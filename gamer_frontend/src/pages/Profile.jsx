@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import boost from '../images/boost.png';
 import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
@@ -48,7 +49,9 @@ const Profile = () => {
                 <span>105 Squad</span>
             </div>
             <div className="flex space-x-4 mt-8">
+              <NavLink to="/createpost">
                 <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">Create a post</button>
+              </NavLink>
                 <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">Write a blog</button>
             </div>
             </div>

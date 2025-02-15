@@ -1,4 +1,7 @@
 import React from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import moment from "moment";
 import user2 from '../images/user2.png';
 import user3 from '../images/user3.jpg';
 import post1 from '../images/post1.jpg';
@@ -15,7 +18,21 @@ import share from '../images/share.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 
+
 const Home = () => {
+
+  const [posts, setPosts] = useState([]);
+
+    useEffect(() => {
+        axios.get("http://localhost:8080/api/posts/all")
+            .then(response => setPosts(response.data))
+            .catch(error => console.error("Error fetching posts:", error));
+    }, []);
+
+    const formatTime = (createdAt) => {
+        return moment(createdAt).fromNow();
+    };
+
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
       <NavBar/>
@@ -104,7 +121,50 @@ const Home = () => {
               </button>
             </div>
           </div>
-        </div>
+
+          {/* Post  3*/}
+          {posts.map((post) => (
+          <div className="key={post.id} bg-gray-800 p-4 rounded mb-4">
+            <div className="flex items-center space-x-4">
+              <img
+                src={user3} 
+                alt="User Avatar"
+                className="h-10 w-10 rounded-full"
+              />
+              <div>
+                <h2 className="font-semibold">Kevin Dias</h2>
+                <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+              </div>
+            </div>
+            <p className="mt-2">{post.title}</p>
+            <p className="text-sm text-blue-400">{post.tags.join(", ")}</p>
+            {post.imageUrl && <img src={post.imageUrl} 
+              alt="Post"
+              className="w-full h-auto object-cover rounded my-2 mb-10"
+            />}
+            <div className="flex justify-between text-white font-thin text-sm px-2">
+              <span>24 Boosts</span>
+              <span>5 Comments</span>
+            </div>
+            <hr className="border-t border-white opacity-30 my-2" />
+            <div className="flex justify-between text-white font-thin">
+              <button className="flex items-center space-x-1">
+                <img src={fillboost} alt="fillboost" className="w-7 h-7" />
+                <span>Boost</span>
+              </button>
+              <button className="flex items-center space-x-1">
+                <img src={comment} alt="comment" className="w-6 h-6" />
+                <span>Comment</span>
+              </button>
+              <button className="flex items-center space-x-1">
+                <img src={share} alt="share" className="w-6 h-6" />
+                <span>Share</span>
+              </button>
+            </div>
+          </div>
+          ))}
+
+        </div>     
 
         {/* Right Sidebar */}
         <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed right-0 h-full mt-[6%]">
