@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
+import user1 from '../images/user1.png';
 import user2 from '../images/user2.png';
 import user3 from '../images/user3.jpg';
 import post1 from '../images/post1.jpg';
@@ -124,20 +125,23 @@ const Home = () => {
 
           {/* Post  3*/}
           {posts.map((post) => (
-          <div className="key={post.id} bg-gray-800 p-4 rounded mb-4">
+          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4">
             <div className="flex items-center space-x-4">
               <img
-                src={user3} 
+                src={user1} 
                 alt="User Avatar"
                 className="h-10 w-10 rounded-full"
               />
               <div>
-                <h2 className="font-semibold">Kevin Dias</h2>
+                <h2 className="font-semibold">Megna Dewmini</h2>
                 <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
               </div>
             </div>
             <p className="mt-2">{post.title}</p>
-            <p className="text-sm text-blue-400">{post.tags.join(", ")}</p>
+            <p className="text-sm text-blue-400">#
+              {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
+            </p>
+
             {post.imageUrl && <img src={post.imageUrl} 
               alt="Post"
               className="w-full h-auto object-cover rounded my-2 mb-10"

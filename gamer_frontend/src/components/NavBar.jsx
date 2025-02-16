@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../images/logo.png";
 import home from "../images/home.png";
@@ -8,9 +8,11 @@ import menu1 from "../images/menu1.png";
 import chat from "../images/chat.png";
 import search from "../images/search.png";
 import menu2 from "../images/menu2.png";
+import { FiMenu, FiX } from "react-icons/fi";
 
 const NavBar = () => {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   return (
     <div className="bg-gray-900 text-white">
@@ -39,7 +41,7 @@ const NavBar = () => {
           </div>
 
           {/* Center: 4 Circle Buttons */}
-          <div className="flex space-x-20 absolute left-1/2 transform -translate-x-1/2">
+          <div className="hidden md:flex space-x-20 absolute left-1/2 transform -translate-x-1/2 ">
           
           <Link to="/">
             <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
@@ -72,21 +74,46 @@ const NavBar = () => {
           </div>
 
           {/* Right: 2 Circle Buttons */}
-          <div className="flex space-x-14">
+          <div className="hidden md:flex space-x-10 absolute right-16">
             <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
               <button className="bg-gray-800 w-10 h-10 rounded-full text-white transition hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110 flex items-center justify-center">
                 <img src={chat} alt="chat" className="h-5 w-5" />
               </button>
             </div>
             <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
-              <button className="bg-gray-800 w-10 h-10 rounded-full text-white transition hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110 flex items-center justify-center">
+              <button className="bg-gray-800 w-10 h-10 rounded-full text-white transition hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110 flex items-center justify-center ml-50">
                 <img src={menu2} alt="menu2" className="h-5" />
               </button>
             </div>
           </div>
 
+           {/* Mobile Menu Toggle Button */}
+          <button
+            className="md:hidden text-white text-2xl"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <FiX /> : <FiMenu />}
+          </button>
+
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-20 left-0 w-full bg-gray-800 p-5 flex flex-col space-y-4 text-center">
+            <Link to="/" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/friends" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Friends</Link>
+            <Link to="/notifications" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Notifications</Link>
+            <Link to="/chat" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Chat</Link>
+            <Link to="/gamesuggestions" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Game Suggestions</Link>
+            <Link to="/groups" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Groups</Link>
+            <Link to="/saved" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Saved Items</Link>
+            <Link to="/menu" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Settings</Link>
+            <Link to="/profile" className="text-white py-2" onClick={() => setMobileMenuOpen(false)}>Your Profile</Link>
+          </div>
+        )}
+
       </nav>
+
     </div>
   );
 };

@@ -1,5 +1,4 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState } from "react";
 import boost from '../images/boost.png';
 import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
@@ -11,8 +10,11 @@ import post3 from '../images/post3.png';
 import post4 from '../images/post4.png';
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
+import CreatePost from "../components/CreatePost";
 
 const Profile = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
       <NavBar/>
@@ -26,37 +28,41 @@ const Profile = () => {
         {/* Main Content */}
         <div className="w-full flex flex-col items-center mt-20">
           {/* Profile Section */}
-            <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
+          <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
                 src={user1} 
                 alt="Profile"
                 className="w-52 h-52 rounded-full mr-12 ml-10"
             />
             <div className="flex-1 text-left relative">
-            <div>
-                <h1 className="text-2xl font-semibold m">Megna Dewmini</h1>
+              <div>
+                <h1 className="text-2xl font-semibold">Megna Dewmini</h1>
                 <p className="text-gray-400 mt-4">Gaming Beyond Limits 🎮✨</p>
-                <p className="text-gray-400 mt-3 ">Player | Developer | Blogger</p>
-            </div>
-            <div className="absolute top-0 right-0">
+                <p className="text-gray-400 mt-3">Player | Developer | Blogger</p>
+              </div>
+              <div className="absolute top-0 right-0">
                 <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
                     <img src={edit} alt="Edit" className="w-5 h-5" /> 
                     <span>Edit Profile</span>
                 </button>
-            </div>
-            <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
+              </div>
+              <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
                 <img src={squad} alt="Squad Icon" className="w-6 h-6" /> 
                 <span>105 Squad</span>
+              </div>
+              <div className="flex space-x-4 mt-8">
+                <button 
+                  className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Create a post
+                </button>
+                <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">
+                  Write a blog
+                </button>
+              </div>
             </div>
-            <div className="flex space-x-4 mt-8">
-              <NavLink to="/createpost">
-                <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">Create a post</button>
-              </NavLink>
-                <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">Write a blog</button>
-            </div>
-            </div>
-
-        </div>
+          </div>
 
           {/* Feed Section */}
           <div className="w-full max-w-2xl bg-gray-900 p-4">
@@ -122,6 +128,18 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Dark Blur Effect when Modal Opens */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>
+      )}
+
+      {/* CreatePost Popup Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex justify-center items-center z-20">
+          <CreatePost onClose={() => setIsModalOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };

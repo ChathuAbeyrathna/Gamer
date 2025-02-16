@@ -4,7 +4,6 @@ import Login from './pages/Login';
 import Home from "./pages/Home";
 import CreateProf from './pages/CreateProf';
 import Profile from './pages/Profile';
-import CreatePost from "./pages/CreatePost";
 
 function App() {
     return (
@@ -15,7 +14,6 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/createprof" element={<CreateProf />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/createpost" element={<CreatePost />} />
             </Routes>
         </Router>
     );
