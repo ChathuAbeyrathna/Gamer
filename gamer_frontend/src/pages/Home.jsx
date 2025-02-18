@@ -24,9 +24,12 @@ const Home = () => {
 
   const [posts, setPosts] = useState([]);
 
-    useEffect(() => {
+      useEffect(() => {
         axios.get("http://localhost:8080/api/posts/all")
-            .then(response => setPosts(response.data))
+            .then(response => {
+                const sortedPosts = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setPosts(sortedPosts);
+            })
             .catch(error => console.error("Error fetching posts:", error));
     }, []);
 
@@ -46,6 +49,51 @@ const Home = () => {
         {/* Feed */}
         <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[25%]">
         
+          {/* Posts*/}
+          {posts.map((post) => (
+          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4">
+            <div className="flex items-center space-x-4">
+              <img
+                src={user1} 
+                alt="User Avatar"
+                className="h-10 w-10 rounded-full"
+              />
+              <div>
+                <h2 className="font-semibold">Megna Dewmini</h2>
+                <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+              </div>
+            </div>
+            <p className="mt-2">{post.title}</p>
+            <p className="text-sm text-blue-400">#
+              {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
+            </p>
+
+            {post.imageUrl && <img src={post.imageUrl} 
+              alt="Post"
+              className="w-full h-auto object-cover rounded my-2 mb-10"
+            />}
+            <div className="flex justify-between text-white font-thin text-sm px-2">
+              <span>24 Boosts</span>
+              <span>5 Comments</span>
+            </div>
+            <hr className="border-t border-white opacity-30 my-2" />
+            <div className="flex justify-between text-white font-thin">
+              <button className="flex items-center space-x-1">
+                <img src={fillboost} alt="fillboost" className="w-7 h-7" />
+                <span>Boost</span>
+              </button>
+              <button className="flex items-center space-x-1">
+                <img src={comment} alt="comment" className="w-6 h-6" />
+                <span>Comment</span>
+              </button>
+              <button className="flex items-center space-x-1">
+                <img src={share} alt="share" className="w-6 h-6" />
+                <span>Share</span>
+              </button>
+            </div>
+          </div>
+          ))}
+
         
           {/* Post 1 */}
           <div className="bg-gray-800 p-4 rounded mb-4">
@@ -122,51 +170,6 @@ const Home = () => {
               </button>
             </div>
           </div>
-
-          {/* Post  3*/}
-          {posts.map((post) => (
-          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src={user1} 
-                alt="User Avatar"
-                className="h-10 w-10 rounded-full"
-              />
-              <div>
-                <h2 className="font-semibold">Megna Dewmini</h2>
-                <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
-              </div>
-            </div>
-            <p className="mt-2">{post.title}</p>
-            <p className="text-sm text-blue-400">#
-              {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
-            </p>
-
-            {post.imageUrl && <img src={post.imageUrl} 
-              alt="Post"
-              className="w-full h-auto object-cover rounded my-2 mb-10"
-            />}
-            <div className="flex justify-between text-white font-thin text-sm px-2">
-              <span>24 Boosts</span>
-              <span>5 Comments</span>
-            </div>
-            <hr className="border-t border-white opacity-30 my-2" />
-            <div className="flex justify-between text-white font-thin">
-              <button className="flex items-center space-x-1">
-                <img src={fillboost} alt="fillboost" className="w-7 h-7" />
-                <span>Boost</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={comment} alt="comment" className="w-6 h-6" />
-                <span>Comment</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={share} alt="share" className="w-6 h-6" />
-                <span>Share</span>
-              </button>
-            </div>
-          </div>
-          ))}
 
         </div>     
 
