@@ -1,12 +1,11 @@
 import React from 'react';
 import photo from '../images/photo.png';
-import NavBar from "../components/NavBar";
 
 const CreateProf = () => {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <NavBar/>
-      <div className="w-full max-w-lg h-auto bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mt-20">
+
+      <div className="w-full max-w-lg h-auto bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg">
       <h2 className="text-center text-white text-2xl font-semibold mb-8">Create Your Gamer Profile</h2>
 
         <form className="space-y-6">

@@ -13,10 +13,8 @@ const CreatePost = ({ onClose }) => {
     const [uploading, setUploading] = useState(false);
 
     const handleImageUpload = async () => {
-        if (!image) {
-            alert("Please select an image!");
-            return null;
-        }
+        if (!image) return null; // Return null if no image is selected
+
         setUploading(true);
         const imageRef = ref(storage, `gamer/${image.name}`);
         const uploadTask = uploadBytesResumable(imageRef, image);
@@ -42,16 +40,30 @@ const CreatePost = ({ onClose }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!title.trim()) {
+            alert("Title is required!");
+            return;
+        }
+
+        if (!tags) {
+            alert("Please select a post tag!");
+            return;
+        }
+
+        if (tags === "Others" && !customTag.trim()) {
+            alert("Please specify your custom tag!");
+            return;
+        }
+
         try {
-            const imageUrl = await handleImageUpload();
-            if (!imageUrl) return;
+            const imageUrl = await handleImageUpload(); // Upload only if an image is selected
 
             const finalTags = tags === "Others" ? [customTag] : [tags];
 
             const postData = {
                 title,
                 tags: finalTags.map(tag => tag.trim()),
-                imageUrl,
+                imageUrl: imageUrl || null, // Allow null value for image
             };
 
             await axios.post("http://localhost:8080/api/posts/create", postData);
@@ -79,11 +91,7 @@ const CreatePost = ({ onClose }) => {
                 <hr className="border-t border-white opacity-50 my-2 mb-6" />
 
                 <div className="flex items-center space-x-4">
-                    <img
-                        src={user1} 
-                        alt="User Avatar"
-                        className="h-10 w-10 rounded-full"
-                    />
+                    <img src={user1} alt="User Avatar" className="h-10 w-10 rounded-full"/>
                     <div>
                         <h2 className="font-semibold">Megna Dewmini</h2>
                     </div>
@@ -103,6 +111,7 @@ const CreatePost = ({ onClose }) => {
                     className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light"
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
+                    required
                 >
                     <option value="">Select Post Tag</option>
                     <option value="Action Game">Action Game</option>
@@ -121,10 +130,11 @@ const CreatePost = ({ onClose }) => {
                         className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light"
                         value={customTag}
                         onChange={(e) => setCustomTag(e.target.value)} 
+                        required
                     />
                 )}
 
-                {/* Image Upload */}
+                {/* Image Upload (Optional) */}
                 <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 flex items-center font-light">
                     <label className="flex-grow cursor-pointer flex items-center gap-2">
                         <input type="file" className="hidden" onChange={(e) => setImage(e.target.files[0])} />
@@ -135,17 +145,17 @@ const CreatePost = ({ onClose }) => {
 
                 {/* Submit Button */}
                 <div className="flex justify-center">
-                <button
-                    type="submit"
-                    className={`w-40 mt-9 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:bg-gradient-to-r hover:from-[#0E2750] hover:to-[#2059B6] transition mx-auto block
-                        bg-gradient-to-r from-[#0E2750] to-[#2059B6] 
-                        hover:from-[#0C2045] hover:to-[#1C4C9D]
-                        ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={handleSubmit}
-                    disabled={uploading}
-                >
-                    {uploading ? "Uploading..." : "Post"}
-                </button>
+                    <button
+                        type="submit"
+                        className={`w-40 mt-9 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:bg-gradient-to-r hover:from-[#0E2750] hover:to-[#2059B6] transition mx-auto block
+                            bg-gradient-to-r from-[#0E2750] to-[#2059B6] 
+                            hover:from-[#0C2045] hover:to-[#1C4C9D]
+                            ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                        onClick={handleSubmit}
+                        disabled={uploading}
+                    >
+                        {uploading ? "Uploading..." : "Post"}
+                    </button>
                 </div>
             </div>
         </div>
