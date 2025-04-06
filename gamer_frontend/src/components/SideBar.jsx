@@ -21,24 +21,48 @@ const SideBar = () => {
       </NavLink>
 
       <ul>
-        <li className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded mt-4">
+        <NavLink 
+              to="/suggest" 
+              className={({ isActive }) =>
+                  `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+                  ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+              }
+        >
+        <li className="flex items-center space-x-3 hover:bg-gray-700 rounded ">
           <button className="w-8 h-8 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
             <img src={game} alt="game" className="h-7 w-7" />
           </button>
           <span>Game Suggestions</span>
         </li>
-        <li className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded mt-2">
+        </NavLink>
+        <NavLink 
+            to="/group" 
+            className={({ isActive }) =>
+                 `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+                ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+            }
+        >
+        <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
           <button className="w-8 h-8 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
             <img src={group} alt="group" className="h-6 w-7" />
           </button>
           <span>Groups</span>
         </li>
-        <li className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded mt-2">
+        </NavLink>
+        <NavLink 
+              to="/save" 
+              className={({ isActive }) =>
+                  `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+                  ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+              }
+        >
+        <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
           <button className="w-8 h-8 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
             <img src={save} alt="save" className="h-6 w-6" />
           </button>
           <span>Saved Items</span>
         </li>
+        </NavLink>
       </ul>
     </div>
   );

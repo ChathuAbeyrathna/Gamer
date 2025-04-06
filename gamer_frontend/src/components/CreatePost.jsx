@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig"; // Import Firebase storage
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import user1 from '../images/user1.png';
@@ -86,7 +87,9 @@ const CreatePost = ({ onClose }) => {
                     <div className="flex justify-center items-center w-full">
                         <h2 className="text-lg font-semibold">Create Post</h2>
                     </div>                    
-                    <button onClick={onClose} className="text-xl ">X</button>
+                    <button className=" text-white" onClick={onClose}>
+                        <IoMdClose size={24} />
+                    </button>
                 </div>
                 <hr className="border-t border-white opacity-50 my-2 mb-6" />
 
@@ -102,7 +105,7 @@ const CreatePost = ({ onClose }) => {
                     placeholder="What's happening in your gaming world?"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full h-40 mt-5 p-3 bg-gray-800 text-white rounded resize-none overflow-y-auto"
+                    className="w-full h-40 mt-5 p-3 bg-gray-800 text-white rounded resize-none overflow-y-auto outline-none"
                     required
                 />
 

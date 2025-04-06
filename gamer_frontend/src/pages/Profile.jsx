@@ -11,9 +11,11 @@ import post4 from '../images/post4.png';
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
 import CreatePost from "../components/CreatePost";
+import WriteBlog from "../components/WriteBlog";
 
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
 
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
@@ -57,7 +59,10 @@ const Profile = () => {
                 >
                   Create a post
                 </button>
-                <button className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white">
+                <button
+                  className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                  onClick={() => setIsBlogModalOpen(true)}
+                >
                   Write a blog
                 </button>
               </div>
@@ -140,6 +145,17 @@ const Profile = () => {
           <CreatePost onClose={() => setIsModalOpen(false)} />
         </div>
       )}
+
+      {/* WriteBlog Popup Modal */}
+      {isBlogModalOpen && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>
+          <div className="fixed inset-0 flex justify-center items-center z-20">
+            <WriteBlog onClose={() => setIsBlogModalOpen(false)} />
+          </div>
+        </>
+      )}
+
     </div>
   );
 };

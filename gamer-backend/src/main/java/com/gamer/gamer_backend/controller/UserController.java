@@ -27,11 +27,12 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
-        boolean isAuthenticated = userService.loginUser(credentials.get("email"), credentials.get("password"));
-        if (isAuthenticated) {
-            return ResponseEntity.ok("Login successful");
-        } else {
+        try {
+            String token = userService.loginUser(credentials.get("email"), credentials.get("password"));
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid email or password");
         }
     }
+
 }
