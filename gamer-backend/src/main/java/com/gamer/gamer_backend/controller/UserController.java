@@ -27,10 +27,10 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
-        try {
-            String token = userService.loginUser(credentials.get("email"), credentials.get("password"));
-            return ResponseEntity.ok(Map.of("token", token));
-        } catch (Exception e) {
+        String token = userService.loginAndGetToken(credentials.get("email"), credentials.get("password"));
+        if (token != null) {
+            return ResponseEntity.ok(Map.of("token", token)); // ✅ send token
+        } else {
             return ResponseEntity.status(401).body("Invalid email or password");
         }
     }

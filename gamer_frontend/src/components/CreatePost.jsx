@@ -40,34 +40,41 @@ const CreatePost = ({ onClose }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (!title.trim()) {
             alert("Title is required!");
             return;
         }
-
+    
         if (!tags) {
             alert("Please select a post tag!");
             return;
         }
-
+    
         if (tags === "Others" && !customTag.trim()) {
             alert("Please specify your custom tag!");
             return;
         }
-
+    
         try {
             const imageUrl = await handleImageUpload(); // Upload only if an image is selected
-
+    
             const finalTags = tags === "Others" ? [customTag] : [tags];
-
+    
             const postData = {
                 title,
                 tags: finalTags.map(tag => tag.trim()),
-                imageUrl: imageUrl || null, // Allow null value for image
+                imageUrl: imageUrl || null,
             };
-
-            await axios.post("http://localhost:8080/api/posts/create", postData);
+    
+            const token = localStorage.getItem("token");
+    
+            await axios.post("http://localhost:8080/api/posts/create", postData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+    
             alert("Post Created Successfully!");
             setTitle("");
             setTags("");
@@ -79,7 +86,7 @@ const CreatePost = ({ onClose }) => {
             alert("Error creating post");
         }
     };
-
+    
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg transition-all duration-300">

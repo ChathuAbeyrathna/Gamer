@@ -18,14 +18,16 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("http://localhost:8080/api/auth/login", formData);
+            const res = await axios.post("http://localhost:8080/api/auth/login", formData);
+            localStorage.setItem("token", res.data.token); // Save token
             alert("Login successful!");
-            navigate("/dashboard"); // Redirect after login
+            navigate("/createprof");
         } catch (error) {
             alert("Invalid email or password");
             console.error(error);
         }
     };
+    
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-900 flex-col">
@@ -37,17 +39,17 @@ const Login = () => {
                 <h2 className="text-3xl font-semibold text-white text-center mb-6">Log in to Gamer</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-200">Username</label>
+                        <label className="block text-sm font-medium text-gray-200">Email</label>
                         <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
+                            type="email"
+                            name="email"
+                            value={formData.email}
                             onChange={handleChange}
-                            className="w-full p-3 mt-1 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 mt-1 bg-gray-700 rounded"
                             required
                         />
                     </div>
-                    
+ 
                     <div>
                         <label className="block text-sm font-medium text-gray-200">Password</label>
                         <input

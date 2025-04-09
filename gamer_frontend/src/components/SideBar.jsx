@@ -1,11 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { getUserEmail } from "../authUtils";
 import user1 from '../images/user1.png';
 import game from '../images/game.png';
 import group from '../images/group.png';
 import save from '../images/save.png';
 
 const SideBar = () => {
+  const email = getUserEmail();
     
   return (
     <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed h-full left-6 mt-[6%]">
@@ -17,7 +19,7 @@ const SideBar = () => {
             }
             >
             <img src={user1} alt="User Avatar" className="h-8 w-8 rounded-full mr-2" />
-            <span className="font-semibold">Megna Dewmini</span>
+            <span className="font-semibold">{email}</span>
       </NavLink>
 
       <ul>
