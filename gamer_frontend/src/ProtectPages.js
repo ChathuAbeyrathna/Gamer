@@ -10,6 +10,7 @@ function App() {
             <Routes>
                 <Route path="/createprof" element={<CreateProf />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/editprof" element={<CreateProf editMode={true} />} />
 
                 <Route path="/group" element={<Group />} />
                 <Route path="/creategroup" element={<CreateGroup />} />

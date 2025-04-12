@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig"; // Import Firebase storage
@@ -12,6 +12,13 @@ const CreatePost = ({ onClose }) => {
     const [customTag, setCustomTag] = useState("");
     const [image, setImage] = useState(null);
     const [uploading, setUploading] = useState(false);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = 'auto';
+        };
+      }, []);
 
     const handleImageUpload = async () => {
         if (!image) return null; // Return null if no image is selected
@@ -88,7 +95,8 @@ const CreatePost = ({ onClose }) => {
     };
     
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-y-auto">
+        <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
             <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg transition-all duration-300">
                 <div className="flex justify-between items-center">
                     <div className="flex justify-center items-center w-full">
@@ -168,6 +176,7 @@ const CreatePost = ({ onClose }) => {
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     );
 };

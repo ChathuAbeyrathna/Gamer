@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import boost from '../images/boost.png';
 import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
@@ -16,8 +17,40 @@ import WriteBlog from "../components/WriteBlog";
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
 
-  return (
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchProfile = async () => {
+      // Decode JWT to extract email
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      const email = decoded.sub;
+
+      try {
+        const res = await fetch(`http://localhost:8080/api/profile/${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+        } else {
+          navigate("/createprof"); // no profile found
+        }
+      } catch (err) {
+        console.error("Error loading profile", err);
+        navigate("/createprof");
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  return profile && (
     <div className="bg-gray-900 text-white min-h-screen"> 
       <NavBar/>
       
@@ -32,21 +65,23 @@ const Profile = () => {
           {/* Profile Section */}
           <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
-                src={user1} 
+                src={profile.imageUrl} 
                 alt="Profile"
                 className="w-52 h-52 rounded-full mr-12 ml-10"
             />
             <div className="flex-1 text-left relative">
               <div>
-                <h1 className="text-2xl font-semibold">Megna Dewmini</h1>
-                <p className="text-gray-400 mt-4">Gaming Beyond Limits 🎮✨</p>
-                <p className="text-gray-400 mt-3">Player | Developer | Blogger</p>
+                <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
+                <p className="text-gray-400 mt-4">{profile.bio}</p>
+                <p className="text-gray-400 mt-3">{profile.role && profile.role.join(" | ")}</p>
               </div>
               <div className="absolute top-0 right-0">
+                <Link to="/editprof">
                 <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
                     <img src={edit} alt="Edit" className="w-5 h-5" /> 
                     <span>Edit Profile</span>
                 </button>
+                </Link>
               </div>
               <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
                 <img src={squad} alt="Squad Icon" className="w-6 h-6" /> 

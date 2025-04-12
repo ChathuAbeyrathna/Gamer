@@ -21,7 +21,8 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/**",           // login, register
                     "/api/posts",             // GET all posts
-                    "/api/posts/**"         // GET post by ID
+                    "/api/posts/**",         // GET post by ID
+                    "/api/profile/**"
                 ).permitAll()
                 .anyRequest().authenticated() // all other actions require login
             )
