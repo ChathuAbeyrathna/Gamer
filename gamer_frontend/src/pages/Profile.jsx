@@ -8,19 +8,20 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
+import menuIcon from '../images/option.png'; 
 import CreatePost from "../components/CreatePost";
 import WriteBlog from "../components/WriteBlog";
 
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
   const [profile, setProfile] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
+  const [menuOpenIndex, setMenuOpenIndex] = useState(null);
   const navigate = useNavigate();
 
-  const formatTime = (createdAt) => {
-          return moment(createdAt).fromNow();
-      };
+  const formatTime = (createdAt) => moment(createdAt).fromNow();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -35,7 +36,6 @@ const Profile = () => {
         const decoded = JSON.parse(atob(token.split('.')[1]));
         const email = decoded.sub;
 
-        // Fetch user profile
         const profileRes = await fetch(`http://localhost:8080/api/profile/${email}`);
         if (profileRes.ok) {
           const profileData = await profileRes.json();
@@ -45,7 +45,6 @@ const Profile = () => {
           return;
         }
 
-        // Fetch user's posts
         const postRes = await fetch(`http://localhost:8080/api/posts/user/${email}`);
         if (postRes.ok) {
           const postData = await postRes.json();
@@ -60,19 +59,41 @@ const Profile = () => {
     fetchData();
   }, [navigate]);
 
+  const handleToggleMenu = (index) => {
+    setMenuOpenIndex(menuOpenIndex === index ? null : index);
+  };
+
+  const handleEditPost = (post) => {
+    setEditingPost(post);
+    setIsModalOpen(true);
+    setMenuOpenIndex(null);
+  };
+
+  const handleDeletePost = async (postId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this post?");
+    if (confirmDelete) {
+      const response = await fetch(`http://localhost:8080/api/posts/delete/${postId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setUserPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+      } else {
+        alert("Failed to delete post");
+      }
+    }
+    setMenuOpenIndex(null);
+  };
+
   return profile && (
     <div className="bg-gray-900 text-white min-h-screen">
       <NavBar />
 
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
-        {/* Sidebar */}
         <div className="w-1/4">
           <Sidebar />
         </div>
 
-        {/* Main Content */}
         <div className="w-full flex flex-col items-center mt-20">
-          {/* Profile Section */}
           <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
               src={profile.imageUrl}
@@ -83,7 +104,7 @@ const Profile = () => {
               <div>
                 <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
                 <p className="text-gray-400 mt-4">{profile.bio}</p>
-                <p className="text-gray-400 mt-3">{profile.role && profile.role.join(" | ")}</p>
+                <p className="text-gray-400 mt-3">{profile.role?.join(" | ")}</p>
               </div>
               <div className="absolute top-0 right-0">
                 <Link to="/editprof">
@@ -100,7 +121,10 @@ const Profile = () => {
               <div className="flex space-x-4 mt-8">
                 <button
                   className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setIsModalOpen(true);
+                    setEditingPost(null);
+                  }}
                 >
                   Create a post
                 </button>
@@ -120,25 +144,53 @@ const Profile = () => {
               <p className="text-center text-gray-400">No posts yet.</p>
             ) : (
               userPosts.map((post, index) => (
-                <div key={index} className="bg-gray-800 p-4 rounded mb-4">
-                  <div className="flex items-center space-x-4">
-                    <img src={profile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                    <div>
-                      <h2 className="font-semibold">{profile.gamerName}</h2>
-                      <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+                <div key={post.id} className="bg-gray-800 p-4 rounded mb-4 relative">
+                  {/* Post Header */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-4">
+                      <img src={profile.imageUrl} alt="User" className="h-10 w-10 rounded-full" />
+                      <div>
+                        <h2 className="font-semibold">{profile.gamerName}</h2>
+                        <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Three-dot menu */}
+                    <div className="relative">
+                      <button onClick={() => handleToggleMenu(index)}>
+                        <img src={menuIcon} alt="menu" className="h-5" />
+                      </button>
+                      {menuOpenIndex === index && (
+                        <div className="absolute right-0 mt-2 w-32 bg-white text-black rounded shadow z-10">
+                          <button className="w-full text-left px-4 py-2 hover:bg-gray-200" onClick={() => handleEditPost(post)}>
+                            Edit Post
+                          </button>
+                          <button className="w-full text-left px-4 py-2 hover:bg-gray-200" onClick={() => handleDeletePost(post.id)}>
+                            Delete Post
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Post Content */}
                   <p className="mt-2">{post.title}</p>
                   <p className="text-sm text-blue-400">#
                     {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
                   </p>
+
                   {post.imageUrl && (
-                    <img
-                      src={post.imageUrl}
-                      alt="Post"
-                      className="w-full h-auto object-cover rounded my-2 mb-10"
-                    />
+                    /\.(mp4|webm|ogg)(\?.*)?$/.test(post.imageUrl) ? (
+                      <video controls className="w-full h-auto rounded my-2 mb-10">
+                        <source src={post.imageUrl} />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <img src={post.imageUrl} alt="Post" className="w-full h-auto object-cover rounded my-2 mb-10" />
+                    )
                   )}
+
+                  {/* Actions */}
                   <hr className="border-t border-white opacity-30 my-2" />
                   <div className="flex justify-between text-white font-thin">
                     <button className="flex items-center space-x-1">
@@ -161,20 +213,31 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Dark Blur Effect when Modal Opens */}
+      {/* Modals */}
       {isModalOpen && <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>}
-
-      {/* CreatePost Popup Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-20">
           <CreatePost
-            onClose={() => setIsModalOpen(false)}
-            onPostCreated={(newPost) => setUserPosts(prev => [newPost, ...prev])}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingPost(null);
+            }}
+            editingPost={editingPost}
+            onPostCreated={(newPost) => {
+              if (editingPost) {
+                setUserPosts((prev) =>
+                  prev.map((p) => (p.id === newPost.id ? newPost : p))
+                );
+              } else {
+                setUserPosts((prev) => [newPost, ...prev]);
+              }
+              setEditingPost(null);
+              setIsModalOpen(false);
+            }}
           />
         </div>
       )}
 
-      {/* WriteBlog Popup Modal */}
       {isBlogModalOpen && (
         <>
           <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>

@@ -16,7 +16,7 @@ import java.util.Optional;
 public class UserProfileController {
 
     private final UserProfileService profileService;
-    private final PostService postService; // Added PostService to update posts
+    private final PostService postService; 
 
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createProfile(@RequestBody UserProfile profile) {
@@ -43,11 +43,11 @@ public class UserProfileController {
             UserProfile existingProfile = existingProfileOptional.get();
             existingProfile.setGamerName(updatedProfile.getGamerName());
             existingProfile.setImageUrl(updatedProfile.getImageUrl());
-            // Update other fields if needed
+            existingProfile.setBio(updatedProfile.getBio());    
+            existingProfile.setRole(updatedProfile.getRole());    
 
             UserProfile savedProfile = profileService.createProfile(existingProfile);
 
-            // ✅ Update posts with new name and image
             postService.updatePostsWithNewProfileInfo(
                     updatedProfile.getEmail(),
                     updatedProfile.getGamerName(),

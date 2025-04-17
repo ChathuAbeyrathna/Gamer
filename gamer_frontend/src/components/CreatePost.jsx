@@ -5,24 +5,36 @@ import { storage } from "../firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import camera from '../images/camera.png';
 
-const CreatePost = ({ onClose , onPostCreated }) => {
+const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     const [title, setTitle] = useState("");
     const [tags, setTags] = useState("");
     const [customTag, setCustomTag] = useState("");
-    const [image, setImage] = useState(null);
+    const [media, setMedia] = useState(null);
+    const [mediaName, setMediaName] = useState("");
     const [uploading, setUploading] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
+    const [existingMediaUrl, setExistingMediaUrl] = useState("");
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         fetchUserProfile();
+        if (editingPost) {
+            setTitle(editingPost.title || "");
+            setTags(editingPost.tags?.[0] || "");
+            setExistingMediaUrl(editingPost.imageUrl || "");
+
+            if (editingPost.imageUrl) {
+                const nameFromUrl = decodeURIComponent(editingPost.imageUrl.split("/").pop().split("?")[0]);
+                setMediaName(nameFromUrl);
+            }
+        }
         return () => {
             document.body.style.overflow = 'auto';
         };
-    }, []);
+    }, [editingPost]);
 
     const fetchUserProfile = async () => {
-        const email = localStorage.getItem("email"); // You should store email during login
+        const email = localStorage.getItem("email");
         if (!email) return;
 
         try {
@@ -33,11 +45,18 @@ const CreatePost = ({ onClose , onPostCreated }) => {
         }
     };
 
-    const handleImageUpload = async () => {
-        if (!image) return null;
+    const handleMediaUpload = async () => {
+        if (!media) return existingMediaUrl || null;
+
+        const fileType = media.type;
+        if (!fileType.startsWith("image/") && !fileType.startsWith("video/")) {
+            alert("Only image and video files are allowed!");
+            return null;
+        }
+
         setUploading(true);
-        const imageRef = ref(storage, `gamer/${image.name}`);
-        const uploadTask = uploadBytesResumable(imageRef, image);
+        const mediaRef = ref(storage, `gamer/${media.name}`);
+        const uploadTask = uploadBytesResumable(mediaRef, media);
 
         return new Promise((resolve, reject) => {
             uploadTask.on(
@@ -66,13 +85,13 @@ const CreatePost = ({ onClose , onPostCreated }) => {
         if (!userProfile) return alert("User profile not loaded!");
 
         try {
-            const imageUrl = await handleImageUpload();
+            const mediaUrl = await handleMediaUpload();
             const finalTags = tags === "Others" ? [customTag] : [tags];
 
             const postData = {
                 title,
                 tags: finalTags.map(tag => tag.trim()),
-                imageUrl: imageUrl || null,
+                imageUrl: mediaUrl || null,
                 email: userProfile.email,
                 userName: userProfile.name,
                 userImage: userProfile.imageUrl
@@ -80,17 +99,25 @@ const CreatePost = ({ onClose , onPostCreated }) => {
 
             const token = localStorage.getItem("token");
 
-            const response = await axios.post("http://localhost:8080/api/posts/create", postData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            let response;
+            if (editingPost) {
+                response = await axios.put(`http://localhost:8080/api/posts/edit/${editingPost.id}`, postData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert("Post Updated Successfully!");
+            } else {
+                response = await axios.post("http://localhost:8080/api/posts/create", postData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert("Post Created Successfully!");
+            }
 
             onPostCreated(response.data);
-            alert("Post Created Successfully!");
-            setTitle(""); setTags(""); setCustomTag(""); setImage(null);
+            setTitle(""); setTags(""); setCustomTag(""); setMedia(null);
             onClose();
         } catch (error) {
-            console.error("Error creating post:", error);
-            alert("Error creating post");
+            console.error("Error submitting post:", error);
+            alert("Error submitting post");
         }
     };
 
@@ -100,7 +127,7 @@ const CreatePost = ({ onClose , onPostCreated }) => {
                 <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-center">
                         <div className="flex justify-center items-center w-full">
-                            <h2 className="text-lg font-semibold">Create Post</h2>
+                            <h2 className="text-lg font-semibold">{editingPost ? "Edit Post" : "Create Post"}</h2>
                         </div>
                         <button className="text-white" onClick={onClose}><IoMdClose size={24} /></button>
                     </div>
@@ -151,8 +178,15 @@ const CreatePost = ({ onClose , onPostCreated }) => {
 
                     <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 flex items-center font-light">
                         <label className="flex-grow cursor-pointer flex items-center gap-2">
-                            <input type="file" className="hidden" onChange={(e) => setImage(e.target.files[0])} />
-                            {image ? image.name : "Add Media"}
+                            <input
+                                type="file"
+                                accept="image/*,video/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                    setMedia(e.target.files[0]);
+                                    setMediaName(e.target.files[0].name);}}
+                            />
+                            {mediaName ? mediaName : "Add Media"}
                             <img src={camera} alt="Upload" className="w-6 h-6 ml-auto" />
                         </label>
                     </div>
@@ -165,7 +199,7 @@ const CreatePost = ({ onClose , onPostCreated }) => {
                             onClick={handleSubmit}
                             disabled={uploading}
                         >
-                            {uploading ? "Uploading..." : "Post"}
+                            {uploading ? "Uploading..." : editingPost ? "Update" : "Post"}
                         </button>
                     </div>
                 </div>

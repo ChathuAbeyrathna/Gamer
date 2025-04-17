@@ -45,4 +45,15 @@ public class PostController {
         return postService.getPostsByEmail(email);
     }
 
+    @PutMapping("/edit/{id}")
+public Post editPost(@PathVariable String id, @RequestBody Post updatedPost) {
+    return postService.updatePost(id, updatedPost);
+}
+
+@DeleteMapping("/delete/{id}")
+public void deletePost(@PathVariable String id) {
+    postService.deletePost(id);
+}
+
+
 }

@@ -13,7 +13,6 @@ import share from '../images/share.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 
-
 const Home = () => {
   const [posts, setPosts] = useState([]);
 
@@ -57,15 +56,30 @@ const Home = () => {
                 <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
               </div>
             </div>
+
             <p className="mt-2">{post.title}</p>
             <p className="text-sm text-blue-400">#
               {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
             </p>
+            
+            {post.imageUrl && (
+              /\.(mp4|webm|ogg)(\?.*)?$/.test(post.imageUrl) ? (
+                <video
+                  controls
+                  className="w-full h-auto rounded my-2 mb-10"
+                >
+                  <source src={post.imageUrl} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={post.imageUrl}
+                  alt="Post"
+                  className="w-full h-auto object-cover rounded my-2 mb-10"
+                />
+              )
+            )}
 
-            {post.imageUrl && <img src={post.imageUrl} 
-              alt="Post"
-              className="w-full h-auto object-cover rounded my-2 mb-10"
-            />}
             <div className="flex justify-between text-white font-thin text-sm px-2">
               <span>24 Boosts</span>
               <span>5 Comments</span>

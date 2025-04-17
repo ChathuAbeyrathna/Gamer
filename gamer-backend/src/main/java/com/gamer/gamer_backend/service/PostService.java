@@ -34,4 +34,18 @@ public class PostService {
             postRepository.save(post);
         }
     }
+
+    public Post updatePost(String id, Post updatedPost) {
+    return postRepository.findById(id).map(post -> {
+        post.setTitle(updatedPost.getTitle());
+        post.setImageUrl(updatedPost.getImageUrl());
+        post.setTags(updatedPost.getTags());
+        return postRepository.save(post);
+    }).orElse(null);
+    }
+
+    public void deletePost(String id) {
+        postRepository.deleteById(id);
+    }
+
 }
