@@ -11,8 +11,11 @@ import java.time.Instant;
 public class Post {
     @Id
     private String id;
+    private String email;         
+    private String userName;      
+    private String userImage;    
     private String title;
     private String imageUrl;
     private String[] tags;
-    private Instant createdAt = Instant.now(); // Store timestamp
+    private Instant createdAt = Instant.now(); 
 }

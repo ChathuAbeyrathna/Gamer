@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import moment from "moment";
 import boost from '../images/boost.png';
-import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
 import share from '../images/share.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
-import user1 from '../images/user1.png';
-import post3 from '../images/post3.png';
-import post4 from '../images/post4.png';
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
 import CreatePost from "../components/CreatePost";
@@ -18,7 +15,12 @@ const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [userPosts, setUserPosts] = useState([]);
   const navigate = useNavigate();
+
+  const formatTime = (createdAt) => {
+          return moment(createdAt).fromNow();
+      };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -28,32 +30,40 @@ const Profile = () => {
       return;
     }
 
-    const fetchProfile = async () => {
-      // Decode JWT to extract email
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      const email = decoded.sub;
-
+    const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/profile/${email}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProfile(data);
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        const email = decoded.sub;
+
+        // Fetch user profile
+        const profileRes = await fetch(`http://localhost:8080/api/profile/${email}`);
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setProfile(profileData);
         } else {
-          navigate("/createprof"); // no profile found
+          navigate("/createprof");
+          return;
+        }
+
+        // Fetch user's posts
+        const postRes = await fetch(`http://localhost:8080/api/posts/user/${email}`);
+        if (postRes.ok) {
+          const postData = await postRes.json();
+          setUserPosts(postData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }
       } catch (err) {
-        console.error("Error loading profile", err);
+        console.error("Error fetching data", err);
         navigate("/createprof");
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, [navigate]);
 
   return profile && (
-    <div className="bg-gray-900 text-white min-h-screen"> 
-      <NavBar/>
-      
+    <div className="bg-gray-900 text-white min-h-screen">
+      <NavBar />
+
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         {/* Sidebar */}
         <div className="w-1/4">
@@ -65,9 +75,9 @@ const Profile = () => {
           {/* Profile Section */}
           <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
-                src={profile.imageUrl} 
-                alt="Profile"
-                className="w-52 h-52 rounded-full mr-12 ml-10"
+              src={profile.imageUrl}
+              alt="Profile"
+              className="w-52 h-52 rounded-full mr-12 ml-10"
             />
             <div className="flex-1 text-left relative">
               <div>
@@ -77,18 +87,18 @@ const Profile = () => {
               </div>
               <div className="absolute top-0 right-0">
                 <Link to="/editprof">
-                <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
-                    <img src={edit} alt="Edit" className="w-5 h-5" /> 
+                  <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
+                    <img src={edit} alt="Edit" className="w-5 h-5" />
                     <span>Edit Profile</span>
-                </button>
+                  </button>
                 </Link>
               </div>
               <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
-                <img src={squad} alt="Squad Icon" className="w-6 h-6" /> 
+                <img src={squad} alt="Squad Icon" className="w-6 h-6" />
                 <span>105 Squad</span>
               </div>
               <div className="flex space-x-4 mt-8">
-                <button 
+                <button
                   className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
                   onClick={() => setIsModalOpen(true)}
                 >
@@ -106,78 +116,61 @@ const Profile = () => {
 
           {/* Feed Section */}
           <div className="w-full max-w-2xl bg-gray-900 p-4">
-            {/* Post 1 */}
-            <div className="bg-gray-800 p-4 rounded mb-4">
-              <div className="flex items-center space-x-4">
-                <img src={user1} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                <div>
-                  <h2 className="font-semibold">Megna Dewmini</h2>
-                  <p className="text-sm text-gray-400">Just Now</p>
+            {userPosts.length === 0 ? (
+              <p className="text-center text-gray-400">No posts yet.</p>
+            ) : (
+              userPosts.map((post, index) => (
+                <div key={index} className="bg-gray-800 p-4 rounded mb-4">
+                  <div className="flex items-center space-x-4">
+                    <img src={profile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
+                    <div>
+                      <h2 className="font-semibold">{profile.gamerName}</h2>
+                      <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2">{post.title}</p>
+                  <p className="text-sm text-blue-400">#
+                    {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
+                  </p>
+                  {post.imageUrl && (
+                    <img
+                      src={post.imageUrl}
+                      alt="Post"
+                      className="w-full h-auto object-cover rounded my-2 mb-10"
+                    />
+                  )}
+                  <hr className="border-t border-white opacity-30 my-2" />
+                  <div className="flex justify-between text-white font-thin">
+                    <button className="flex items-center space-x-1">
+                      <img src={boost} alt="boost" className="w-7 h-7" />
+                      <span>Boost</span>
+                    </button>
+                    <button className="flex items-center space-x-1">
+                      <img src={comment} alt="comment" className="w-6 h-6" />
+                      <span>Comment</span>
+                    </button>
+                    <button className="flex items-center space-x-1">
+                      <img src={share} alt="share" className="w-6 h-6" />
+                      <span>Share</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <p className="mt-2">It's not only a game. It is an art.</p>
-              <img src={post3} alt="Post" className="w-full h-auto object-cover rounded my-2 mb-10" />
-              <hr className="border-t border-white opacity-30 my-2" />
-              <div className="flex justify-between text-white font-thin">
-                <button className="flex items-center space-x-1">
-                  <img src={boost} alt="boost" className="w-7 h-7" />
-                  <span>Boost</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={comment} alt="comment" className="w-6 h-6" />
-                  <span>Comment</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={share} alt="share" className="w-6 h-6" />
-                  <span>Share</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Post 2 */}
-            <div className="bg-gray-800 p-4 rounded mb-4">
-              <div className="flex items-center space-x-4">
-                <img src={user1} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                <div>
-                  <h2 className="font-semibold">Megna Dewmini</h2>
-                  <p className="text-sm text-gray-400">1 hour ago</p>
-                </div>
-              </div>
-              <p className="mt-2">Hey Gamers, This is my new work.</p>
-              <img src={post4} alt="Post" className="w-full h-auto object-cover rounded my-2 mb-10" />
-              <div className="flex justify-between text-white font-thin text-sm px-2">
-                <span>24 Boosts</span>
-                <span>5 Comments</span>
-              </div>
-              <hr className="border-t border-white opacity-30 my-2" />
-              <div className="flex justify-between text-white font-thin">
-                <button className="flex items-center space-x-1">
-                  <img src={fillboost} alt="fillboost" className="w-7 h-7" />
-                  <span>Boost</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={comment} alt="comment" className="w-6 h-6" />
-                  <span>Comment</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={share} alt="share" className="w-6 h-6" />
-                  <span>Share</span>
-                </button>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* Dark Blur Effect when Modal Opens */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>
-      )}
+      {isModalOpen && <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>}
 
       {/* CreatePost Popup Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-20">
-          <CreatePost onClose={() => setIsModalOpen(false)} />
+          <CreatePost
+            onClose={() => setIsModalOpen(false)}
+            onPostCreated={(newPost) => setUserPosts(prev => [newPost, ...prev])}
+          />
         </div>
       )}
 
@@ -190,7 +183,6 @@ const Profile = () => {
           </div>
         </>
       )}
-
     </div>
   );
 };

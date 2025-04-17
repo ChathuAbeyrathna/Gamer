@@ -1,6 +1,7 @@
 package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.UserProfile;
+import com.gamer.gamer_backend.service.PostService;
 import com.gamer.gamer_backend.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class UserProfileController {
 
     private final UserProfileService profileService;
+    private final PostService postService; // Added PostService to update posts
 
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createProfile(@RequestBody UserProfile profile) {
@@ -35,7 +37,26 @@ public class UserProfileController {
 
     @PutMapping("/update")
     public ResponseEntity<UserProfile> updateProfile(@RequestBody UserProfile updatedProfile) {
-        return ResponseEntity.ok(profileService.updateProfile(updatedProfile));
-    }
+        Optional<UserProfile> existingProfileOptional = profileService.getProfileByEmail(updatedProfile.getEmail());
 
+        if (existingProfileOptional.isPresent()) {
+            UserProfile existingProfile = existingProfileOptional.get();
+            existingProfile.setGamerName(updatedProfile.getGamerName());
+            existingProfile.setImageUrl(updatedProfile.getImageUrl());
+            // Update other fields if needed
+
+            UserProfile savedProfile = profileService.createProfile(existingProfile);
+
+            // ✅ Update posts with new name and image
+            postService.updatePostsWithNewProfileInfo(
+                    updatedProfile.getEmail(),
+                    updatedProfile.getGamerName(),
+                    updatedProfile.getImageUrl()
+            );
+
+            return ResponseEntity.ok(savedProfile);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

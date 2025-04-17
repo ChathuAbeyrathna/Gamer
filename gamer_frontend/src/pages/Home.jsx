@@ -2,17 +2,11 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
-import user1 from '../images/user1.png';
-import user2 from '../images/user2.png';
-import user3 from '../images/user3.jpg';
-import post1 from '../images/post1.jpg';
-import post2 from '../images/post2.jpg';
 import profile1 from '../images/profile1.png';
 import profile2 from '../images/profile2.png';
 import profile3 from '../images/profile3.png';
 import profile4 from '../images/profile4.png';
 import profile5 from '../images/profile5.png';
-import boost from '../images/boost.png';
 import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
 import share from '../images/share.png';
@@ -21,7 +15,6 @@ import Sidebar from "../components/SideBar";
 
 
 const Home = () => {
-
   const [posts, setPosts] = useState([]);
 
       useEffect(() => {
@@ -36,6 +29,7 @@ const Home = () => {
     const formatTime = (createdAt) => {
         return moment(createdAt).fromNow();
     };
+    
 
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
@@ -54,12 +48,12 @@ const Home = () => {
           <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4">
             <div className="flex items-center space-x-4">
               <img
-                src={user1} 
+                src={post.userImage} 
                 alt="User Avatar"
                 className="h-10 w-10 rounded-full"
               />
               <div>
-                <h2 className="font-semibold">Megna Dewmini</h2>
+                <h2 className="font-semibold">{post.userName || "Unknown User"}</h2>
                 <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
               </div>
             </div>
@@ -93,84 +87,6 @@ const Home = () => {
             </div>
           </div>
           ))}
-
-        
-          {/* Post 1 */}
-          <div className="bg-gray-800 p-4 rounded mb-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src={user2} 
-                alt="User Avatar"
-                className="h-10 w-10 rounded-full"
-              />
-              <div>
-                <h2 className="font-semibold">Ann Perera</h2>
-                <p className="text-sm text-gray-400">Just Now</p>
-              </div>
-            </div>
-            <p className="mt-2">It's not only a game. It is an art.</p>
-            <img
-              src={post1} 
-              alt="Post"
-              className="w-full h-auto object-cover rounded my-2 mb-10"
-            />
-            <hr className="border-t border-white opacity-30 my-2" />
-            <div className="flex justify-between text-white font-thin">
-              <button className="flex items-center space-x-1">
-                <img src={boost} alt="boost" className="w-7 h-7" />
-                <span>Boost</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={comment} alt="comment" className="w-6 h-6" />
-                <span>Comment</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={share} alt="share" className="w-6 h-6" />
-                <span>Share</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Post 2 */}
-          <div className="bg-gray-800 p-4 rounded mb-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src={user3} 
-                alt="User Avatar"
-                className="h-10 w-10 rounded-full"
-              />
-              <div>
-                <h2 className="font-semibold">Kevin Dias</h2>
-                <p className="text-sm text-gray-400">1 hour ago</p>
-              </div>
-            </div>
-            <p className="mt-2">Hey Gamers, This is my new work.</p>
-            <img
-              src={post2} 
-              alt="Post"
-              className="w-full h-auto object-cover rounded my-2 mb-10"
-            />
-            <div className="flex justify-between text-white font-thin text-sm px-2">
-              <span>24 Boosts</span>
-              <span>5 Comments</span>
-            </div>
-            <hr className="border-t border-white opacity-30 my-2" />
-            <div className="flex justify-between text-white font-thin">
-              <button className="flex items-center space-x-1">
-                <img src={fillboost} alt="fillboost" className="w-7 h-7" />
-                <span>Boost</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={comment} alt="comment" className="w-6 h-6" />
-                <span>Comment</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={share} alt="share" className="w-6 h-6" />
-                <span>Share</span>
-              </button>
-            </div>
-          </div>
-
         </div>     
 
         {/* Right Sidebar */}

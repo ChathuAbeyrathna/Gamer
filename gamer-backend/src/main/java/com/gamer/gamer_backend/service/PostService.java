@@ -21,4 +21,17 @@ public class PostService {
     public List<Post> getAllPosts() {
         return postRepository.findAll();
     }
+
+    public List<Post> getPostsByEmail(String email) {
+        return postRepository.findByEmail(email);
+    }
+
+    public void updatePostsWithNewProfileInfo(String email, String newName, String newImageUrl) {
+        List<Post> posts = postRepository.findByEmail(email);
+        for (Post post : posts) {
+            post.setUserName(newName);
+            post.setUserImage(newImageUrl);
+            postRepository.save(post);
+        }
+    }
 }

@@ -65,6 +65,10 @@ const CreateProf = () => {
         const imageRef = ref(storage, `gamer/${image.name}`);
         await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(imageRef);
+      } else if (isEditMode) {
+        // Keep the existing image URL
+        const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
+        imageUrl = res.data?.imageUrl || '';
       }
 
       const finalRoles = customRole && selectedRoles.includes("Other")
