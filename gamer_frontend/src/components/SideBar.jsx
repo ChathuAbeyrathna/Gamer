@@ -78,6 +78,7 @@ const SideBar = () => {
           </li>
         </NavLink>
 
+        {email && (
         <NavLink 
           to="/save" 
           className={({ isActive }) =>
@@ -92,6 +93,8 @@ const SideBar = () => {
             <span>Saved Items</span>
           </li>
         </NavLink>
+      )}
+
       </ul>
     </div>
   );

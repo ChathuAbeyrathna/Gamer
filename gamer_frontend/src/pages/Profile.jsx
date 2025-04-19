@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import moment from "moment";
 import boost from '../images/boost.png';
@@ -8,7 +8,7 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
-import menuIcon from '../images/option.png'; 
+import menuIcon from '../images/option.png';
 import CreatePost from "../components/CreatePost";
 import WriteBlog from "../components/WriteBlog";
 
@@ -19,6 +19,7 @@ const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
 
   const formatTime = (createdAt) => moment(createdAt).fromNow();
@@ -62,6 +63,18 @@ const Profile = () => {
   const handleToggleMenu = (index) => {
     setMenuOpenIndex(menuOpenIndex === index ? null : index);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpenIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleEditPost = (post) => {
     setEditingPost(post);
@@ -154,18 +167,18 @@ const Profile = () => {
                         <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
                       </div>
                     </div>
-                    
+
                     {/* Three-dot menu */}
                     <div className="relative">
                       <button onClick={() => handleToggleMenu(index)}>
                         <img src={menuIcon} alt="menu" className="h-5" />
                       </button>
                       {menuOpenIndex === index && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white text-black rounded shadow z-10">
-                          <button className="w-full text-left px-4 py-2 hover:bg-gray-200" onClick={() => handleEditPost(post)}>
+                        <div ref={menuRef} className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
+                          <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => handleEditPost(post)}>
                             Edit Post
                           </button>
-                          <button className="w-full text-left px-4 py-2 hover:bg-gray-200" onClick={() => handleDeletePost(post.id)}>
+                          <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => handleDeletePost(post.id)}>
                             Delete Post
                           </button>
                         </div>

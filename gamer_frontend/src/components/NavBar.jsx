@@ -136,17 +136,19 @@ const NavBar = () => {
               {showMenu2Popup && (
               <div className="absolute right-0 mt-2 w-56 bg-gradient-to-b from-[#222] to-[#444] text-white rounded-xl shadow-lg p-4 space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl">?</div>
+                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">?</div>
                     <span>Help & Support</span>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl">!</div>
+                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">!</div>
                     <span>Give Feedback</span>
                   </div>
-                  <div onClick={handleLogout} className="flex items-center space-x-3 cursor-pointer">
-                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl">→</div>
-                    <span>Log Out</span>
-                  </div>
+                  {localStorage.getItem("token") && (
+                    <div onClick={handleLogout} className="flex items-center space-x-3 cursor-pointer">
+                      <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">→</div>
+                      <span>Log Out</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

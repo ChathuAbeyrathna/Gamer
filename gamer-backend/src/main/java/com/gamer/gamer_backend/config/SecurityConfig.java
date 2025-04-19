@@ -19,12 +19,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**",           // login, register
-                    "/api/posts",             // GET all posts
-                    "/api/posts/**",         // GET post by ID
-                    "/api/profile/**"
+                    "/api/auth/**",          
+                    "/api/posts",          
+                    "/api/posts/**",         
+                    "/api/profile/**",
+                    "/api/saved-posts/**"
                 ).permitAll()
-                .anyRequest().authenticated() // all other actions require login
+                .anyRequest().authenticated() 
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,5 +1,5 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef }  from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
 import profile1 from '../images/profile1.png';
@@ -12,24 +12,77 @@ import comment from '../images/comment.png';
 import share from '../images/share.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
+import menuIcon from '../images/option.png';
+import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
+  const [savedPostIds, setSavedPostIds] = useState([]);
+  const [dropdownOpenId, setDropdownOpenId] = useState(null);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
 
       useEffect(() => {
-        axios.get("http://localhost:8080/api/posts/all")
-            .then(response => {
-                const sortedPosts = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setPosts(sortedPosts);
-            })
-            .catch(error => console.error("Error fetching posts:", error));
-    }, []);
+        fetchPosts();
+        fetchSavedPosts();
+      }, []);
 
-    const formatTime = (createdAt) => {
-        return moment(createdAt).fromNow();
-    };
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setDropdownOpenId(null);
+          }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, []);
+
+      const fetchPosts = async () => {
+        const res = await axios.get("http://localhost:8080/api/posts/all");
+        const sortedPosts = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setPosts(sortedPosts);
+      };
+
+      const fetchSavedPosts = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return; 
+      
+        try {
+          const res = await axios.get("http://localhost:8080/api/saved-posts", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setSavedPostIds(res.data.map(sp => sp.postId));
+        } catch (error) {
+          console.error("Error fetching saved posts:", error);
+        }
+      };
+      
+
+      const toggleSave = async (postId) => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+      
+        const res = await axios.post(`http://localhost:8080/api/saved-posts/toggle/${postId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      
+        if (res.data) {
+          setSavedPostIds(prev => [...prev, postId]);
+        } else {
+          setSavedPostIds(prev => prev.filter(id => id !== postId));
+        }
+      };
     
-
+      const formatTime = (createdAt) => {
+          return moment(createdAt).fromNow();
+      };
+      
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
       <NavBar/>
@@ -44,7 +97,31 @@ const Home = () => {
         
           {/* Posts*/}
           {posts.map((post) => (
-          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4">
+          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4 relative">
+            <div className="absolute top-4 right-4">
+                <button onClick={() => setDropdownOpenId(dropdownOpenId === post.id ? null : post.id)}>
+                    <img src={menuIcon} alt="menu" className="h-5" />
+                </button>
+                {dropdownOpenId === post.id && (
+                  <div ref={dropdownRef} className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
+                    <button
+                      className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600"
+                      onClick={() => toggleSave(post.id)}
+                    >
+                      {savedPostIds.includes(post.id) ? (
+                        <FaBookmark className="text-white mr-2" />
+                      ) : (
+                        <FaRegBookmark className="text-white mr-2" />
+                      )}
+                      Save Post
+                    </button>
+                    <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
+                      <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
+                      <span>Report Post</span>
+                    </button>
+                  </div>
+                )}
+            </div>
             <div className="flex items-center space-x-4">
               <img
                 src={post.userImage} 
