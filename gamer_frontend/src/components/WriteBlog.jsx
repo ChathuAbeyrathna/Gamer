@@ -23,7 +23,8 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
       fetchUserProfile();
       if (editingBlog) {
           setTitle(editingBlog.title || "");
-          setContent(editingBlog.content || "");
+          setContent(typeof editingBlog.content === "string" ? editingBlog.content : "");
+          setContent(String(editingBlog.content || ""));
           setTags(editingBlog.tags?.[0] || "");
           setExistingImageUrl(editingBlog.imageUrl || "");
 
@@ -180,7 +181,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
               className="w-full mt-5 p-3 bg-transparent text-white text-lg font-bold outline-none"
             />
 
-            <ReactQuill
+            <ReactQuill 
               theme="snow"
               value={content}
               onChange={setContent}
