@@ -46,14 +46,13 @@ public class PostController {
     }
 
     @PutMapping("/edit/{id}")
-public Post editPost(@PathVariable String id, @RequestBody Post updatedPost) {
-    return postService.updatePost(id, updatedPost);
-}
+    public Post editPost(@PathVariable String id, @RequestBody Post updatedPost) {
+        return postService.updatePost(id, updatedPost);
+    }
 
-@DeleteMapping("/delete/{id}")
-public void deletePost(@PathVariable String id) {
-    postService.deletePost(id);
-}
-
+    @DeleteMapping("/delete/{id}")
+    public void deletePost(@PathVariable String id) {
+        postService.deletePost(id);
+    }
 
 }

@@ -108,11 +108,11 @@ const SavedPosts = () => {
                                 </p>
                                 {post.imageUrl && (
                                     /\.(mp4|webm|ogg)$/.test(post.imageUrl) ? (
-                                        <video controls className="w-full rounded my-2">
+                                        <video controls className="w-full rounded my-2 mb-4">
                                             <source src={post.imageUrl} />
                                         </video>
                                     ) : (
-                                        <img src={post.imageUrl} alt="Post" className="w-full rounded my-2" />
+                                        <img src={post.imageUrl} alt="Post" className="w-full rounded my-2 mb-4" />
                                     )
                                 )}
 

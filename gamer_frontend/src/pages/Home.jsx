@@ -10,21 +10,22 @@ import profile5 from '../images/profile5.png';
 import fillboost from '../images/fillboost.png';
 import comment from '../images/comment.png';
 import share from '../images/share.png';
+import menuIcon from '../images/option.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
-import menuIcon from '../images/option.png';
+import ViewBlog from "../components/ViewBlog";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 
 const Home = () => {
-  const [posts, setPosts] = useState([]);
+  const [feedItems, setFeedItems] = useState([]);
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
+  const [openBlog, setOpenBlog] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-
       useEffect(() => {
-        fetchPosts();
+        fetchFeed();
         fetchSavedPosts();
       }, []);
 
@@ -40,10 +41,19 @@ const Home = () => {
         };
       }, []);
 
-      const fetchPosts = async () => {
-        const res = await axios.get("http://localhost:8080/api/posts/all");
-        const sortedPosts = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setPosts(sortedPosts);
+      const fetchFeed = async () => {
+        const [postsRes, blogsRes] = await Promise.all([
+          axios.get("http://localhost:8080/api/posts/all"),
+          axios.get("http://localhost:8080/api/blogs/all"),
+        ]);
+    
+        const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
+        const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
+    
+        const combinedFeed = [...posts, ...blogs].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setFeedItems(combinedFeed);
       };
 
       const fetchSavedPosts = async () => {
@@ -59,7 +69,6 @@ const Home = () => {
           console.error("Error fetching saved posts:", error);
         }
       };
-      
 
       const toggleSave = async (postId) => {
         const token = localStorage.getItem("token");
@@ -82,6 +91,11 @@ const Home = () => {
       const formatTime = (createdAt) => {
           return moment(createdAt).fromNow();
       };
+
+      const stripHtmlTags = (html) => {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        return doc.body.textContent || "";
+      };      
       
   return (
     <div className="bg-gray-900 text-white min-h-screen"> 
@@ -94,90 +108,108 @@ const Home = () => {
 
         {/* Feed */}
         <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[25%]">
-        
-          {/* Posts*/}
-          {posts.map((post) => (
-          <div key={post.id} className=" bg-gray-800 p-4 rounded mb-4 relative">
-            <div className="absolute top-4 right-4">
-                <button onClick={() => setDropdownOpenId(dropdownOpenId === post.id ? null : post.id)}>
-                    <img src={menuIcon} alt="menu" className="h-5" />
+          {feedItems.map((item) => (
+            <div key={item.id} 
+                className="bg-gray-800 p-4 rounded mb-4 relative"
+            >
+              <div className="absolute top-4 right-4">
+                <button onClick={() => setDropdownOpenId(dropdownOpenId === item.id ? null : item.id)}>
+                  <img src={menuIcon} alt="menu" className="h-5" />
                 </button>
-                {dropdownOpenId === post.id && (
-                  <div ref={dropdownRef} className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
+                {dropdownOpenId === item.id && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10"
+                  >
                     <button
                       className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600"
-                      onClick={() => toggleSave(post.id)}
+                      onClick={() => toggleSave(item.id)}
                     >
-                      {savedPostIds.includes(post.id) ? (
+                      {savedPostIds.includes(item.id) ? (
                         <FaBookmark className="text-white mr-2" />
                       ) : (
                         <FaRegBookmark className="text-white mr-2" />
                       )}
-                      Save Post
+                      Save {item.type === "post" ? "Post" : "Blog"}
                     </button>
                     <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
-                      <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
-                      <span>Report Post</span>
+                      <span>Report {item.type === "post" ? "Post" : "Blog"}</span>
                     </button>
                   </div>
                 )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <img
-                src={post.userImage} 
-                alt="User Avatar"
-                className="h-10 w-10 rounded-full"
-              />
-              <div>
-                <h2 className="font-semibold">{post.userName || "Unknown User"}</h2>
-                <p className="text-sm text-gray-400">{formatTime(post.createdAt)}</p>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <img src={item.userImage} alt="User Avatar" className="h-10 w-10 rounded-full" />
+                <div>
+                  <h2 className="font-semibold">{item.userName}</h2>
+                  <p className="text-sm text-gray-400">{formatTime(item.createdAt)}</p>
+                </div>
+              </div>
+
+              <div
+                onClick={() => item.type === "blog" && setOpenBlog(item)}
+                className={`${item.type === "blog" ? "bg-gray-700 rounded-md p-2 mt-4 mb-4 cursor-pointer" : ""}`}
+              >
+                <p className={`mt-2 ${item.type === "blog" ? "text-bold" : "text-bold"
+                      }`}>{item.title}</p>
+                <p className="text-sm text-blue-400">
+                  #{Array.isArray(item.tags) ? item.tags.join(", ") : ""}
+                </p>
+
+                {item.imageUrl &&
+                  (/\.(mp4|webm|ogg)(\?.*)?$/.test(item.imageUrl) ? (
+                    <video controls className="w-full h-auto rounded my-2 mb-4">
+                      <source src={item.imageUrl} />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <img
+                      src={item.imageUrl}
+                      alt="Media"
+                      className={`object-cover rounded my-2 mb-4 ${
+                        item.type === "blog" ? "w-full h-40" : "w-full h-auto"
+                      }`}
+                    />
+                  ))}
+
+                {item.type === "blog" && (
+                  <p className="mt-2 text-sm text-gray-300">
+                    {item.content &&
+                      (stripHtmlTags(item.content).length > 200
+                        ? stripHtmlTags(item.content).substring(0, 200) + "...see more"
+                        : stripHtmlTags(item.content))}
+                  </p>
+                )}
+
+              </div>
+
+              <div className="flex justify-between text-white font-thin text-sm px-2">
+                <span>24 Boosts</span>
+                <span>5 Comments</span>
+              </div>
+              <hr className="border-t border-white opacity-30 my-2" />
+              <div className="flex justify-between text-white font-thin">
+                <button className="flex items-center space-x-1">
+                  <img src={fillboost} alt="boost" className="w-7 h-7" />
+                  <span>Boost</span>
+                </button>
+                <button className="flex items-center space-x-1">
+                  <img src={comment} alt="comment" className="w-6 h-6" />
+                  <span>Comment</span>
+                </button>
+                <button className="flex items-center space-x-1">
+                  <img src={share} alt="share" className="w-6 h-6" />
+                  <span>Share</span>
+                </button>
               </div>
             </div>
-
-            <p className="mt-2">{post.title}</p>
-            <p className="text-sm text-blue-400">#
-              {Array.isArray(post.tags) ? post.tags.join(", ") : ""}
-            </p>
-            
-            {post.imageUrl && (
-              /\.(mp4|webm|ogg)(\?.*)?$/.test(post.imageUrl) ? (
-                <video
-                  controls
-                  className="w-full h-auto rounded my-2 mb-10"
-                >
-                  <source src={post.imageUrl} />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img
-                  src={post.imageUrl}
-                  alt="Post"
-                  className="w-full h-auto object-cover rounded my-2 mb-10"
-                />
-              )
-            )}
-
-            <div className="flex justify-between text-white font-thin text-sm px-2">
-              <span>24 Boosts</span>
-              <span>5 Comments</span>
-            </div>
-            <hr className="border-t border-white opacity-30 my-2" />
-            <div className="flex justify-between text-white font-thin">
-              <button className="flex items-center space-x-1">
-                <img src={fillboost} alt="fillboost" className="w-7 h-7" />
-                <span>Boost</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={comment} alt="comment" className="w-6 h-6" />
-                <span>Comment</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <img src={share} alt="share" className="w-6 h-6" />
-                <span>Share</span>
-              </button>
-            </div>
-          </div>
           ))}
+
+          {openBlog && (
+            <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />
+          )}
+
         </div>     
 
         {/* Right Sidebar */}

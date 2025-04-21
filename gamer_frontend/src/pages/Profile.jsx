@@ -194,12 +194,12 @@ const Profile = () => {
 
                   {post.imageUrl && (
                     /\.(mp4|webm|ogg)(\?.*)?$/.test(post.imageUrl) ? (
-                      <video controls className="w-full h-auto rounded my-2 mb-10">
+                      <video controls className="w-full h-auto rounded my-2 mb-4">
                         <source src={post.imageUrl} />
                         Your browser does not support the video tag.
                       </video>
                     ) : (
-                      <img src={post.imageUrl} alt="Post" className="w-full h-auto object-cover rounded my-2 mb-10" />
+                      <img src={post.imageUrl} alt="Post" className="w-full h-auto object-cover rounded my-2 mb-4" />
                     )
                   )}
 

@@ -23,7 +23,8 @@ public class SecurityConfig {
                     "/api/posts",          
                     "/api/posts/**",         
                     "/api/profile/**",
-                    "/api/saved-posts/**"
+                    "/api/saved-posts/**",
+                    "/api/blogs/**"
                 ).permitAll()
                 .anyRequest().authenticated() 
             )
