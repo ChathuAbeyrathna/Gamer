@@ -44,6 +44,7 @@ public class BlogService {
     public Blog updateBlog(String id, Blog updatedBlog) {
     return blogRepository.findById(id).map(blog -> {
         blog.setTitle(updatedBlog.getTitle());
+        blog.setContent(updatedBlog.getContent());
         blog.setImageUrl(updatedBlog.getImageUrl());
         blog.setTags(updatedBlog.getTags());
         return blogRepository.save(blog);

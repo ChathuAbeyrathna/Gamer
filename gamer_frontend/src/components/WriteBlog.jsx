@@ -4,234 +4,237 @@ import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import camera from '../images/camera.png';
+
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null }) => {
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [tags, setTags] = useState("");
-    const [customTag, setCustomTag] = useState("");
-    const [image, setImage] = useState(null);
-    const [imageName, setImageName] = useState("");
-    const [uploading, setUploading] = useState(false);
-    const [userProfile, setUserProfile] = useState(null);
-    const [existingImageUrl, setExistingImageUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [tags, setTags] = useState("");
+  const [customTag, setCustomTag] = useState("");
+  const [image, setImage] = useState(null);
+  const [imageName, setImageName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [existingImageUrl, setExistingImageUrl] = useState("");
 
-    useEffect(() => {
-      document.body.style.overflow = 'hidden';
-      fetchUserProfile();
-      if (editingBlog) {
-          setTitle(editingBlog.title || "");
-          setContent(typeof editingBlog.content === "string" ? editingBlog.content : "");
-          setContent(String(editingBlog.content || ""));
-          setTags(editingBlog.tags?.[0] || "");
-          setExistingImageUrl(editingBlog.imageUrl || "");
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    fetchUserProfile();
 
-          if (editingBlog.imageUrl) {
-              const nameFromUrl = decodeURIComponent(editingBlog.imageUrl.split("/").pop().split("?")[0]);
-              setImageName(nameFromUrl);
-          }
+    if (editingBlog) {
+      setTitle(editingBlog.title || "");
+      setContent((editingBlog.content || ""));
+      setTags(editingBlog.tags?.[0] || "");
+      setExistingImageUrl(editingBlog.imageUrl || "");
+
+      if (editingBlog.imageUrl) {
+        const nameFromUrl = decodeURIComponent(editingBlog.imageUrl.split("/").pop().split("?")[0]);
+        setImageName(nameFromUrl);
       }
-      return () => {
-          document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [editingBlog]);
+
+  const fetchUserProfile = async () => {
+    const email = localStorage.getItem("email");
+    if (!email) return;
+
+    try {
+      const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
+      setUserProfile(res.data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!image) return existingImageUrl || null;
+    setUploading(true);
+    const imageRef = ref(storage, `gamer/${image.name}`);
+    const uploadTask = uploadBytesResumable(imageRef, image);
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        null,
+        (error) => {
+          console.error("Upload Error:", error);
+          setUploading(false);
+          reject(error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploading(false);
+          resolve(downloadURL);
+        }
+      );
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!title.trim()) return alert("Title is required!");
+    if (!tags) return alert("Please select a blog tag!");
+    if (tags === "Others" && !customTag.trim()) return alert("Please specify your custom tag!");
+    if (!userProfile) return alert("User profile not loaded!");
+
+    try {
+      const imageUrl = await handleImageUpload();
+      const finalTags = tags === "Others" ? [customTag] : [tags];
+
+
+      const blogData = {
+        title,
+        content,
+        tags: finalTags.map(tag => tag.trim()),
+        imageUrl: imageUrl || null,
+        email: userProfile.email,
+        userName: userProfile.name,
+        userImage: userProfile.imageUrl
       };
-    }, [editingBlog]);
 
-    const fetchUserProfile = async () => {
-        const email = localStorage.getItem("email");
-        if (!email) return;
+      const token = localStorage.getItem("token");
 
-        try {
-            const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
-            setUserProfile(res.data);
-        } catch (err) {
-            console.error("Error fetching profile:", err);
-        }
-    };
+      let response;
+      if (editingBlog) {
+        response = await axios.put(`http://localhost:8080/api/blogs/edit/${editingBlog.id}`, blogData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert("Blog Updated Successfully!");
+      } else {
+        response = await axios.post("http://localhost:8080/api/blogs/create", blogData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert("Blog Published Successfully!");
+      }
 
-    const handleImageUpload = async () => {
-      if (!image) return existingImageUrl || null;
-      setUploading(true);
-      const imageRef = ref(storage, `gamer/${image.name}`);
-      const uploadTask = uploadBytesResumable(imageRef, image);
+      onBlogCreated(response.data);
+      setTitle(""); setTags(""); setCustomTag(""); setImage(null);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting blog:", error);
+      alert("Error submitting blog");
+    }
+  };
 
-      return new Promise((resolve, reject) => {
-          uploadTask.on(
-              "state_changed",
-              null,
-              (error) => {
-                  console.error("Upload Error:", error);
-                  setUploading(false);
-                  reject(error);
-              },
-              async () => {
-                  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                  setUploading(false);
-                  resolve(downloadURL);
-              }
-          );
-      });
-    };
+  const modules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ header: [1, 2, 3, false] }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'image'],
+      ['clean'],
+    ],
+  };
+  
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image',
+  ];
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!title.trim()) return alert("Title is required!");
-        if (!tags) return alert("Please select a blog tag!");
-        if (tags === "Others" && !customTag.trim()) return alert("Please specify your custom tag!");
-        if (!userProfile) return alert("User profile not loaded!");
-
-        try {
-            const imageUrl = await handleImageUpload();
-            const finalTags = tags === "Others" ? [customTag] : [tags];
-
-            const blogData = {
-                title,
-                content,
-                tags: finalTags.map(tag => tag.trim()),
-                imageUrl: imageUrl || null,
-                email: userProfile.email,
-                userName: userProfile.name,
-                userImage: userProfile.imageUrl
-            };
-
-            const token = localStorage.getItem("token");
-
-            let response;
-            if (editingBlog) {
-                response = await axios.put(`http://localhost:8080/api/blogs/edit/${editingBlog.id}`, blogData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                alert("Blog Updated Successfully!");
-            } else {
-                response = await axios.post("http://localhost:8080/api/blogs/create", blogData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                alert("Blog Published Successfully!");
-            }
-
-            onBlogCreated(response.data);
-            setTitle(""); setContent(""); setTags(""); setCustomTag(""); setImage(null);
-            onClose();
-        } catch (error) {
-            console.error("Error submitting blog:", error);
-            alert("Error submitting blog");
-        }
-    };
-
-    const modules = {
-      toolbar: [
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ header: [1, 2, 3, false] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link', 'image'],
-        ['clean'],
-      ],
-    };
-    
-    const formats = [
-      'header',
-      'bold', 'italic', 'underline', 'strike',
-      'list', 'bullet',
-      'link', 'image',
-    ];
-
-    return (
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-60 overflow-y-auto">
-        <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
-          <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg">
-            
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex justify-center items-center w-full">
-                  <h2 className="text-lg font-semibold">{editingBlog ? "Edit Blog" : "Write Blog"}</h2>
-              </div>
-              <button onClick={onClose}>
-                <IoMdClose size={24} />
-              </button>
+  return (
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-60 overflow-y-auto">
+      <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
+        <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-center items-center w-full">
+              <h2 className="text-lg font-semibold">{editingBlog ? "Edit Blog" : "Write Blog"}</h2>
             </div>
+            <button onClick={onClose}>
+              <IoMdClose size={24} />
+            </button>
+          </div>
 
-            <hr className="border-t border-white opacity-50 my-2 mb-6" />
+          <hr className="border-t border-white opacity-50 my-2 mb-6" />
 
-            <div className="flex items-center space-x-4 mb-4">
-              {userProfile && (
-                  <>
-                      <img src={userProfile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                      <div><h2 className="font-semibold">{userProfile.gamerName}</h2></div>
-                  </>
-              )}
-            </div>
+          <div className="flex items-center space-x-4 mb-4">
+            {userProfile && (
+              <>
+                <img src={userProfile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
+                <h2 className="font-semibold">{userProfile.gamerName}</h2>
+              </>
+            )}
+          </div>
 
-            <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 flex items-center font-light h-18">
-              <label className="flex-grow cursor-pointer flex justify-center items-center gap-3">
-                <input type="file" className="hidden" 
-                    onChange={(e) => {
-                      setImage(e.target.files[0]); 
-                      setImageName(e.target.files[0].name);}} />
-                {imageName ? imageName : "Add Cover Image"}
-                <img src={camera} alt="Upload" className="w-6 h-6" />
-              </label>
-            </div>
+          <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 flex items-center font-light h-18">
+            <label className="flex-grow cursor-pointer flex justify-center items-center gap-3">
+              <input type="file" className="hidden" onChange={(e) => {
+                setImage(e.target.files[0]);
+                setImageName(e.target.files[0].name);
+              }} />
+              {imageName ? imageName : "Add Cover Image"}
+              <img src={camera} alt="Upload" className="w-6 h-6" />
+            </label>
+          </div>
 
+          <input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full mt-5 p-3 bg-transparent text-white text-lg font-bold outline-none"
+            required
+          />
+
+          <ReactQuill 
+            theme="snow"
+            value={content}
+            onChange={setContent}
+            modules={modules}
+            formats={formats}
+            placeholder="Write your gamer blog……"
+            className="bg-transparent text-white h-40 mt-3 mb-14 custom-quill"
+          />
+
+          <select
+            className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light cursor-pointer"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            required
+          >
+            <option value="">Select Post Tag</option>
+            <option value="Action Game">Action Game</option>
+            <option value="Adventure Game">Adventure Game</option>
+            <option value="RPG Game">RPG Game</option>
+            <option value="Simulation Game">Simulation Game</option>
+            <option value="Sports Game">Sports Game</option>
+            <option value="Others">Others</option>
+          </select>
+
+          {tags === "Others" && (
             <input
               type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full mt-5 p-3 bg-transparent text-white text-lg font-bold outline-none"
-            />
-
-            <ReactQuill 
-              theme="snow"
-              value={content}
-              onChange={setContent}
-              modules={modules}
-              formats={formats}
-              placeholder="Write your gamer blog……"
-              className="bg-transparent text-white h-40 mt-3 mb-14 custom-quill"
-            />
-
-            <select
-              className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light cursor-pointer"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              placeholder="Specify your tag"
+              className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light"
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
               required
+            />
+          )}
+
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className={`w-60 mt-9 mb-5 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:from-[#0C2045] hover:to-[#1C4C9D] transition
+              ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={handleSubmit}
+              disabled={uploading}
             >
-              <option value="">Select Post Tag</option>
-              <option value="Action Game">Action Game</option>
-              <option value="Adventure Game">Adventure Game</option>
-              <option value="RPG Game">RPG Game</option>
-              <option value="Simulation Game">Simulation Game</option>
-              <option value="Sports Game">Sports Game</option>
-              <option value="Others">Others</option>
-            </select>
-
-            {tags === "Others" && (
-              <input
-                type="text"
-                placeholder="Specify your tag"
-                className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light"
-                value={customTag}
-                onChange={(e) => setCustomTag(e.target.value)}
-                required
-              />
-            )}
-
-            <div className="flex justify-center">
-              <button
-                type="submit"
-                className={`w-60 mt-9 mb-5 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:from-[#0C2045] hover:to-[#1C4C9D] transition
-                  ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={handleSubmit}
-                disabled={uploading}
-              >
-                {uploading ? "Uploading..." : editingBlog ? "Update" : "Publish"}
-              </button>
-            </div>
+              {uploading ? "Uploading..." : editingBlog ? "Update" : "Publish"}
+            </button>
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default WriteBlogModal;

@@ -22,6 +22,7 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [openBlog, setOpenBlog] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Add this line for refresh control
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -70,7 +71,7 @@ const Profile = () => {
     };
     
     fetchData();    
-  }, [navigate]);
+  }, [navigate, refreshKey]);
 
   const handleToggleMenu = (index) => {
     setMenuOpenIndex(menuOpenIndex === index ? null : index);
@@ -278,7 +279,6 @@ const Profile = () => {
       </div>
 
       {/* Modals */}
-      {isModalOpen && <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>}
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-20">
           <CreatePost
@@ -297,6 +297,7 @@ const Profile = () => {
               }
               setEditingPost(null);
               setIsModalOpen(false);
+              setRefreshKey(prev => prev + 1); // Add this line to trigger refresh
             }}
           />
         </div>
@@ -310,20 +311,21 @@ const Profile = () => {
               onClose={() => { 
                 setIsBlogModalOpen(false);
                 setEditingBlog(null);
-            }}
-            editingBlog={editingBlog}
-            onBlogCreated={(newBlog) => {
-              if (editingBlog) {
-                setUserPosts((prev) =>
-                  prev.map((b) => (b.id === newBlog.id ? newBlog : b))
-                );
-              } else {
-                setUserPosts((prev) => [newBlog, ...prev]);
-              }
-              setEditingBlog(null);
-              setIsModalOpen(false);
-            }}
-           />
+              }}
+              editingBlog={editingBlog}
+              onBlogCreated={(newBlog) => {
+                if (editingBlog) {
+                  setUserPosts((prev) =>
+                    prev.map((b) => (b.id === newBlog.id ? newBlog : b))
+                  );
+                } else {
+                  setUserPosts((prev) => [newBlog, ...prev]);
+                }
+                setEditingBlog(null);
+                setIsBlogModalOpen(false);
+                setRefreshKey(prev => prev + 1); // Add this line to trigger refresh
+              }}
+            />
           </div>
         </>
       )}
