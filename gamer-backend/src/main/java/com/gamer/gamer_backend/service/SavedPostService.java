@@ -5,6 +5,7 @@ import com.gamer.gamer_backend.repository.SavedPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -22,14 +23,15 @@ public class SavedPostService {
             repository.save(SavedPost.builder()
                     .userEmail(userEmail)
                     .postId(postId)
+                    .savedAt(Instant.now())
                     .build());
             return true;
         }
     }
 
     public List<SavedPost> getSavedPosts(String userEmail) {
-        return repository.findByUserEmail(userEmail);
-    }
+        return repository.findByUserEmailOrderBySavedAtDesc(userEmail);
+    }    
 
     public void unsavePost(String userEmail, String postId) {
         repository.deleteByUserEmailAndPostId(userEmail, postId);

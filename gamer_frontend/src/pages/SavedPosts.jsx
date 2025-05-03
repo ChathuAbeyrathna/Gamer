@@ -40,7 +40,8 @@ const SavedPosts = () => {
             });
             const savedPostIds = res.data.map(p => p.postId);
             const allPosts = await axios.get("http://localhost:8080/api/posts/all");
-            const filtered = allPosts.data.filter(post => savedPostIds.includes(post.id));
+            const idToPostMap = new Map(allPosts.data.map(post => [post.id, post]));
+    const filtered = savedPostIds.map(id => idToPostMap.get(id)).filter(Boolean);
             setSavedPosts(filtered);
         } catch (error) {
             console.error("Error fetching saved posts:", error);
@@ -106,15 +107,19 @@ const SavedPosts = () => {
                                 <p className="text-sm text-blue-400">
                                     #{Array.isArray(post.tags) ? post.tags.join(", ") : ""}
                                 </p>
-                                {post.imageUrl && (
-                                    /\.(mp4|webm|ogg)$/.test(post.imageUrl) ? (
-                                        <video controls className="w-full rounded my-2 mb-4">
-                                            <source src={post.imageUrl} />
-                                        </video>
-                                    ) : (
-                                        <img src={post.imageUrl} alt="Post" className="w-full rounded my-2 mb-4" />
-                                    )
-                                )}
+                                {post.imageUrl &&
+                                (/\.(mp4|webm|ogg)(\?.*)?$/.test(post.imageUrl) ? (
+                                    <video controls className="w-full h-auto rounded my-2 mb-4">
+                                        <source src={post.imageUrl} />
+                                        Your browser does not support the video tag.
+                                    </video>
+                                ) : (
+                                    <img
+                                        src={post.imageUrl}
+                                        alt="Media"
+                                        className="object-cover rounded my-2 mb-4"
+                                    />
+                                ))}
 
                                 <div className="flex justify-between text-white font-thin text-sm px-2">
                                     <span>24 Boosts</span>

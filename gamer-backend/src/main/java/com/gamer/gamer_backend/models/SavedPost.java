@@ -3,6 +3,7 @@ package com.gamer.gamer_backend.models;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -14,5 +15,6 @@ public class SavedPost {
     private String id;
     private String userEmail;
     private String postId;
+    private Instant savedAt;
 }
 
