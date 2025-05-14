@@ -5,6 +5,7 @@ import com.gamer.gamer_backend.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,6 +16,10 @@ public class UserProfileService {
 
     public UserProfile createProfile(UserProfile profile) {
         return userProfileRepository.save(profile);
+    }
+
+    public List<UserProfile> getAllProfiles() {
+    return userProfileRepository.findAll();
     }
 
     public Optional<UserProfile> getProfileByEmail(String email) {

@@ -2,11 +2,13 @@ package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.service.PostService;
+import com.gamer.gamer_backend.service.BlogService;
 import com.gamer.gamer_backend.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -17,10 +19,16 @@ public class UserProfileController {
 
     private final UserProfileService profileService;
     private final PostService postService; 
+    private final BlogService blogService; 
 
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createProfile(@RequestBody UserProfile profile) {
         return ResponseEntity.ok(profileService.createProfile(profile));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserProfile>> getAllProfiles() {
+        return ResponseEntity.ok(profileService.getAllProfiles());
     }
 
     @GetMapping("/{email}")
@@ -49,6 +57,12 @@ public class UserProfileController {
             UserProfile savedProfile = profileService.createProfile(existingProfile);
 
             postService.updatePostsWithNewProfileInfo(
+                    updatedProfile.getEmail(),
+                    updatedProfile.getGamerName(),
+                    updatedProfile.getImageUrl()
+            );
+
+            blogService.updateBlogsWithNewProfileInfo(
                     updatedProfile.getEmail(),
                     updatedProfile.getGamerName(),
                     updatedProfile.getImageUrl()

@@ -5,6 +5,7 @@ import Group from './pages/Group/Group';
 import CreateGroup from './pages/Group/CreateGroup';
 import Suggest from './pages/Suggest/Suggest';
 import Save from './pages/SavedPosts';
+import AllProfiles from './pages/AllProfiles/AllProfiles';
 
 function App() {
     return (
@@ -19,6 +20,8 @@ function App() {
                 <Route path="/suggest" element={<Suggest />} />
 
                 <Route path="/save" element={<Save />} />
+                
+                <Route path="/allprof" element={<AllProfiles />} />
             </Routes>
     );
 }
