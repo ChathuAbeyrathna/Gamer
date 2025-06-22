@@ -14,7 +14,7 @@ public class SecurityConfig {
     private JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
@@ -24,7 +24,8 @@ public class SecurityConfig {
                     "/api/posts/**",         
                     "/api/profile/**",
                     "/api/saved-posts/**",
-                    "/api/blogs/**"
+                    "/api/blogs/**",
+                    "/api/groups/**"
                 ).permitAll()
                 .anyRequest().authenticated() 
             )

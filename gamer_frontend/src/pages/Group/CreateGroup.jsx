@@ -1,76 +1,114 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook from React Router
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { storage } from '../../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import NavBar from "../../components/NavBar";
 import photo from '../../images/photo.png';
 
 const CreateGroup = () => {
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [coverPhoto, setCoverPhoto] = useState(null);
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+
+    const email = localStorage.getItem("email");
+
+    let coverPhotoUrl = "";
+    if (coverPhoto) {
+      const imageRef = ref(storage, `gamer/${coverPhoto.name}`);
+      const snapshot = await uploadBytes(imageRef, coverPhoto);
+      coverPhotoUrl = await getDownloadURL(snapshot.ref);
+    }
+
+    const groupData = {
+      name,
+      description,
+      coverPhotoUrl,
+      ownerEmail: email,
+      memberEmails: [email]
+    };
+
+    try {
+      await axios.post('http://localhost:8080/api/groups', groupData);
+      alert("Group created!");
+      navigate('/group');
+    } catch (err) {
+      alert("Error creating group");
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleCancel = () => {
-    navigate('/group'); // Navigate to the group page
+    navigate('/group');
   };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <NavBar />
-
-      <div className="w-full max-w-lg h-auto bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mt-20">
+      <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mt-20">
         <h2 className="text-center text-white text-2xl font-semibold mb-8">Create New Group</h2>
 
-        <form className="space-y-6">
+        <form onSubmit={handleCreate} className="space-y-6">
           <div className="border border-white/90 rounded-md p-4 flex items-center justify-center">
-            <label htmlFor="profile-photo" className="cursor-pointer">
-              <img 
-                src={photo}
-                alt="Add a profile" 
-                className="w-10 h-10 mx-auto" 
-              />
+            <label htmlFor="cover-photo" className="cursor-pointer">
+              <img src={photo} alt="Add cover" className="w-10 h-10 mx-auto" />
               <span className="text-white text-sm block mt-2">Add a cover photo</span>
             </label>
-            <input 
-              type="file" 
-              id="profile-photo" 
+            <input
+              type="file"
+              id="cover-photo"
+              accept="image/*"
               className="hidden"
-            />
-          </div>
-         
-          <div>
-            <input 
-              type="text" 
-              placeholder="Add a group name" 
-              className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none focus:border-blue-500"
+              onChange={(e) => setCoverPhoto(e.target.files[0])}
             />
           </div>
 
-          <div>
-            <input 
-              type="text" 
-              placeholder="Add a description" 
-              className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none focus:border-blue-500"
-            />
-          </div>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Add a group name"
+            required
+            className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
+          />
+
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add a description"
+            required
+            className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
+          />
 
           <div className="flex justify-between mt-9">
-            {/* Cancel Button */}
-            <button 
-                type="button" 
-                onClick={handleCancel} 
-                className="w-40 py-1 px-6 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-md font-semibold border border-white hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-900 transition"
-                >
-                Cancel
-            </button>
-            {/* Create Button */}
-            <button 
-              type="submit" 
-              className="w-40 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:bg-gradient-to-r hover:from-[#0E2750] hover:to-[#2059B6] transition"
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-40 py-1 px-6 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-md font-semibold border border-white hover:from-gray-700 hover:to-gray-900 transition"
             >
-              Create
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={creating}
+              className="w-40 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white"
+            >
+              {creating ? "Creating..." : "Create"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}
+};
 
 export default CreateGroup;

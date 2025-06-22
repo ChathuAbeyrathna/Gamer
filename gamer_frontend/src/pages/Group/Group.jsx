@@ -30,7 +30,7 @@ const Profile = () => {
           </div>
 
           {/* Group Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 cursor-pointer">
             {/* Card 1 */}
             <div className="relative rounded-xl overflow-hidden">
                 <img
@@ -50,7 +50,7 @@ const Profile = () => {
             </div>
 
             {/* Card 2 */}
-            <div className="relative rounded-xl overflow-hidden">
+            <div className="relative rounded-xl overflow-hidden"  onClick={() => navigate("/yourgrouplist")}>
                 <img
                     src={group2}
                     alt="Your Game Groups"

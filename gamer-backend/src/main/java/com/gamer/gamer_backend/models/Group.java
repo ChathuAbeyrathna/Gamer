@@ -6,18 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.Instant;
+import java.util.List;
 
+@Document(collection = "groups")
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "saved_posts")
-public class SavedPost {
+@NoArgsConstructor
+@Builder
+public class Group {
     @Id
     private String id;
-    private String userEmail;
-    private String postId;
-    private Instant savedAt;
+    private String name;
+    private String description;
+    private String coverPhotoUrl;
+    private String ownerEmail;
+    private List<String> memberEmails; // emails of joined users
 }
-
