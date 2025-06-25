@@ -16,4 +16,7 @@ public class User {
     private String username;
     private String email;
     private String password;
+
+    private String resetToken;
+    private long resetTokenExpiry;
 }

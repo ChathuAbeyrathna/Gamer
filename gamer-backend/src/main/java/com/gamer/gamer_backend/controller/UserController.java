@@ -33,7 +33,6 @@ public class UserController {
         String token = userService.loginAndGetToken(email, password);
 
         if (token != null) {
-            // Return both token and email
             return ResponseEntity.ok(Map.of(
                 "token", token,
                 "email", email
@@ -43,4 +42,28 @@ public class UserController {
         }
     }
 
+    // Forgot password: send reset link
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            userService.initiatePasswordReset(email);
+            return ResponseEntity.ok("Reset link sent");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // Reset password
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        try {
+            String token = body.get("token");
+            String newPassword = body.get("newPassword");
+            userService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password updated successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
 }

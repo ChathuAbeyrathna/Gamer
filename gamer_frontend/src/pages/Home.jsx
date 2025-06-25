@@ -230,7 +230,7 @@ const Home = () => {
                       <img src={profile.imageUrl} alt="Profile" className="w-10 h-10 rounded-full" />
                       <span>{profile.gamerName}</span>
                     </div>
-                    <button className="bg-gradient-to-b from-[#2059B6] to-[#407CDE] text-white text-xs px-2 py-1 rounded">Add Gamer</button>
+                    <button className="bg-gradient-to-b from-[#2059B6] to-[#407CDE] text-white text-xs px-2 py-1 rounded">Follow</button>
                   </li>
                 </div>
               ))}

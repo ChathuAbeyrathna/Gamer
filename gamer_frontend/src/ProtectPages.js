@@ -7,6 +7,7 @@ import YourGroupList from './pages/Group/YourGroupList';
 import Suggest from './pages/Suggest/Suggest';
 import Save from './pages/SavedPosts';
 import AllProfiles from './pages/AllProfiles/AllProfiles';
+import Chat from './pages/Chat';
 
 function App() {
     return (
@@ -24,6 +25,8 @@ function App() {
                 <Route path="/save" element={<Save />} />
                 
                 <Route path="/allprof" element={<AllProfiles />} />
+
+                <Route path="/chat" element={<Chat />} />
             </Routes>
     );
 }
