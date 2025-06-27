@@ -1,15 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import moment from "moment";
-import fillboost from '../images/fillboost.png';
-import comment from '../images/comment.png';
-import share from '../images/share.png';
-import menuIcon from '../images/option.png';
+import FeedCard from "../components/FeedCard";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
-import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 
 const Home = () => {
   const [feedItems, setFeedItems] = useState([]);
@@ -17,7 +12,6 @@ const Home = () => {
   const [profiles, setProfiles] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [openBlog, setOpenBlog] = useState(null);
-  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,24 +20,13 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/profile/all')
-      .then(res => setProfiles(res.data))
-      .catch(err => console.error('Error fetching profiles:', err));
+    axios
+      .get("http://localhost:8080/api/profile/all")
+      .then((res) => setProfiles(res.data))
+      .catch((err) => console.error("Error fetching profiles:", err));
   }, []);
 
   const currentUserEmail = localStorage.getItem("email");
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpenId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const fetchFeed = async () => {
     const [postsRes, blogsRes] = await Promise.all([
@@ -66,9 +49,9 @@ const Home = () => {
 
     try {
       const res = await axios.get("http://localhost:8080/api/saved-posts", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setSavedPostIds(res.data.map(sp => sp.postId));
+      setSavedPostIds(res.data.map((sp) => sp.postId));
     } catch (error) {
       console.error("Error fetching saved posts:", error);
     }
@@ -81,24 +64,19 @@ const Home = () => {
       return;
     }
 
-    const res = await axios.post(`http://localhost:8080/api/saved-posts/toggle/${postId}`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.post(
+      `http://localhost:8080/api/saved-posts/toggle/${postId}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     if (res.data) {
-      setSavedPostIds(prev => [...prev, postId]);
+      setSavedPostIds((prev) => [...prev, postId]);
     } else {
-      setSavedPostIds(prev => prev.filter(id => id !== postId));
+      setSavedPostIds((prev) => prev.filter((id) => id !== postId));
     }
-  };
-
-  const formatTime = (createdAt) => {
-    return moment(createdAt).fromNow();
-  };
-
-  const stripHtmlTags = (html) => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
   };
 
   return (
@@ -113,124 +91,45 @@ const Home = () => {
         {/* Feed */}
         <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[25%]">
           {feedItems.map((item) => (
-            <div key={item.id}
-              className="bg-gray-800 p-4 rounded mb-4 relative"
-            >
-              <div className="absolute top-4 right-4">
-                <button onClick={() => setDropdownOpenId(dropdownOpenId === item.id ? null : item.id)}>
-                  <img src={menuIcon} alt="menu" className="h-5" />
-                </button>
-                {dropdownOpenId === item.id && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10"
-                  >
-                    <button
-                      className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600"
-                      onClick={() => toggleSave(item.id)}
-                    >
-                      {savedPostIds.includes(item.id) ? (
-                        <FaBookmark className="text-white mr-2" />
-                      ) : (
-                        <FaRegBookmark className="text-white mr-2" />
-                      )}
-                      Save {item.type === "post" ? "Post" : "Blog"}
-                    </button>
-                    <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
-                      <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
-                      <span>Report Post</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <img src={item.userImage} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                <div>
-                  <h2 className="font-semibold">{item.userName}</h2>
-                  <p className="text-sm text-gray-400">{formatTime(item.createdAt)}</p>
-                </div>
-              </div>
-
-              <div
-                onClick={() => item.type === "blog" && setOpenBlog(item)}
-                className={`${item.type === "blog" ? "bg-gray-700 rounded-md p-2 mt-4 mb-4 cursor-pointer" : ""}`}
-              >
-                <p className={`mt-2 ${item.type === "blog" ? "text-bold" : "text-bold"
-                  }`}>{item.title}</p>
-                <p className="text-sm text-blue-400">
-                  #{Array.isArray(item.tags) ? item.tags.join(", ") : ""}
-                </p>
-
-                {item.imageUrl &&
-                  (/\.(mp4|webm|ogg)(\?.*)?$/.test(item.imageUrl) ? (
-                    <video controls className="w-full h-auto rounded my-2 mb-4">
-                      <source src={item.imageUrl} />
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : (
-                    <img
-                      src={item.imageUrl}
-                      alt="Media"
-                      className={`object-cover rounded my-2 mb-4 ${item.type === "blog" ? "w-full h-40" : "w-full h-auto"
-                        }`}
-                    />
-                  ))}
-
-                {item.type === "blog" && (
-                  <p className="mt-2 text-sm text-gray-300">
-                    {item.content &&
-                      (stripHtmlTags(item.content).length > 200
-                        ? stripHtmlTags(item.content).substring(0, 200) + "...see more"
-                        : stripHtmlTags(item.content))}
-                  </p>
-                )}
-
-              </div>
-
-              <div className="flex justify-between text-white font-thin text-sm px-2">
-                <span>24 Boosts</span>
-                <span>5 Comments</span>
-              </div>
-              <hr className="border-t border-white opacity-30 my-2" />
-              <div className="flex justify-between text-white font-thin">
-                <button className="flex items-center space-x-1">
-                  <img src={fillboost} alt="boost" className="w-7 h-7" />
-                  <span>Boost</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={comment} alt="comment" className="w-6 h-6" />
-                  <span>Comment</span>
-                </button>
-                <button className="flex items-center space-x-1">
-                  <img src={share} alt="share" className="w-6 h-6" />
-                  <span>Share</span>
-                </button>
-              </div>
-            </div>
+            <FeedCard
+              key={item.id}
+              item={item}
+              currentUserEmail={currentUserEmail}
+              dropdownOpenId={dropdownOpenId}
+              setDropdownOpenId={setDropdownOpenId}
+              toggleSave={toggleSave}
+              savedPostIds={savedPostIds}
+              setOpenBlog={setOpenBlog}
+            />
           ))}
-
           {openBlog && (
             <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />
           )}
-
         </div>
 
         {/* Right Sidebar */}
         <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed right-0 h-full mt-[6%]">
-
           <h2 className="font-semibold mb-2">Power Up Your Stream:</h2>
           <ul>
             {profiles
-              .filter(profile => profile.email !== currentUserEmail)
-              .map(profile => (
-                <div key={profile.email} className="p-[2px] bg-gradient-to-r from-[#01C0D3] to-[#2059B6] rounded mr-10 mb-5 mt-6">
+              .filter((profile) => profile.email !== currentUserEmail)
+              .map((profile) => (
+                <div
+                  key={profile.email}
+                  className="p-[2px] bg-gradient-to-r from-[#01C0D3] to-[#2059B6] rounded mr-10 mb-5 mt-6"
+                >
                   <li className="flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 rounded h-14">
                     <div className="flex items-center space-x-3">
-                      <img src={profile.imageUrl} alt="Profile" className="w-10 h-10 rounded-full" />
+                      <img
+                        src={profile.imageUrl}
+                        alt="Profile"
+                        className="w-10 h-10 rounded-full"
+                      />
                       <span>{profile.gamerName}</span>
                     </div>
-                    <button className="bg-gradient-to-b from-[#2059B6] to-[#407CDE] text-white text-xs px-2 py-1 rounded">Follow</button>
+                    <button className="bg-gradient-to-b from-[#2059B6] to-[#407CDE] text-white text-xs px-2 py-1 rounded">
+                      Follow
+                    </button>
                   </li>
                 </div>
               ))}

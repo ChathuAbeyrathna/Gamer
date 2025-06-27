@@ -25,8 +25,12 @@ const Signup = () => {
         setIsSubmitting(true);
         try {
             await axios.post("http://localhost:8080/api/auth/signup", formData);
+
+            localStorage.setItem("newUserName", formData.username);
+
             showPopupMessage("Signup successful! Redirecting...", "success");
             setTimeout(() => navigate("/login"), 1500);
+
         } catch (error) {
             if (error.response && error.response.status === 400) {
                 const message = error.response.data || "";
@@ -81,7 +85,7 @@ const Signup = () => {
                                 name="username"
                                 value={formData.username}
                                 onChange={handleChange}
-                                className="w-full p-3 mt-1 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-3 mt-1 text-white bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                         </div>
@@ -92,7 +96,7 @@ const Signup = () => {
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full p-3 mt-1 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-3 mt-1 text-white bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                         </div>
@@ -103,7 +107,7 @@ const Signup = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full p-3 mt-1 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-3 mt-1 text-white bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                         </div>

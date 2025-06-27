@@ -1,12 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import moment from "moment";
-import boost from '../images/boost.png';
-import comment from '../images/comment.png';
-import share from '../images/share.png';
+import FeedCard from "../components/FeedCard";
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
-import menuIcon from '../images/option.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
@@ -25,8 +21,6 @@ const Profile = () => {
   const [refreshKey, setRefreshKey] = useState(0); // Add this line for refresh control
   const menuRef = useRef(null);
   const navigate = useNavigate();
-
-  const formatTime = (createdAt) => moment(createdAt).fromNow();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -73,10 +67,6 @@ const Profile = () => {
     fetchData();    
   }, [navigate, refreshKey]);
 
-  const handleToggleMenu = (index) => {
-    setMenuOpenIndex(menuOpenIndex === index ? null : index);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -118,10 +108,7 @@ const Profile = () => {
     setMenuOpenIndex(null);
   };  
 
-  const stripHtmlTags = (html) => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
-  }; 
+  const currentUserEmail = localStorage.getItem("email");
 
   return profile && (
     <div className="bg-gray-900 text-white min-h-screen">
@@ -185,89 +172,20 @@ const Profile = () => {
             {userPosts.length === 0 ? (
               <p className="text-center text-gray-400">No posts yet.</p>
             ) : (
-              userPosts.map((item, index) => (
-                <div key={item.id} className="bg-gray-800 p-4 rounded mb-4 relative">
-                  {/* Post Header */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <img src={profile.imageUrl} alt="User" className="h-10 w-10 rounded-full" />
-                      <div>
-                        <h2 className="font-semibold">{profile.gamerName}</h2>
-                        <p className="text-sm text-gray-400">{formatTime(item.createdAt)}</p>
-                      </div>
-                    </div>
-
-                    {/* Three-dot menu */}
-                    <div className="relative">
-                      <button onClick={() => handleToggleMenu(index)}>
-                        <img src={menuIcon} alt="menu" className="h-5" />
-                      </button>
-                      {menuOpenIndex === index && (
-                        <div ref={menuRef} className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
-                          <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => handleEditItem(item)}>
-                            Edit
-                          </button>
-                          <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => handleDeleteItem(item.id, item.type === "blog")}>
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div
-                    onClick={() => item.type === "blog" && setOpenBlog(item)}
-                    className={`${item.type === "blog" ? "bg-gray-700 rounded-md p-2 mt-4 mb-4 cursor-pointer" : ""}`}
-                  >
-                    <p className={`mt-2 ${item.type === "blog" ? "text-bold" : "text-bold"
-                          }`}>{item.title}</p>
-                    <p className="text-sm text-blue-400">
-                      #{Array.isArray(item.tags) ? item.tags.join(", ") : ""}
-                    </p>
-
-                    {item.imageUrl &&
-                      (/\.(mp4|webm|ogg)(\?.*)?$/.test(item.imageUrl) ? (
-                        <video controls className="w-full h-auto rounded my-2 mb-4">
-                          <source src={item.imageUrl} />
-                          Your browser does not support the video tag.
-                        </video>
-                      ) : (
-                        <img
-                          src={item.imageUrl}
-                          alt="Media"
-                          className={`object-cover rounded my-2 mb-4 ${
-                            item.type === "blog" ? "w-full h-40" : "w-full h-auto"
-                          }`}
-                        />
-                      ))}
-
-                    {item.type === "blog" && (
-                      <p className="mt-2 text-sm text-gray-300">
-                        {item.content &&
-                          (stripHtmlTags(item.content).length > 200
-                            ? stripHtmlTags(item.content).substring(0, 200) + "...see more"
-                            : stripHtmlTags(item.content))}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <hr className="border-t border-white opacity-30 my-2" />
-                  <div className="flex justify-between text-white font-thin">
-                    <button className="flex items-center space-x-1">
-                      <img src={boost} alt="boost" className="w-7 h-7" />
-                      <span>Boost</span>
-                    </button>
-                    <button className="flex items-center space-x-1">
-                      <img src={comment} alt="comment" className="w-6 h-6" />
-                      <span>Comment</span>
-                    </button>
-                    <button className="flex items-center space-x-1">
-                      <img src={share} alt="share" className="w-6 h-6" />
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
+              userPosts.map((item) => (
+                <FeedCard
+                  key={item.id || item._id} // Use unique identifier
+                  item={item}
+                  currentUserEmail={currentUserEmail}
+                  dropdownOpenId={menuOpenIndex}
+                  setDropdownOpenId={setMenuOpenIndex}
+                  setOpenBlog={setOpenBlog}
+                  showMenu={true}
+                  onEdit={() => handleEditItem(item)}
+                  onDelete={() => handleDeleteItem(item.id, item.type === "blog")}
+                  profileImage={profile.imageUrl}
+                  profileName={profile.gamerName}
+                />
               ))
             )}
 

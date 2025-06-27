@@ -13,7 +13,7 @@ const Loading = () => {
 
                 {/* Glowing quote below */}
                 <p className="text-white mt-6 text-xl font-semibold italic text-center animate-glow">
-                    Gamer mode activating... please wait
+                    Gaming is not a hobby, it's a lifestyle...
                 </p>
 
                 {/* Inline animations */}

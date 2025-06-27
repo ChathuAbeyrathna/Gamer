@@ -20,6 +20,14 @@ const CreateProf = () => {
   const email = getUserEmail();
 
   useEffect(() => {
+    const savedName = localStorage.getItem("newUserName");
+    if (savedName) {
+      setGamerName(savedName); // set default value to input
+      localStorage.removeItem("newUserName"); // optional: remove after use
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`http://localhost:8080/api/profile/${email}`);

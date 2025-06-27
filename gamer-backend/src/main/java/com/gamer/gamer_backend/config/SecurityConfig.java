@@ -25,7 +25,8 @@ public class SecurityConfig {
                     "/api/profile/**",
                     "/api/saved-posts/**",
                     "/api/blogs/**",
-                    "/api/groups/**"
+                    "/api/groups/**",
+                    "/api/comments/**"
                 ).permitAll()
                 .anyRequest().authenticated() 
             )
