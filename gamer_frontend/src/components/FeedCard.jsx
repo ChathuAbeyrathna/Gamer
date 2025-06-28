@@ -23,12 +23,6 @@ const FeedCard = ({
   profileName,
   currentUserEmail,
 }) => {
-  const formatTime = (createdAt) => moment(createdAt).fromNow();
-  const stripHtmlTags = (html) => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
-  };
-
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -37,12 +31,34 @@ const FeedCard = ({
   const [editedContent, setEditedContent] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hiddenReplies, setHiddenReplies] = useState({});
+  const [shareMessage, setShareMessage] = useState("");
   const commentInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
+  const formatTime = (createdAt) => moment(createdAt).fromNow();
+
+  const stripHtmlTags = (html) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    axios
+      .get(`http://localhost:8080/api/comments/post/${item.id}`)
+      .then((res) => setComments(res.data))
+      .catch(console.error);
+  }, [item.id]);
+
+  const fetchComments = () => {
+    axios
+      .get(`http://localhost:8080/api/comments/post/${item.id}`)
+      .then((res) => setComments(res.data))
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpenId(null);
       }
     };
@@ -54,22 +70,6 @@ const FeedCard = ({
     };
   }, [dropdownOpenId, item.id, setDropdownOpenId]);
 
-  useEffect(() => {
-    if (showComments) {
-      axios
-        .get(`http://localhost:8080/api/comments/post/${item.id}`)
-        .then((res) => setComments(res.data))
-        .catch((err) => console.error(err));
-    }
-  }, [showComments, item.id]);
-
-  const fetchComments = () => {
-    axios
-      .get(`http://localhost:8080/api/comments/post/${item.id}`)
-      .then((res) => setComments(res.data))
-      .catch(console.error);
-  };
-
   const handleAddComment = () => {
     if (!newComment.trim()) return;
 
@@ -77,11 +77,8 @@ const FeedCard = ({
       postId: item.id,
       email: currentUserEmail,
       content: newComment.trim(),
+      ...(replyingTo && { parentCommentId: replyingTo }),
     };
-
-    if (replyingTo) {
-      payload.parentCommentId = replyingTo;
-    }
 
     axios
       .post(
@@ -118,11 +115,7 @@ const FeedCard = ({
   };
 
   const renderComment = (c, level = 0) => (
-    <div
-      key={c.id}
-      className="mb-4"
-      style={{ marginLeft: level > 0 ? 20 : 0 }} // small gap for replies
-    >
+    <div key={c.id} className="mb-4" style={{ marginLeft: level > 0 ? 20 : 0 }}>
       <div className="flex space-x-2">
         <img
           src={c.userImage || "/default-avatar.png"}
@@ -215,7 +208,6 @@ const FeedCard = ({
             )}
           </div>
 
-          {/* Reply input */}
           {replyingTo === c.id && (
             <div className="mt-2">
               <textarea
@@ -242,7 +234,6 @@ const FeedCard = ({
             </div>
           )}
 
-          {/* Nested replies */}
           {c.replies?.length > 0 && !hiddenReplies[c.id] && (
             <div className="mt-3">
               {c.replies.map((reply) => renderComment(reply, level + 1))}
@@ -253,11 +244,29 @@ const FeedCard = ({
     </div>
   );
 
+  const handleShare = () => {
+    const postUrl = `${window.location.origin}/posts/${item.id}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: item.title,
+          url: postUrl,
+        })
+        .catch((error) => {
+          console.error("Error sharing:", error);
+        });
+    } else {
+      navigator.clipboard.writeText(postUrl).then(() => {
+        setShareMessage("Link copied to clipboard!");
+        setTimeout(() => setShareMessage(""), 2000);
+      });
+    }
+  };
+
   return (
-    <div
-      className={`bg-gray-800 p-4 rounded mb-6 relative w-full ${customStyle}`}
-    >
-      {/* Dropdown menu icon */}
+    <div className={`bg-gray-800 p-4 rounded mb-6 relative w-full ${customStyle}`}>
+      {/* Dropdown menu */}
       <div className="absolute top-4 right-4">
         <button
           onClick={() =>
@@ -266,8 +275,6 @@ const FeedCard = ({
         >
           <img src={menuIcon} alt="menu" className="h-5" />
         </button>
-
-        {/* Dropdown menu */}
         {dropdownOpenId === item.id && (
           <div
             ref={dropdownRef}
@@ -275,37 +282,17 @@ const FeedCard = ({
           >
             {showMenu ? (
               <>
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-600"
-                  onClick={onEdit}
-                >
-                  Edit
-                </button>
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-600"
-                  onClick={onDelete}
-                >
-                  Delete
-                </button>
+                <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onEdit}>Edit</button>
+                <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onDelete}>Delete</button>
               </>
             ) : (
               <>
-                <button
-                  className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600"
-                  onClick={() => toggleSave(item.id)}
-                >
-                  {savedPostIds?.includes(item.id) ? (
-                    <FaBookmark className="text-white mr-2" />
-                  ) : (
-                    <FaRegBookmark className="text-white mr-2" />
-                  )}
-                  {savedPostIds?.includes(item.id) ? "Unsave" : "Save"}{" "}
-                  {item.type === "post" ? "Post" : "Blog"}
+                <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => toggleSave(item.id)}>
+                  {savedPostIds?.includes(item.id) ? <FaBookmark className="text-white mr-2" /> : <FaRegBookmark className="text-white mr-2" />}
+                  {savedPostIds?.includes(item.id) ? "Unsave" : "Save"} {item.type === "post" ? "Post" : "Blog"}
                 </button>
                 <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
-                  <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">
-                    !
-                  </div>
+                  <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
                   <span>Report Post</span>
                 </button>
               </>
@@ -313,6 +300,7 @@ const FeedCard = ({
           </div>
         )}
       </div>
+
       {/* Header */}
       <div className="flex items-center space-x-4 mb-2">
         <img
@@ -331,21 +319,14 @@ const FeedCard = ({
       {/* Content */}
       <div
         onClick={() => item.type === "blog" && setOpenBlog?.(item)}
-        className={`${
-          item.type === "blog"
-            ? "bg-gray-700 rounded-md p-2 mt-4 mb-4 cursor-pointer"
-            : ""
-        }`}
+        className={`${item.type === "blog" ? "bg-gray-700 rounded-md p-2 mt-4 mb-4 cursor-pointer" : ""}`}
       >
         <p className={`mt-2 ${item.type === "blog" ? "text-bold" : "text-bold"}`}>
           {item.title}
         </p>
-        <p className="text-sm text-blue-400">
-          #{Array.isArray(item.tags) ? item.tags.join(", ") : ""}
-        </p>
-
-        {item.imageUrl &&
-          (/\.(mp4|webm|ogg)(\?.*)?$/.test(item.imageUrl) ? (
+        <p className="text-sm text-blue-400">#{Array.isArray(item.tags) ? item.tags.join(", ") : ""}</p>
+        {item.imageUrl && (
+          /\.(mp4|webm|ogg)(\?.*)?$/.test(item.imageUrl) ? (
             <video controls className="w-full h-auto rounded my-2 mb-4">
               <source src={item.imageUrl} />
               Your browser does not support the video tag.
@@ -354,12 +335,10 @@ const FeedCard = ({
             <img
               src={item.imageUrl}
               alt="Media"
-              className={`object-cover rounded my-2 mb-4 ${
-                item.type === "blog" ? "w-full h-40" : "w-full h-auto"
-              }`}
+              className={`object-cover rounded my-2 mb-4 ${item.type === "blog" ? "w-full h-40" : "w-full h-auto"}`}
             />
-          ))}
-
+          )
+        )}
         {item.type === "blog" && (
           <p className="mt-2 text-sm text-gray-300">
             {item.content &&
@@ -370,12 +349,20 @@ const FeedCard = ({
         )}
       </div>
 
-      {/* Action buttons */}
+      {/* Action counts */}
       <div className="flex justify-between text-white font-thin text-sm px-2">
         <span>24 Boosts</span>
-        <span>{comments.length} Comments</span>
+        <span
+          className="cursor-pointer hover:underline"
+          onClick={() => setShowComments((prev) => !prev)}
+        >
+          {comments.length} Comments
+        </span>
       </div>
+
       <hr className="border-t border-white opacity-30 my-2" />
+
+      {/* Action buttons */}
       <div className="flex justify-between text-white font-thin mb-2">
         <button className="flex items-center space-x-1">
           <img src={boost} alt="boost" className="w-7 h-7" />
@@ -388,10 +375,17 @@ const FeedCard = ({
           <img src={commentIcon} alt="comment" className="w-6 h-6" />
           <span>Comment</span>
         </button>
-        <button className="flex items-center space-x-1">
+        <button
+          className="flex items-center space-x-1 cursor-pointer"
+          onClick={handleShare}
+        >
           <img src={share} alt="share" className="w-6 h-6" />
           <span>Share</span>
         </button>
+
+        {shareMessage && (
+          <p className="text-green-400 text-sm mt-1">{shareMessage}</p>
+        )}
       </div>
 
       {/* Comment Section */}
