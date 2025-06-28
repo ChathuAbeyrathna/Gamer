@@ -16,15 +16,33 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    // Add comment
+    // Add new top-level comment
     @PostMapping("/add")
     public Comment addComment(@RequestBody Comment comment) {
         return commentService.createComment(comment);
     }
 
-    // Get all comments by post id
+    // Add reply to comment
+    @PostMapping("/addReply")
+    public Comment addReply(@RequestBody Comment reply) {
+        return commentService.createReply(reply);
+    }
+
+    // Get comments with nested replies for a post
     @GetMapping("/post/{postId}")
-    public List<Comment> getCommentsByPostId(@PathVariable String postId) {
-        return commentService.getCommentsByPostId(postId);
+    public List<Comment> getComments(@PathVariable String postId) {
+        return commentService.getCommentsWithReplies(postId);
+    }
+
+    // Edit comment
+    @PutMapping("/edit/{id}")
+    public Comment editComment(@PathVariable String id, @RequestBody Comment updated) {
+        return commentService.updateComment(id, updated.getContent());
+    }
+
+    // Delete comment (and replies)
+    @DeleteMapping("/delete/{id}")
+    public void deleteComment(@PathVariable String id) {
+        commentService.deleteCommentAndReplies(id);
     }
 }
