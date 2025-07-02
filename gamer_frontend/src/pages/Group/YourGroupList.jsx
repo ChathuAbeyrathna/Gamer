@@ -4,14 +4,19 @@ import Sidebar from "../../components/SideBar";
 import axios from 'axios';
 import defaultImg from '../../images/default.png';
 
+
 const YourGroupList = () => {
   const email = localStorage.getItem("email");
-  const [groups, setGroups] = useState([]);
+  const [groups, setGroups] = useState([]); 
 
   useEffect(() => {
     if (!email) return;
 
-    axios.get(`http://localhost:8080/api/groups/owner/${email}`)
+    const token = localStorage.getItem("token");
+
+    axios.get(`http://localhost:8080/api/groups/owner/${email}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(res => setGroups(res.data))
       .catch(err => console.error("Error loading user's groups", err));
   }, [email]);

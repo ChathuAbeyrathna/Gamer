@@ -18,34 +18,42 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [openBlog, setOpenBlog] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Add this line for refresh control
+  const [refreshKey, setRefreshKey] = useState(0);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
+  useEffect(() => {
     if (!token) {
       navigate("/login");
       return;
     }
 
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    const email = decoded.sub;
+
     const fetchData = async () => {
       try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        const email = decoded.sub;
-    
-        const profileRes = await fetch(`http://localhost:8080/api/profile/${email}`);
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setProfile(profileData);
-        } else {
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const profileRes = await fetch(`http://localhost:8080/api/profile/${email}`, { headers });
+        if (profileRes.status === 401 || profileRes.status === 403) {
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+
+        if (!profileRes.ok) {
           navigate("/createprof");
           return;
         }
-    
-        const postRes = await fetch(`http://localhost:8080/api/posts/user/${email}`);
-        const blogRes = await fetch(`http://localhost:8080/api/blogs/user/${email}`);
+
+        const profileData = await profileRes.json();
+        setProfile(profileData);
+
+        const postRes = await fetch(`http://localhost:8080/api/posts/user/${email}`, { headers });
+        const blogRes = await fetch(`http://localhost:8080/api/blogs/user/${email}`, { headers });
 
         const postData = postRes.ok ? await postRes.json() : [];
         const blogData = blogRes.ok ? await blogRes.json() : [];
@@ -53,19 +61,19 @@ const Profile = () => {
         const postsWithType = postData.map(p => ({ ...p, type: "post" }));
         const blogsWithType = blogData.map(b => ({ ...b, type: "blog" }));
 
-        const combined = [...postsWithType, ...blogsWithType]
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const combined = [...postsWithType, ...blogsWithType].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
 
         setUserPosts(combined);
-    
       } catch (err) {
         console.error("Error fetching data", err);
         navigate("/createprof");
       }
     };
-    
-    fetchData();    
-  }, [navigate, refreshKey]);
+
+    fetchData();
+  }, [navigate, refreshKey, token]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -88,37 +96,44 @@ const Profile = () => {
       setIsBlogModalOpen(true);
     }
     setMenuOpenIndex(null);
-  };  
+  };
 
   const handleDeleteItem = async (itemId, isBlog = false) => {
     const type = isBlog ? "blog" : "post";
     const confirmDelete = window.confirm(`Are you sure you want to delete this ${type}?`);
-    if (confirmDelete) {
-      const url = isBlog 
-        ? `http://localhost:8080/api/blogs/delete/${itemId}`
-        : `http://localhost:8080/api/posts/delete/${itemId}`;
-  
-      const response = await fetch(url, { method: "DELETE" });
-      if (response.ok) {
+    if (!confirmDelete) return;
+
+    const url = isBlog
+      ? `http://localhost:8080/api/blogs/delete/${itemId}`
+      : `http://localhost:8080/api/posts/delete/${itemId}`;
+
+    try {
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
         setUserPosts(prevItems => prevItems.filter(item => item.id !== itemId));
       } else {
         alert(`Failed to delete ${type}`);
       }
+    } catch (err) {
+      console.error(`Error deleting ${type}`, err);
     }
-    setMenuOpenIndex(null);
-  };  
 
-  const currentUserEmail = localStorage.getItem("email");
+    setMenuOpenIndex(null);
+  };
+
+  const currentUserEmail = JSON.parse(atob(token.split('.')[1])).sub;
 
   return profile && (
     <div className="bg-gray-900 text-white min-h-screen">
       <NavBar />
-
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
           <Sidebar />
         </div>
-
         <div className="w-full flex flex-col items-center mt-20">
           <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
@@ -174,7 +189,7 @@ const Profile = () => {
             ) : (
               userPosts.map((item) => (
                 <FeedCard
-                  key={item.id || item._id} // Use unique identifier
+                  key={item.id || item._id}
                   item={item}
                   currentUserEmail={currentUserEmail}
                   dropdownOpenId={menuOpenIndex}
@@ -213,9 +228,7 @@ const Profile = () => {
               } else {
                 setUserPosts((prev) => [newPost, ...prev]);
               }
-              setEditingPost(null);
-              setIsModalOpen(false);
-              setRefreshKey(prev => prev + 1); // Add this line to trigger refresh
+              setRefreshKey(prev => prev + 1);
             }}
           />
         </div>
@@ -239,9 +252,7 @@ const Profile = () => {
                 } else {
                   setUserPosts((prev) => [newBlog, ...prev]);
                 }
-                setEditingBlog(null);
-                setIsBlogModalOpen(false);
-                setRefreshKey(prev => prev + 1); // Add this line to trigger refresh
+                setRefreshKey(prev => prev + 1);
               }}
             />
           </div>

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import moment from "moment";
 import { FaBookmark, FaRegBookmark, FaEllipsisH } from "react-icons/fa";
-import boost from "../images/fillboost.png";
+import fillBoost from "../images/fillboost.png";
+import boostIcon from "../images/boost.png";
 import commentIcon from "../images/comment.png";
-import share from "../images/share.png";
+import shareIcon from "../images/share.png";
 import menuIcon from "../images/option.png";
 import EmojiPicker from "emoji-picker-react";
 
@@ -32,8 +33,14 @@ const FeedCard = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hiddenReplies, setHiddenReplies] = useState({});
   const [shareMessage, setShareMessage] = useState("");
+  const [boosted, setBoosted] = useState(false);
+  const [boosts, setBoosts] = useState([]);
+  const [showBoostList, setShowBoostList] = useState(false);
+  const [animateBoost, setAnimateBoost] = useState(false);
+
   const commentInputRef = useRef(null);
   const dropdownRef = useRef(null);
+  const token = localStorage.getItem("token");
 
   const formatTime = (createdAt) => moment(createdAt).fromNow();
 
@@ -42,20 +49,7 @@ const FeedCard = ({
     return doc.body.textContent || "";
   };
 
-  useEffect(() => {
-    axios
-      .get(`http://localhost:8080/api/comments/post/${item.id}`)
-      .then((res) => setComments(res.data))
-      .catch(console.error);
-  }, [item.id]);
-
-  const fetchComments = () => {
-    axios
-      .get(`http://localhost:8080/api/comments/post/${item.id}`)
-      .then((res) => setComments(res.data))
-      .catch(console.error);
-  };
-
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -70,7 +64,71 @@ const FeedCard = ({
     };
   }, [dropdownOpenId, item.id, setDropdownOpenId]);
 
+  // boosts and comments
+  useEffect(() => {
+    if (!item.id) return;
+
+    axios
+      .get(`http://localhost:8080/api/boosts/${item.id}`)
+      .then((res) => {
+        setBoosts(res.data);
+        const isBoosted = res.data.some(
+          (b) => b.userEmail?.toLowerCase() === currentUserEmail?.toLowerCase()
+        );
+        setBoosted(isBoosted);
+      })
+      .catch(console.error);
+
+    axios
+      .get(`http://localhost:8080/api/comments/post/${item.id}`)
+      .then((res) => setComments(res.data))
+      .catch(console.error);
+  }, [item.id, currentUserEmail]);
+
+  const handleToggleBoost = () => {
+    if (!token) {
+      alert("Please login to boost.");
+      window.location.href = "/login";
+      return;
+    }
+
+    axios
+      .post(
+        `http://localhost:8080/api/boosts/toggle/${item.id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((res) => {
+        const boostedNow = res.data.boosted;
+        setBoosted(boostedNow);
+
+        // 👉 Animate only when boosting
+        if (boostedNow) {
+          setAnimateBoost(true);
+          setTimeout(() => setAnimateBoost(false), 300); // Remove after animation
+        }
+
+        return axios.get(`http://localhost:8080/api/boosts/${item.id}`);
+      })
+      .then((res) => {
+        setBoosts(res.data);
+      })
+      .catch(console.error);
+  };
+
+  const fetchComments = () => {
+    axios
+      .get(`http://localhost:8080/api/comments/post/${item.id}`)
+      .then((res) => setComments(res.data))
+      .catch(console.error);
+  };
+
   const handleAddComment = () => {
+    if (!token) {
+      alert("Please login to comment.");
+      window.location.href = "/login";
+      return;
+    }
     if (!newComment.trim()) return;
 
     const payload = {
@@ -80,10 +138,12 @@ const FeedCard = ({
       ...(replyingTo && { parentCommentId: replyingTo }),
     };
 
-    axios
-      .post(
+    axios.post(
         `http://localhost:8080/api/comments/${replyingTo ? "addReply" : "add"}`,
-        payload
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       )
       .then(() => {
         setNewComment("");
@@ -96,7 +156,9 @@ const FeedCard = ({
 
   const handleEditComment = (id, content) => {
     axios
-      .put(`http://localhost:8080/api/comments/edit/${id}`, { content })
+      .put(`http://localhost:8080/api/comments/edit/${id}`, { content }, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
         setEditingCommentId(null);
         setEditedContent("");
@@ -108,7 +170,9 @@ const FeedCard = ({
   const handleDeleteComment = (id) => {
     if (window.confirm("Are you sure you want to delete this comment?")) {
       axios
-        .delete(`http://localhost:8080/api/comments/delete/${id}`)
+        .delete(`http://localhost:8080/api/comments/delete/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then(fetchComments)
         .catch(console.error);
     }
@@ -266,7 +330,7 @@ const FeedCard = ({
 
   return (
     <div className={`bg-gray-800 p-4 rounded mb-6 relative w-full ${customStyle}`}>
-      {/* Dropdown menu */}
+      {/* Dropdown menu icon */}
       <div className="absolute top-4 right-4">
         <button
           onClick={() =>
@@ -289,11 +353,11 @@ const FeedCard = ({
               <>
                 <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => toggleSave(item.id)}>
                   {savedPostIds?.includes(item.id) ? <FaBookmark className="text-white mr-2" /> : <FaRegBookmark className="text-white mr-2" />}
-                  {savedPostIds?.includes(item.id) ? "Unsave" : "Save"} {item.type === "post" ? "Post" : "Blog"}
+                  {savedPostIds?.includes(item.id) ? "Unsave" : "Save"}
                 </button>
                 <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
                   <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
-                  <span>Report Post</span>
+                  <span>Report</span>
                 </button>
               </>
             )}
@@ -349,14 +413,19 @@ const FeedCard = ({
         )}
       </div>
 
-      {/* Action counts */}
+       {/* Action counts */}
       <div className="flex justify-between text-white font-thin text-sm px-2">
-        <span>24 Boosts</span>
+        <span
+          className="cursor-pointer hover:underline"
+          onClick={() => setShowBoostList(!showBoostList)}
+        >
+          {boosts.length} Boost{boosts.length !== 1 ? "s" : ""}
+        </span>
         <span
           className="cursor-pointer hover:underline"
           onClick={() => setShowComments((prev) => !prev)}
         >
-          {comments.length} Comments
+          {comments.length} Comment{comments.length !== 1 ? "s" : ""}
         </span>
       </div>
 
@@ -364,8 +433,12 @@ const FeedCard = ({
 
       {/* Action buttons */}
       <div className="flex justify-between text-white font-thin mb-2">
-        <button className="flex items-center space-x-1">
-          <img src={boost} alt="boost" className="w-7 h-7" />
+        <button onClick={handleToggleBoost} className="flex items-center space-x-1">
+          <img
+            src={boosted ? fillBoost : boostIcon}
+            alt="boost"
+            className={`w-7 h-7 transition-transform duration-300 ease-in-out ${animateBoost ? "scale-125" : "scale-100"}`}
+          />
           <span>Boost</span>
         </button>
         <button
@@ -379,7 +452,7 @@ const FeedCard = ({
           className="flex items-center space-x-1 cursor-pointer"
           onClick={handleShare}
         >
-          <img src={share} alt="share" className="w-6 h-6" />
+          <img src={shareIcon} alt="share" className="w-6 h-6" />
           <span>Share</span>
         </button>
 
@@ -438,6 +511,23 @@ const FeedCard = ({
           )}
         </div>
       )}
+
+      {showBoostList && (
+      <div className="bg-gray-900 p-2 rounded mt-2 max-h-48 overflow-y-auto">
+        {boosts.map((b, index) => (
+          <div key={b.id || b.email || index} className="flex items-center space-x-2 text-white text-sm mb-2">
+            <img
+              src={b.userImage || "/default-avatar.png"}
+              className="h-8 w-8 rounded-full"
+              alt={b.userName || "User"}
+            />
+            <span>{b.userName || "Unknown"}</span>
+          </div>
+        ))}
+      </div>
+    )}
+
+
     </div>
   );
 };

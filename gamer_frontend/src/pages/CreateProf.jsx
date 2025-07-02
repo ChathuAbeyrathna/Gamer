@@ -91,10 +91,17 @@ const CreateProf = () => {
         imageUrl
       };
 
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       if (isEditMode) {
-        await axios.put('http://localhost:8080/api/profile/update', profileData);
+        await axios.put('http://localhost:8080/api/profile/update', profileData, config);
       } else {
-        await axios.post('http://localhost:8080/api/profile/create', profileData);
+        await axios.post('http://localhost:8080/api/profile/create', profileData, config);
       }
 
       navigate('/profile');

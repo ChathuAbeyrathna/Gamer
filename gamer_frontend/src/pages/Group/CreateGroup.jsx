@@ -35,7 +35,9 @@ const CreateGroup = () => {
     };
 
     try {
-      await axios.post('http://localhost:8080/api/groups', groupData);
+      await axios.post('http://localhost:8080/api/groups', groupData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       alert("Group created!");
       navigate('/group');
     } catch (err) {
@@ -49,6 +51,8 @@ const CreateGroup = () => {
   const handleCancel = () => {
     navigate('/group');
   };
+
+  const token = localStorage.getItem("token");
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">

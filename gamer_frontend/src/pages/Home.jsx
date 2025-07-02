@@ -12,6 +12,7 @@ const Home = () => {
   const [profiles, setProfiles] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [openBlog, setOpenBlog] = useState(null);
+  const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,18 +30,25 @@ const Home = () => {
   const currentUserEmail = localStorage.getItem("email");
 
   const fetchFeed = async () => {
-    const [postsRes, blogsRes] = await Promise.all([
-      axios.get("http://localhost:8080/api/posts/all"),
-      axios.get("http://localhost:8080/api/blogs/all"),
-    ]);
+    setLoading(true); // Start loading
+    try {
+      const [postsRes, blogsRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/posts/all"),
+        axios.get("http://localhost:8080/api/blogs/all"),
+      ]);
 
-    const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
-    const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
+      const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
+      const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
 
-    const combinedFeed = [...posts, ...blogs].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    setFeedItems(combinedFeed);
+      const combinedFeed = [...posts, ...blogs].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setFeedItems(combinedFeed);
+    } catch (error) {
+      console.error("Error fetching feed:", error);
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   const fetchSavedPosts = async () => {
@@ -90,18 +98,24 @@ const Home = () => {
 
         {/* Feed */}
         <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[25%]">
-          {feedItems.map((item) => (
-            <FeedCard
-              key={item.id}
-              item={item}
-              currentUserEmail={currentUserEmail}
-              dropdownOpenId={dropdownOpenId}
-              setDropdownOpenId={setDropdownOpenId}
-              toggleSave={toggleSave}
-              savedPostIds={savedPostIds}
-              setOpenBlog={setOpenBlog}
-            />
-          ))}
+          {loading ? (
+            <div className="flex justify-center items-center h-40 text-gray-400 text-lg font-medium">
+              Loading...
+            </div>
+          ) : (
+            feedItems.map((item) => (
+              <FeedCard
+                key={item.id}
+                item={item}
+                currentUserEmail={currentUserEmail}
+                dropdownOpenId={dropdownOpenId}
+                setDropdownOpenId={setDropdownOpenId}
+                toggleSave={toggleSave}
+                savedPostIds={savedPostIds}
+                setOpenBlog={setOpenBlog}
+              />
+            ))
+          )}
           {openBlog && (
             <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />
           )}

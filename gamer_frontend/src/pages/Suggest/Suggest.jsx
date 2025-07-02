@@ -30,14 +30,18 @@ const Suggest = () => {
 
   useEffect(() => {
     fetchFeed();
-    fetchSavedPosts();
     fetchGroups();
   }, []);
-
+  
   const fetchFeed = async () => {
+    const token = localStorage.getItem("token");
     const [postsRes, blogsRes] = await Promise.all([
-      axios.get("http://localhost:8080/api/posts/all"),
-      axios.get("http://localhost:8080/api/blogs/all"),
+      axios.get("http://localhost:8080/api/posts/all", {
+      headers: { Authorization: `Bearer ${token}` }
+      }),
+      axios.get("http://localhost:8080/api/blogs/all", {
+      headers: { Authorization: `Bearer ${token}` }
+      }),
     ]);
 
     const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
@@ -49,24 +53,13 @@ const Suggest = () => {
     setFeedItems(combinedFeed);
   };
 
-  const fetchSavedPosts = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await axios.get("http://localhost:8080/api/saved-posts", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSavedPostIds(res.data.map(sp => sp.postId));
-    } catch (error) {
-      console.error("Error fetching saved posts:", error);
-    }
-  };
-
   const fetchGroups = async () => {
     const userEmail = localStorage.getItem("email");
     try {
-      const res = await axios.get("http://localhost:8080/api/groups");
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:8080/api/groups", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const otherGroups = res.data.filter(g => g.ownerEmail !== userEmail);
       setExploreGroups(otherGroups);
     } catch (err) {
@@ -199,7 +192,7 @@ const Suggest = () => {
                       savedPostIds={savedPostIds}
                       setOpenBlog={setOpenBlog}
                       dropdownRef={dropdownRef}
-                      customStyle="w-[600px] min-h-[400px]"
+                      customStyle="w-[610px] min-h-[400px]"
                     />
                   ))
                 ) : (
