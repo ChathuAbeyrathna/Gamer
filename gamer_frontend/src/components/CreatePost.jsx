@@ -4,6 +4,7 @@ import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import camera from '../images/camera.png';
+import EmojiPicker from "emoji-picker-react";
 
 const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     const [title, setTitle] = useState("");
@@ -14,6 +15,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     const [uploading, setUploading] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
     const [existingMediaUrl, setExistingMediaUrl] = useState("");
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -74,6 +76,14 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                 }
             );
         });
+    };
+
+    const toggleEmojiPicker = () => {
+      setShowEmojiPicker(val => !val);
+    };
+
+    const onEmojiClick = (emojiObject) => {
+      setTitle(prev => prev + emojiObject.emoji);
     };
 
     const handleSubmit = async (e) => {
@@ -142,13 +152,35 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                         )}
                     </div>
 
-                    <textarea
-                        placeholder="What's happening in your gaming world?"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full h-40 mt-3 p-3 bg-gray-800 text-white rounded resize-none overflow-y-auto outline-none"
-                        required
-                    />
+                    {/* Title textarea with emoji picker */}
+                    <div className="relative">
+                        <textarea
+                            placeholder="What's happening in your gaming world?"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full h-40 mt-3 p-3 bg-gray-800 text-white rounded resize-none overflow-y-auto outline-none pr-10"
+                            required
+                        />
+                        <button
+                          type="button"
+                          onClick={toggleEmojiPicker}
+                          className="absolute right-3 top-3 text-white text-xl select-none"
+                          aria-label="Toggle emoji picker"
+                        >
+                          😊
+                        </button>
+
+                        {showEmojiPicker && (
+                          <div className="absolute z-50 top-16 right-0">
+                            <EmojiPicker
+                              onEmojiClick={onEmojiClick}
+                              theme="dark"
+                              height={350}
+                              width={300}
+                            />
+                          </div>
+                        )}
+                    </div>
 
                     <select
                         className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light cursor-pointer"
@@ -184,7 +216,8 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                                 className="hidden"
                                 onChange={(e) => {
                                     setMedia(e.target.files[0]);
-                                    setMediaName(e.target.files[0].name);}}
+                                    setMediaName(e.target.files[0].name);
+                                }}
                             />
                             {mediaName ? mediaName : "Add Media"}
                             <img src={camera} alt="Upload" className="w-6 h-6 ml-auto" />

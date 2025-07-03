@@ -5,6 +5,7 @@ import FeedCard from "../components/FeedCard";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
+import defaultProfile from '../images/defaultProfile.png'; 
 
 const Home = () => {
   const [feedItems, setFeedItems] = useState([]);
@@ -135,7 +136,7 @@ const Home = () => {
                   <li className="flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 rounded h-14">
                     <div className="flex items-center space-x-3">
                       <img
-                        src={profile.imageUrl}
+                        src={profile.imageUrl || defaultProfile}
                         alt="Profile"
                         className="w-10 h-10 rounded-full"
                       />

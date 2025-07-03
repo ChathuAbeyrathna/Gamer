@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
+import defaultProfile from '../../images/defaultProfile.png'; // imported fallback image
 
 const AllProfiles = () => {
   const [profiles, setProfiles] = useState([]);
@@ -45,7 +46,7 @@ const AllProfiles = () => {
                 >
                     <div className="bg-gray-800 text-white p-4 rounded-xl shadow-md flex flex-col items-center">
                     <img
-                        src={profile.imageUrl}
+                        src={profile.imageUrl || defaultProfile}
                         alt="Profile"
                         className="w-24 h-24 rounded-full mt-3 mb-3 object-cover"
                     />

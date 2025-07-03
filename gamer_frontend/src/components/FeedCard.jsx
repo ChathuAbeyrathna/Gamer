@@ -498,6 +498,9 @@ const FeedCard = ({
                 <div className="absolute top-full mt-2 right-0 z-20">
                   <EmojiPicker
                     onEmojiClick={(e) => setNewComment((c) => c + e.emoji)}
+                    theme="dark"
+                    height={350}
+                    width={300}
                   />
                 </div>
               )}

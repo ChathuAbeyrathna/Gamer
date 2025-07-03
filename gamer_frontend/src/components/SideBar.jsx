@@ -4,6 +4,7 @@ import { getUserEmail } from "../authUtils";
 import game from '../images/game.png';
 import group from '../images/group.png';
 import save from '../images/save.png';
+import defaultProfile from '../images/defaultProfile.png'; // imported fallback image
 
 const SideBar = () => {
   const email = getUserEmail();
@@ -39,7 +40,7 @@ const SideBar = () => {
           }
         >
           <img
-            src={profile.imageUrl}
+            src={profile.imageUrl || defaultProfile}
             alt="User Avatar"
             className="h-8 w-8 rounded-full mr-2"
           />

@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import FeedCard from "../components/FeedCard";
-import squad from '../images/squad.png';
-import edit from '../images/edit.png';
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
 import CreatePost from "../components/CreatePost";
 import WriteBlog from "../components/WriteBlog";
+import FeedCard from "../components/FeedCard";
+import squad from '../images/squad.png';
+import edit from '../images/edit.png';
+import defaultProfile from '../images/defaultProfile.png';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -16,6 +17,7 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState(null);
   const [editingBlog, setEditingBlog] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true); 
   const [openBlog, setOpenBlog] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -66,6 +68,7 @@ const Profile = () => {
         );
 
         setUserPosts(combined);
+        setIsLoadingPosts(false); // ✅ stop loading
       } catch (err) {
         console.error("Error fetching data", err);
         navigate("/createprof");
@@ -137,7 +140,7 @@ const Profile = () => {
         <div className="w-full flex flex-col items-center mt-20">
           <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
             <img
-              src={profile.imageUrl}
+              src={profile.imageUrl || defaultProfile} 
               alt="Profile"
               className="w-52 h-52 rounded-full mr-12 ml-10"
             />
@@ -184,7 +187,9 @@ const Profile = () => {
 
           {/* Feed Section */}
           <div className="w-full max-w-2xl bg-gray-900 p-4">
-            {userPosts.length === 0 ? (
+            {isLoadingPosts ? (
+              <p className="text-center text-gray-400">Loading...</p>
+            ) : userPosts.length === 0 ? (
               <p className="text-center text-gray-400">No posts yet.</p>
             ) : (
               userPosts.map((item) => (
@@ -198,7 +203,7 @@ const Profile = () => {
                   showMenu={true}
                   onEdit={() => handleEditItem(item)}
                   onDelete={() => handleDeleteItem(item.id, item.type === "blog")}
-                  profileImage={profile.imageUrl}
+                  profileImage={profile.imageUrl || defaultProfile}
                   profileName={profile.gamerName}
                 />
               ))

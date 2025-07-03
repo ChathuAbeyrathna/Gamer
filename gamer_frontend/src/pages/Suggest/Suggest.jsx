@@ -6,7 +6,7 @@ import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
 import ViewBlog from "../../components/ViewBlog";
 import { FaArrowLeft } from "react-icons/fa";
-import defaultGroup from '../../images/default.png'; // imported fallback image
+import defaultGroup from '../../images/default.png'; 
 
 const categories = [
   { name: "Action Game", icon: "🎯", tag: "action" },
@@ -110,33 +110,35 @@ const Suggest = () => {
 
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
-          <Sidebar />
+          <Sidebar />  
         </div>
 
-        <div className="w-full flex flex-col m-24">
+        <div className="w-full flex flex-col">
           {/* Category Title with Back Arrow */}
-          <div className="text-3xl ml-40 self-start flex items-center space-x-3">
-            {selectedCategory && (
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setViewType("posts");
-                }}
-                className="hover:text-gray-400"
-              >
-                <FaArrowLeft className="text-2xl font-light mr-1" style={{ strokeWidth: 1 }} />
-              </button>
-            )}
-            <h2>
-              {selectedCategory
-                ? categories.find((cat) => cat.tag === selectedCategory)?.name || "Category"
-                : "Categories"}
-            </h2>
+          <div className="sticky top-[80px] bg-gray-900 z-30 pt-10 pb-4">
+            <div className="container mx-auto flex items-center space-x-3 px-10 text-3xl ml-20">
+              {selectedCategory && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setViewType("posts");
+                  }}
+                  className="hover:text-gray-400"
+                >
+                  <FaArrowLeft className="text-2xl font-light mr-1" style={{ strokeWidth: 1 }} />
+                </button>
+              )}
+              <h2>
+                {selectedCategory
+                  ? categories.find((cat) => cat.tag === selectedCategory)?.name || "Category"
+                  : "Categories"}
+              </h2>
+            </div>
           </div>
 
           {/* Category List */}
           {!selectedCategory && (
-            <div className="flex flex-col space-y-6 w-3/4 mt-10 ml-40">
+            <div className="flex flex-col space-y-6 w-3/4 mt-24 ml-40">
               {categories.map((cat) => (
                 <div
                   key={cat.tag}
@@ -152,32 +154,34 @@ const Suggest = () => {
 
           {/* Posts/Groups Tabs */}
           {selectedCategory && (
-            <div className="flex ml-[42%] mt-8 mb-2 space-x-8 text-lg font-semibold">
-              <button
-                onClick={() => setViewType("posts")}
-                className={`px-4 py-1 border-b-2 ${
-                  viewType === "posts"
-                    ? "text-[#01C0D3] border-[#01C0D3]"
-                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
-                }`}
-              >
-                Posts
-              </button>
-              <button
-                onClick={() => setViewType("groups")}
-                className={`px-4 py-1 border-b-2 ${
-                  viewType === "groups"
-                    ? "text-[#01C0D3] border-[#01C0D3]"
-                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
-                }`}
-              >
-                Groups
-              </button>
+            <div className="sticky top-[160px] bg-gray-900 z-30 py-2">
+              <div className="container mx-auto flex ml-[42%] mb-2 space-x-8 text-lg font-semibold">
+                <button
+                  onClick={() => setViewType("posts")}
+                  className={`px-4 py-1 border-b-2 ${
+                    viewType === "posts"
+                      ? "text-[#01C0D3] border-[#01C0D3]"
+                      : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                  }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setViewType("groups")}
+                  className={`px-4 py-1 border-b-2 ${
+                    viewType === "groups"
+                      ? "text-[#01C0D3] border-[#01C0D3]"
+                      : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                  }`}
+                >
+                  Groups
+                </button>
+              </div>
             </div>
           )}
 
           {/* Main Content Area */}
-          <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[2%] ml-[20%]">
+          <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[5%] ml-[25%]">
             {selectedCategory ? (
               viewType === "posts" ? (
                 filteredItems.length > 0 ? (
@@ -192,7 +196,7 @@ const Suggest = () => {
                       savedPostIds={savedPostIds}
                       setOpenBlog={setOpenBlog}
                       dropdownRef={dropdownRef}
-                      customStyle="w-[610px] min-h-[400px]"
+                      customStyle="w-[550px] min-h-[400px]"
                     />
                   ))
                 ) : (

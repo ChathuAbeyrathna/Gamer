@@ -3,8 +3,9 @@ import { storage } from '../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { getUserEmail } from "../authUtils";
-import photo from '../images/photo.png';
 import axios from 'axios';
+import photo from '../images/photo.png';
+import EmojiPicker from "emoji-picker-react";
 
 const CreateProf = () => {
   const [image, setImage] = useState(null);
@@ -16,6 +17,7 @@ const CreateProf = () => {
   const [customRole, setCustomRole] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const navigate = useNavigate();
   const email = getUserEmail();
 
@@ -61,6 +63,15 @@ const CreateProf = () => {
         ? prev.filter((r) => r !== value)
         : [...prev, value]
     );
+  };
+
+  // Emoji picker handlers
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((val) => !val);
+  };
+
+  const onEmojiClick = (emojiObject) => {
+    setBio((prevBio) => prevBio + emojiObject.emoji);
   };
 
   const handleSubmit = async (e) => {
@@ -114,7 +125,7 @@ const CreateProf = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-14">
-      <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg">
+      <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mb-20">
         <h2 className="text-center text-white text-2xl font-semibold mb-8">
           {isEditMode ? 'Edit Your Gamer Profile' : 'Create Your Gamer Profile'}
         </h2>
@@ -138,14 +149,37 @@ const CreateProf = () => {
             className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60"
           />
 
-          {/* Gamer Bio */}
-          <input
-            type="text"
-            placeholder="Add a gamer bio"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60"
-          />
+          {/* Gamer Bio with emoji picker */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Add a gamer bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 pr-10"
+            />
+            {/* Emoji toggle button */}
+            <button
+              type="button"
+              onClick={toggleEmojiPicker}
+              className="absolute right-3 top-3 text-white text-xl select-none"
+              aria-label="Toggle emoji picker"
+            >
+              😊
+            </button>
+
+            {/* Emoji Picker dropdown */}
+            {showEmojiPicker && (
+              <div className="absolute z-50 top-12 right-0">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  theme="dark"
+                  height={350}
+                  width={300}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Role Dropdown */}
           <div>

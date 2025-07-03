@@ -3,10 +3,10 @@ import axios from "axios";
 import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import camera from '../images/camera.png';
-
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import EmojiPicker from "emoji-picker-react";
+import camera from '../images/camera.png';
 
 const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null }) => {
   const [title, setTitle] = useState("");
@@ -18,6 +18,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   const [uploading, setUploading] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -76,6 +77,14 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
     });
   };
 
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((val) => !val);
+  };
+
+  const onEmojiClick = (emojiObject) => {
+    setTitle((prev) => prev + emojiObject.emoji);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -87,7 +96,6 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
     try {
       const imageUrl = await handleImageUpload();
       const finalTags = tags === "Others" ? [customTag] : [tags];
-
 
       const blogData = {
         title,
@@ -143,7 +151,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-60 overflow-y-auto">
       <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
-        <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg">
+        <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg relative">
           <div className="flex justify-between items-center mb-2">
             <div className="flex justify-center items-center w-full">
               <h2 className="text-lg font-semibold">{editingBlog ? "Edit Blog" : "Write Blog"}</h2>
@@ -175,14 +183,35 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
             </label>
           </div>
 
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full mt-5 p-3 bg-transparent text-white text-lg font-bold outline-none"
-            required
-          />
+          {/* Title input with emoji picker */}
+          <div className="relative mt-5">
+            <input
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-3 bg-transparent text-white text-lg font-bold outline-none pr-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={toggleEmojiPicker}
+              className="absolute right-3 top-3 text-white text-xl select-none"
+              aria-label="Toggle emoji picker"
+            >
+              😊
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute z-50 top-12 right-0">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  theme="dark"
+                  height={350}
+                  width={300}
+                />
+              </div>
+            )}
+          </div>
 
           <ReactQuill 
             theme="snow"
