@@ -48,7 +48,8 @@ const SavedPosts = () => {
   const currentUserEmail = localStorage.getItem("email");
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="relative min-h-screen text-white">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
       <div className="container mx-auto flex mt-4">
         <Sidebar />

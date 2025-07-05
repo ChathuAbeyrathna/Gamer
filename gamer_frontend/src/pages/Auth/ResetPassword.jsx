@@ -16,7 +16,9 @@ const ResetPassword = () => {
 
     if (!token) {
         return (
-            <div className="flex justify-center items-center min-h-screen bg-gray-900">
+            <div className="relative flex justify-center items-center min-h-screen">
+                <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+
                 <div className="w-full max-w-md bg-gradient-to-b from-[#01C0D3] to-[#2059B6] p-[2px] rounded-lg shadow-lg">
                     <div className="bg-gradient-to-b from-gray-900 to-gray-700 p-8 rounded-lg text-center">
                         <img src={logo} alt="Logo" className="mx-auto w-24 mb-4" />

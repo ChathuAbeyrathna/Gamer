@@ -5,7 +5,7 @@ import FeedCard from "../components/FeedCard";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
-import defaultProfile from '../images/defaultProfile.png'; 
+import defaultProfile from '../images/defaultProfile.png';
 
 const Home = () => {
   const [feedItems, setFeedItems] = useState([]);
@@ -13,7 +13,7 @@ const Home = () => {
   const [profiles, setProfiles] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [openBlog, setOpenBlog] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,7 +89,8 @@ const Home = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="relative min-h-screen text-white">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
 
       {/* Main Layout */}

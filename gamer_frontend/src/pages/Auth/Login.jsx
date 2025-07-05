@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from '../../images/logo.png';
-import Loading from '../../components/Loading'; 
+import Loading from '../../components/Loading';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -67,14 +67,14 @@ const Login = () => {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-900 flex-col">
+    <div className="relative flex justify-center items-center min-h-screen flex-col">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       {/* Popup Message */}
       {showPopup && (
         <div className="mb-4 w-full max-w-md px-4">
           <div
-            className={`text-white text-center py-2 px-4 rounded shadow-md animate-fade-in ${
-              popupType === "success" ? "bg-green-600" : "bg-red-600"
-            }`}
+            className={`text-white text-center py-2 px-4 rounded shadow-md animate-fade-in ${popupType === "success" ? "bg-green-600" : "bg-red-600"
+              }`}
           >
             {popupMessage}
           </div>

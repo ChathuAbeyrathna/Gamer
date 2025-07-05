@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import FeedCard from "../../components/FeedCard";
@@ -6,7 +6,7 @@ import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
 import ViewBlog from "../../components/ViewBlog";
 import { FaArrowLeft } from "react-icons/fa";
-import defaultGroup from '../../images/default.png'; 
+import defaultGroup from '../../images/default.png';
 
 const categories = [
   { name: "Action Game", icon: "🎯", tag: "action" },
@@ -25,22 +25,22 @@ const Suggest = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [viewType, setViewType] = useState("posts");
   const [exploreGroups, setExploreGroups] = useState([]);
-  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchFeed();
     fetchGroups();
+    fetchSavedPosts();
   }, []);
-  
+
   const fetchFeed = async () => {
     const token = localStorage.getItem("token");
     const [postsRes, blogsRes] = await Promise.all([
       axios.get("http://localhost:8080/api/posts/all", {
-      headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       }),
       axios.get("http://localhost:8080/api/blogs/all", {
-      headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       }),
     ]);
 
@@ -64,6 +64,20 @@ const Suggest = () => {
       setExploreGroups(otherGroups);
     } catch (err) {
       console.error("Error loading groups:", err);
+    }
+  };
+
+  const fetchSavedPosts = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await axios.get("http://localhost:8080/api/saved-posts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedPostIds(res.data.map((sp) => sp.postId));
+    } catch (error) {
+      console.error("Error fetching saved posts:", error);
     }
   };
 
@@ -105,17 +119,18 @@ const Suggest = () => {
   const currentUserEmail = localStorage.getItem("email");
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="relative min-h-screen text-white">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
 
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
-          <Sidebar />  
+          <Sidebar />
         </div>
 
         <div className="w-full flex flex-col">
           {/* Category Title with Back Arrow */}
-          <div className="sticky top-[80px] bg-gray-900 z-30 pt-10 pb-4">
+          <div className="sticky top-[80px] bg-gray-900 z-30 pt-6 pb-4">
             <div className="container mx-auto flex items-center space-x-3 px-10 text-3xl ml-20">
               {selectedCategory && (
                 <button
@@ -136,6 +151,32 @@ const Suggest = () => {
             </div>
           </div>
 
+          {/* Posts/Groups Tabs */}
+          {selectedCategory && (
+            <div className="sticky top-[140px] bg-gray-900 z-30 py-2 flex justify-center">
+              <div className="mb-2 space-x-8 text-lg font-semibold">
+                <button
+                  onClick={() => setViewType("posts")}
+                  className={`px-4 py-1 border-b-2 ${viewType === "posts"
+                    ? "text-[#01C0D3] border-[#01C0D3]"
+                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                    }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setViewType("groups")}
+                  className={`px-4 py-1 border-b-2 ${viewType === "groups"
+                    ? "text-[#01C0D3] border-[#01C0D3]"
+                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                    }`}
+                >
+                  Groups
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Category List */}
           {!selectedCategory && (
             <div className="flex flex-col space-y-6 w-3/4 mt-24 ml-40">
@@ -152,36 +193,8 @@ const Suggest = () => {
             </div>
           )}
 
-          {/* Posts/Groups Tabs */}
-          {selectedCategory && (
-            <div className="sticky top-[160px] bg-gray-900 z-30 py-2">
-              <div className="container mx-auto flex ml-[42%] mb-2 space-x-8 text-lg font-semibold">
-                <button
-                  onClick={() => setViewType("posts")}
-                  className={`px-4 py-1 border-b-2 ${
-                    viewType === "posts"
-                      ? "text-[#01C0D3] border-[#01C0D3]"
-                      : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
-                  }`}
-                >
-                  Posts
-                </button>
-                <button
-                  onClick={() => setViewType("groups")}
-                  className={`px-4 py-1 border-b-2 ${
-                    viewType === "groups"
-                      ? "text-[#01C0D3] border-[#01C0D3]"
-                      : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
-                  }`}
-                >
-                  Groups
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Main Content Area */}
-          <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[5%] ml-[25%]">
+          <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[27%]">
             {selectedCategory ? (
               viewType === "posts" ? (
                 filteredItems.length > 0 ? (
@@ -195,7 +208,6 @@ const Suggest = () => {
                       toggleSave={toggleSave}
                       savedPostIds={savedPostIds}
                       setOpenBlog={setOpenBlog}
-                      dropdownRef={dropdownRef}
                       customStyle="w-[550px] min-h-[400px]"
                     />
                   ))

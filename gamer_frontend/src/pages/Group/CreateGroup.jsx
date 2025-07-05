@@ -55,7 +55,8 @@ const CreateGroup = () => {
   const token = localStorage.getItem("token");
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className=" relative min-h-screen flex items-center justify-center p-4">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
       <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mt-20">
         <h2 className="text-center text-white text-2xl font-semibold mb-8">Create New Group</h2>

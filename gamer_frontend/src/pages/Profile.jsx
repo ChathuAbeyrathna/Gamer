@@ -17,7 +17,7 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState(null);
   const [editingBlog, setEditingBlog] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true); 
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [openBlog, setOpenBlog] = useState(null);
   const [menuOpenIndex, setMenuOpenIndex] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -68,7 +68,7 @@ const Profile = () => {
         );
 
         setUserPosts(combined);
-        setIsLoadingPosts(false); // ✅ stop loading
+        setIsLoadingPosts(false);
       } catch (err) {
         console.error("Error fetching data", err);
         navigate("/createprof");
@@ -128,62 +128,66 @@ const Profile = () => {
     setMenuOpenIndex(null);
   };
 
-  const currentUserEmail = JSON.parse(atob(token.split('.')[1])).sub;
+  const currentUserEmail = JSON.parse(atob(token.split('.')[1])).sub; 
 
-  return profile && (
-    <div className="bg-gray-900 text-white min-h-screen">
+  return (
+    <div className="relative min-h-screen text-white">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
           <Sidebar />
         </div>
+
         <div className="w-full flex flex-col items-center mt-20">
-          <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
-            <img
-              src={profile.imageUrl || defaultProfile} 
-              alt="Profile"
-              className="w-52 h-52 rounded-full mr-12 ml-10"
-            />
-            <div className="flex-1 text-left relative">
-              <div>
-                <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
-                <p className="text-gray-400 mt-4">{profile.bio}</p>
-                <p className="text-gray-400 mt-3">{profile.role?.join(" | ")}</p>
-              </div>
-              <div className="absolute top-0 right-0">
-                <Link to="/editprof">
-                  <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
-                    <img src={edit} alt="Edit" className="w-5 h-5" />
-                    <span>Edit Profile</span>
+          {profile && (
+            <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
+              <img
+                src={profile.imageUrl || defaultProfile}
+                alt="Profile"
+                className="w-52 h-52 rounded-full mr-12 ml-10"
+              />
+              <div className="flex-1 text-left relative">
+                <div>
+                  <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
+                  <p className="text-gray-400 mt-4">{profile.bio}</p>
+                  <p className="text-gray-400 mt-3">{profile.role?.join(" | ")}</p>
+                </div>
+                <div className="absolute top-0 right-0">
+                  <Link to="/editprof">
+                    <button className="bg-gray-700 px-4 py-2 rounded-full flex items-center space-x-2">
+                      <img src={edit} alt="Edit" className="w-5 h-5" />
+                      <span>Edit Profile</span>
+                    </button>
+                  </Link>
+                </div>
+                <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
+                  <img src={squad} alt="Squad Icon" className="w-6 h-6" />
+                  <span>105 Squad</span>
+                </div>
+                <div className="flex space-x-4 mt-8">
+                  <button
+                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setEditingPost(null);
+                    }}
+                  >
+                    Create a post
                   </button>
-                </Link>
-              </div>
-              <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
-                <img src={squad} alt="Squad Icon" className="w-6 h-6" />
-                <span>105 Squad</span>
-              </div>
-              <div className="flex space-x-4 mt-8">
-                <button
-                  className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
-                  onClick={() => {
-                    setIsModalOpen(true);
-                    setEditingPost(null);
-                  }}
-                >
-                  Create a post
-                </button>
-                <button
-                  className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
-                  onClick={() => {
-                    setIsBlogModalOpen(true);
-                    setEditingBlog(null);
-                  }}
-                >
-                  Write a blog
-                </button>
+                  <button
+                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                    onClick={() => {
+                      setIsBlogModalOpen(true);
+                      setEditingBlog(null);
+                    }}
+                  >
+                    Write a blog
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Feed Section */}
           <div className="w-full max-w-2xl bg-gray-900 p-4">
@@ -243,8 +247,8 @@ const Profile = () => {
         <>
           <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>
           <div className="fixed inset-0 flex justify-center items-center z-20">
-            <WriteBlog 
-              onClose={() => { 
+            <WriteBlog
+              onClose={() => {
                 setIsBlogModalOpen(false);
                 setEditingBlog(null);
               }}

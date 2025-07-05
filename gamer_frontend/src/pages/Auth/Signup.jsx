@@ -59,7 +59,9 @@ const Signup = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-900 flex-col">
+        <div className="relative flex justify-center items-center min-h-screen flex-col">
+            <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+
             {/* Popup Message */}
             {showPopup && (
                 <div className="mb-4 w-full max-w-md px-4">

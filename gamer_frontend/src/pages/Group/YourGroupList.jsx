@@ -22,7 +22,8 @@ const YourGroupList = () => {
   }, [email]);
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="relative min-h-screen text-white">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
 
       <div className="flex mt-4">
