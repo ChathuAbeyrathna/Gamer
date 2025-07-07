@@ -75,56 +75,70 @@ const CreateProf = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    let imageUrl = '';
+  e.preventDefault();
 
-    try {
-      if (image) {
-        const imageRef = ref(storage, `gamer/${image.name}`);
-        await uploadBytes(imageRef, image);
-        imageUrl = await getDownloadURL(imageRef);
-      } else if (isEditMode) {
-        // Keep the existing image URL
-        const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
-        imageUrl = res.data?.imageUrl || '';
-      }
+  // Validate required fields
+  if (!gamerName.trim()) {
+    alert("Gamer name is required.");
+    return;
+  }
 
-      const finalRoles = customRole && selectedRoles.includes("Other")
-        ? [...selectedRoles.filter(r => r !== "Other"), customRole]
-        : selectedRoles;
+  if (selectedRoles.length === 0 || (selectedRoles.includes("Other") && !customRole.trim())) {
+    alert("Please select at least one role.");
+    return;
+  }
 
-      const profileData = {
-        email,
-        gamerName,
-        bio,
-        role: finalRoles,
-        imageUrl
-      };
+  setLoading(true);
+  let imageUrl = '';
 
-      const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      if (isEditMode) {
-        await axios.put('http://localhost:8080/api/profile/update', profileData, config);
-      } else {
-        await axios.post('http://localhost:8080/api/profile/create', profileData, config);
-      }
-
-      navigate('/profile');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-    } finally {
-      setLoading(false);
+  try {
+    if (image) {
+      const imageRef = ref(storage, `gamer/${image.name}`);
+      await uploadBytes(imageRef, image);
+      imageUrl = await getDownloadURL(imageRef);
+    } else if (isEditMode) {
+      const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
+      imageUrl = res.data?.imageUrl || '';
     }
-  };
+
+    const finalRoles = customRole && selectedRoles.includes("Other")
+      ? [...selectedRoles.filter(r => r !== "Other"), customRole]
+      : selectedRoles;
+
+    const profileData = {
+      email,
+      gamerName,
+      bio,
+      role: finalRoles,
+      imageUrl
+    };
+
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    if (isEditMode) {
+      await axios.put('http://localhost:8080/api/profile/update', profileData, config);
+    } else {
+      await axios.post('http://localhost:8080/api/profile/create', profileData, config);
+    }
+
+    navigate('/profile');
+  } catch (error) {
+    console.error('Error saving profile:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-14">
+    <div className="relative min-h-screen flex items-center justify-center p-28">
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+
       <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mb-20">
         <h2 className="text-center text-white text-2xl font-semibold mb-8">
           {isEditMode ? 'Edit Your Gamer Profile' : 'Create Your Gamer Profile'}

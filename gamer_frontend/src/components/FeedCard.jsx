@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import moment from "moment";
 import { FaBookmark, FaRegBookmark, FaEllipsisH } from "react-icons/fa";
+import { Link } from 'react-router-dom';
+import EmojiPicker from "emoji-picker-react";
 import fillBoost from "../images/fillboost.png";
 import boostIcon from "../images/boost.png";
 import commentIcon from "../images/comment.png";
 import shareIcon from "../images/share.png";
 import menuIcon from "../images/option.png";
-import EmojiPicker from "emoji-picker-react";
+import defaultProfile from "../images/defaultProfile.png";
 
 const FeedCard = ({
   item,
@@ -139,12 +141,12 @@ const FeedCard = ({
     };
 
     axios.post(
-        `http://localhost:8080/api/comments/${replyingTo ? "addReply" : "add"}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+      `http://localhost:8080/api/comments/${replyingTo ? "addReply" : "add"}`,
+      payload,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
       .then(() => {
         setNewComment("");
         setReplyingTo(null);
@@ -181,14 +183,18 @@ const FeedCard = ({
   const renderComment = (c, level = 0) => (
     <div key={c.id} className="mb-4" style={{ marginLeft: level > 0 ? 20 : 0 }}>
       <div className="flex space-x-2">
-        <img
-          src={c.userImage || "/default-avatar.png"}
-          alt={c.userName || "User"}
-          className="h-8 w-8 rounded-full object-cover"
-        />
+        <Link to={`/profile/view/${c.email}`}>
+          <img
+            src={c.userImage || defaultProfile}
+            alt={c.userName || "User"}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+        </Link>
         <div className="flex-1">
           <div className="text-white font-semibold text-sm flex items-center space-x-2">
-            <span>{c.userName || "Unknown"}</span>
+            <Link to={`/profile/view/${c.email}`}>
+              <span>{c.userName || "Unknown"}</span>
+            </Link>
             <span className="text-gray-400 text-xs flex items-center space-x-2">
               <span>{formatTime(c.createdAt)}</span>
 
@@ -366,7 +372,7 @@ const FeedCard = ({
       </div>
 
       {/* Header */}
-      <div className="flex items-center space-x-4 mb-2">
+      <Link to={`/profile/view/${item.email}`} className="flex items-center space-x-4 mb-2">
         <img
           src={profileImage || item.userImage}
           alt="User Avatar"
@@ -378,7 +384,7 @@ const FeedCard = ({
           </h2>
           <p className="text-sm text-gray-400">{formatTime(item.createdAt)}</p>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div
@@ -413,7 +419,7 @@ const FeedCard = ({
         )}
       </div>
 
-       {/* Action counts */}
+      {/* Action counts */}
       <div className="flex justify-between text-white font-thin text-sm px-2">
         <span
           className="cursor-pointer hover:underline"
@@ -516,20 +522,21 @@ const FeedCard = ({
       )}
 
       {showBoostList && (
-      <div className="bg-gray-900 p-2 rounded mt-2 max-h-48 overflow-y-auto">
-        {boosts.map((b, index) => (
-          <div key={b.id || b.email || index} className="flex items-center space-x-2 text-white text-sm mb-2">
-            <img
-              src={b.userImage || "/default-avatar.png"}
-              className="h-8 w-8 rounded-full"
-              alt={b.userName || "User"}
-            />
-            <span>{b.userName || "Unknown"}</span>
-          </div>
-        ))}
-      </div>
-    )}
-
+        <div className="bg-gray-900 p-2 rounded mt-2 max-h-48 overflow-y-auto">
+          {[...boosts].reverse().map((b, index) => (
+            <Link to={`/profile/view/${b.userEmail}`}>
+            <div key={b.id || b.userEmail || index} className="flex items-center space-x-2 text-white text-sm mb-2">
+              <img
+                src={b.userImage || defaultProfile}
+                className="h-8 w-8 rounded-full"
+                alt={b.userName || "User"}
+              />
+              <span>{b.userName || "Unknown"}</span>
+            </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
     </div>
   );

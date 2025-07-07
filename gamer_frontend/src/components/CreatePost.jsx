@@ -132,7 +132,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur overflow-y-auto">
             <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
                 <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-center">

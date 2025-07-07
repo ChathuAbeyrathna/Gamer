@@ -149,7 +149,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-60 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur overflow-y-auto">
       <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
         <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg relative">
           <div className="flex justify-between items-center mb-2">

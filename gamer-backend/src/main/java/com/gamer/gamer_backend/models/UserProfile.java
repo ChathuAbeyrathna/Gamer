@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -21,4 +22,5 @@ public class UserProfile {
     private String bio;
     private List<String> role;
     private String imageUrl;
+    private Instant createdAt = Instant.now();
 }

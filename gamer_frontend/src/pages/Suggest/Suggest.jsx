@@ -118,6 +118,10 @@ const Suggest = () => {
 
   const currentUserEmail = localStorage.getItem("email");
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="relative min-h-screen text-white">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>

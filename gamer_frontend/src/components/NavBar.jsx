@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../images/logo.png";
 import home from "../images/home.png";
@@ -12,18 +12,22 @@ import game from '../images/game.png';
 import group from '../images/group.png';
 import save from '../images/save.png';
 import { FiMenu, FiX } from "react-icons/fi";
-import Loading from "../components/Loading"; 
+import Loading from "../components/Loading";
+import defaultProfile from '../images/defaultProfile.png';
+import { getUserEmail } from "../authUtils";
 
 const NavBar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMenu1Popup, setShowMenu1Popup] = useState(false);
   const [showMenu2Popup, setShowMenu2Popup] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false); 
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
+  const email = getUserEmail();
 
   const handleLogout = () => {
-    setIsLoggingOut(true); 
+    setIsLoggingOut(true);
     setTimeout(() => {
       localStorage.removeItem("token");
       localStorage.removeItem("email");
@@ -31,7 +35,25 @@ const NavBar = () => {
     }, 3000); // wait before redirect
   };
 
-  // ✅ show loading page if logging out
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!email) return;
+
+      try {
+        const res = await fetch(`http://localhost:8080/api/profile/${email}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error("Profile fetch error", err);
+      }
+    };
+
+    fetchProfile();
+  }, [email]);
+
+  // show loading page if logging out
   if (isLoggingOut) return <Loading />;
 
   return (
@@ -149,6 +171,22 @@ const NavBar = () => {
                 </div>
               )}
             </div>
+
+            {profile && (
+              <Link
+                to="/profile"
+                className={({ isActive }) =>
+                  `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+            ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+                }
+              >
+                <img
+                  src={profile.imageUrl || defaultProfile}
+                  alt="User Avatar"
+                  className="h-10 w-10 rounded-full mr-2"
+                />
+              </Link>
+            )}
           </div>
 
           <button

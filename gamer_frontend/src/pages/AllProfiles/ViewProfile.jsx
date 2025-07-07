@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../../components/NavBar';
+import SquadModal from '../../components/SquadModal';
 import FeedCard from '../../components/FeedCard';
 import ViewBlog from "../../components/ViewBlog";
 import { FaArrowLeft } from "react-icons/fa";
@@ -12,30 +13,38 @@ const ViewProfile = () => {
   const { email } = useParams();
   const navigate = useNavigate();
 
+  const currentUserEmail = localStorage.getItem("email");
+
   const [profile, setProfile] = useState(null);
+  const [showSquad, setShowSquad] = useState(false);
   const [posts, setPosts] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
+
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [openBlog, setOpenBlog] = useState(null);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
-  const currentUserEmail = localStorage.getItem("email");
-
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAll = async () => {
       try {
-        const [profileRes, postsRes, blogsRes] = await Promise.all([
+        const [profileRes, postsRes, blogsRes, statusRes] = await Promise.all([
           axios.get(`http://localhost:8080/api/profile/${email}`),
           axios.get(`http://localhost:8080/api/posts/user/${email}`),
           axios.get(`http://localhost:8080/api/blogs/user/${email}`),
+          axios.get(`http://localhost:8080/api/follow/status/${email}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          }),
         ]);
         setProfile(profileRes.data);
         setPosts(postsRes.data);
         setBlogs(blogsRes.data);
+
+        setIsFollowing(statusRes.data.isFollowing);
+
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('Error fetching profile data:', err);
         setProfile(null);
         setPosts([]);
         setBlogs([]);
@@ -44,7 +53,7 @@ const ViewProfile = () => {
       }
     };
 
-    fetchData();
+    fetchAll();
     fetchSavedPosts();
   }, [email]);
 
@@ -62,10 +71,26 @@ const ViewProfile = () => {
     }
   };
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-    // Optionally: Call backend to follow/unfollow
+  // Toggle follow/unfollow
+  const toggleFollow = async () => {
+    if (!currentUserEmail) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        `http://localhost:8080/api/follow/toggle-follow/${email}`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      if (res.data.status === "ok") {
+        setIsFollowing(!isFollowing);
+      }
+    } catch (error) {
+      console.error("Follow toggle failed", error);
+    }
   };
+
 
   const toggleSave = async (postId) => {
     const token = localStorage.getItem("token");
@@ -92,9 +117,14 @@ const ViewProfile = () => {
     ...blogs.map(b => ({ ...b, type: 'blog' }))
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
+
+
   return (
     <div className="relative min-h-screen text-white">
-      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+      <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]" />
       <NavBar />
 
       <button
@@ -105,7 +135,6 @@ const ViewProfile = () => {
       </button>
 
       <div className="max-w-6xl mx-auto mt-20 px-4 py-8">
-        {/* Profile Section */}
         {profile && (
           <div className="flex items-center w-full max-w-4xl">
             <img
@@ -113,40 +142,62 @@ const ViewProfile = () => {
               alt="Profile"
               className="w-48 h-48 rounded-full mr-12 ml-36"
             />
+
             <div className="flex-1 text-left relative">
               <div>
                 <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
                 <p className="text-gray-400 mt-4">{profile.bio}</p>
                 <p className="text-gray-400 mt-3">{profile.role?.join(' | ')}</p>
               </div>
-              <div className="absolute top-0 right-0 flex items-center space-x-2 text-gray-300">
+
+              {/* Squad icon */}
+              <div onClick={() => setShowSquad(true)} className="absolute top-0 right-0 flex items-center space-x-2 text-gray-300 cursor-pointer select-none"
+              >
                 <img src={squad} alt="Squad Icon" className="w-6 h-6" />
-                <span>105 Squad</span>
-              </div>
-              <div className="absolute bottom-0 right-0 flex items-center text-md text-gray-300">
-                <span className="cursor-pointer">⚙️</span>
-              </div>
-              <div className="flex space-x-6 mt-8">
-                <button
-                  onClick={handleFollow}
-                  className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
-                  style={{
-                    background: 'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
-                  }}
-                >
-                  {isFollowing ? 'Unfollow' : 'Follow'}
-                </button>
-                <button
-                  className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
-                  style={{
-                    background: 'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
-                  }}
-                >
-                  Message
-                </button>
+                <span>Squad</span>
               </div>
 
+              <div className="flex space-x-6 mt-8">
+                {/* Follow/Unfollow button */}
+                {email !== currentUserEmail && (
+                  <button
+                    onClick={toggleFollow}
+                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
+                    style={{
+                      background:
+                        'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
+                    }}
+                  >
+                    {isFollowing ? 'Unfollow' : 'Follow'}
+                  </button>
+                )}
+
+                {/* Message button (could be linked to chat) */}
+                {email !== currentUserEmail && (
+                  <button
+                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
+                    style={{
+                      background:
+                        'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
+                    }}
+                    onClick={() => alert("Implement messaging!")}
+                  >
+                    Message
+                  </button>
+                )}
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* Squad popup modal */}
+        {showSquad && (
+          <div className="fixed inset-0 flex justify-center items-center z-20">
+            <SquadModal
+              email={profile?.email}
+              show={showSquad}
+              onClose={() => setShowSquad(false)}
+            />
           </div>
         )}
 

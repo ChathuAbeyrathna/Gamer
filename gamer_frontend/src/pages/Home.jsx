@@ -11,91 +11,137 @@ const Home = () => {
   const [feedItems, setFeedItems] = useState([]);
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [following, setFollowing] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [openBlog, setOpenBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const currentUserEmail = localStorage.getItem("email");
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
+    const fetchFeed = async () => {
+      setLoading(true);
+      try {
+        const [postsRes, blogsRes] = await Promise.all([
+          axios.get("http://localhost:8080/api/posts/all"),
+          axios.get("http://localhost:8080/api/blogs/all"),
+        ]);
+        const posts = postsRes.data.map((p) => ({ ...p, type: "post" }));
+        const blogs = blogsRes.data.map((b) => ({ ...b, type: "blog" }));
+        const combinedFeed = [...posts, ...blogs].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setFeedItems(combinedFeed);
+      } catch (error) {
+        console.error("Error fetching feed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchSavedPosts = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get("http://localhost:8080/api/saved-posts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSavedPostIds(res.data.map((sp) => sp.postId));
+      } catch (error) {
+        console.error("Error fetching saved posts:", error);
+      }
+    };
+
+    const fetchProfiles = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/profile/all");
+        setProfiles(res.data);
+      } catch (err) {
+        console.error("Error fetching profiles:", err);
+      }
+    };
+
+    const fetchFollowing = async () => {
+      if (!token || !currentUserEmail) return;
+      try {
+        const res = await axios.get(
+          `http://localhost:8080/api/follow/following/${currentUserEmail}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFollowing(res.data.map((user) => user.email));
+      } catch (err) {
+        console.error("Error fetching following list:", err);
+      }
+    };
+
+    // call all functions
     fetchFeed();
     fetchSavedPosts();
-  }, []);
+    fetchProfiles();
+    fetchFollowing();
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:8080/api/profile/all")
-      .then((res) => setProfiles(res.data))
-      .catch((err) => console.error("Error fetching profiles:", err));
-  }, []);
+  }, [currentUserEmail, token]);
 
-  const currentUserEmail = localStorage.getItem("email");
-
-  const fetchFeed = async () => {
-    setLoading(true); // Start loading
-    try {
-      const [postsRes, blogsRes] = await Promise.all([
-        axios.get("http://localhost:8080/api/posts/all"),
-        axios.get("http://localhost:8080/api/blogs/all"),
-      ]);
-
-      const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
-      const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
-
-      const combinedFeed = [...posts, ...blogs].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setFeedItems(combinedFeed);
-    } catch (error) {
-      console.error("Error fetching feed:", error);
-    } finally {
-      setLoading(false); // Stop loading
+  const handleToggleFollow = async (email, e) => {
+    e.stopPropagation();
+    if (!token) {
+      alert("Please log in to follow users.");
+      return;
     }
-  };
-
-  const fetchSavedPosts = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     try {
-      const res = await axios.get("http://localhost:8080/api/saved-posts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSavedPostIds(res.data.map((sp) => sp.postId));
-    } catch (error) {
-      console.error("Error fetching saved posts:", error);
+      const res = await axios.post(
+        `http://localhost:8080/api/follow/toggle-follow/${email}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.status === "ok") {
+        setFollowing((prev) =>
+          prev.includes(email)
+            ? prev.filter((e) => e !== email)
+            : [...prev, email]
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling follow:", err);
     }
   };
 
   const toggleSave = async (postId) => {
-    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
     }
 
-    const res = await axios.post(
-      `http://localhost:8080/api/saved-posts/toggle/${postId}`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
+    try {
+      const res = await axios.post(
+        `http://localhost:8080/api/saved-posts/toggle/${postId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.data) {
+        setSavedPostIds((prev) => [...prev, postId]);
+      } else {
+        setSavedPostIds((prev) => prev.filter((id) => id !== postId));
       }
-    );
-
-    if (res.data) {
-      setSavedPostIds((prev) => [...prev, postId]);
-    } else {
-      setSavedPostIds((prev) => prev.filter((id) => id !== postId));
+    } catch (err) {
+      console.error("Error toggling save:", err);
     }
   };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="relative min-h-screen text-white">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
 
-      {/* Main Layout */}
       <div className="container mx-auto flex mt-4">
-        {/* Sidebar */}
         <Sidebar />
 
         {/* Feed */}
@@ -128,23 +174,33 @@ const Home = () => {
           <h2 className="font-semibold mb-2">Power Up Your Stream:</h2>
           <ul>
             {profiles
-              .filter((profile) => profile.email !== currentUserEmail)
-              .map((profile) => (
+              .filter((p) => p.email !== currentUserEmail)
+              .slice(0, 5)
+              .map((p) => (
                 <div
-                  key={profile.email}
+                  key={p.email}
                   className="p-[2px] bg-gradient-to-r from-[#01C0D3] to-[#2059B6] rounded mr-10 mb-5 mt-6"
                 >
-                  <li className="flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 rounded h-14">
-                    <div className="flex items-center space-x-3">
+                  <li className="flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 rounded h-14 cursor-pointer">
+                    <div
+                      className="flex items-center space-x-3"
+                      onClick={() => navigate(`/profile/view/${p.email}`)}
+                    >
                       <img
-                        src={profile.imageUrl || defaultProfile}
-                        alt="Profile"
+                        src={p.imageUrl || defaultProfile}
+                        alt={p.gamerName}
                         className="w-10 h-10 rounded-full"
                       />
-                      <span>{profile.gamerName}</span>
+                      <span>{p.gamerName}</span>
                     </div>
-                    <button className="bg-gradient-to-b from-[#2059B6] to-[#407CDE] text-white text-xs px-2 py-1 rounded">
-                      Follow
+                    <button
+                      onClick={(e) => handleToggleFollow(p.email, e)}
+                      className={`text-xs px-2 py-1 rounded hover:brightness-110 transition duration-150 ${following.includes(p.email)
+                          ? "bg-gradient-to-b from-[#407CDE] to-[#2059B6]"
+                          : "bg-gradient-to-b from-[#2059B6] to-[#407CDE]"
+                        }`}
+                    >
+                      {following.includes(p.email) ? "Unfollow" : "Follow"}
                     </button>
                   </li>
                 </div>

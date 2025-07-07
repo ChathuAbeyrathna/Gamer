@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
-import ViewBlog from "../components/ViewBlog";
+import SquadModal from '../components/SquadModal';
 import CreatePost from "../components/CreatePost";
 import WriteBlog from "../components/WriteBlog";
+import ViewBlog from "../components/ViewBlog";
 import FeedCard from "../components/FeedCard";
 import squad from '../images/squad.png';
 import edit from '../images/edit.png';
@@ -12,6 +13,7 @@ import defaultProfile from '../images/defaultProfile.png';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
+  const [showSquad, setShowSquad] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -128,7 +130,11 @@ const Profile = () => {
     setMenuOpenIndex(null);
   };
 
-  const currentUserEmail = JSON.parse(atob(token.split('.')[1])).sub; 
+  const currentUserEmail = JSON.parse(atob(token.split('.')[1])).sub;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -141,7 +147,7 @@ const Profile = () => {
 
         <div className="w-full flex flex-col items-center mt-20">
           {profile && (
-            <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-6">
+            <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-4">
               <img
                 src={profile.imageUrl || defaultProfile}
                 alt="Profile"
@@ -161,9 +167,9 @@ const Profile = () => {
                     </button>
                   </Link>
                 </div>
-                <div className="absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
+                <div onClick={() => setShowSquad(true)} className="cursor-pointer absolute bottom-0 right-0 flex items-center space-x-2 text-gray-300">
                   <img src={squad} alt="Squad Icon" className="w-6 h-6" />
-                  <span>105 Squad</span>
+                  <span>Squad</span>
                 </div>
                 <div className="flex space-x-4 mt-8">
                   <button
@@ -221,6 +227,16 @@ const Profile = () => {
       </div>
 
       {/* Modals */}
+      {showSquad && (
+        <div className="fixed inset-0 flex justify-center items-center z-20">
+          <SquadModal
+            email={profile?.email}
+            show={showSquad}
+            onClose={() => setShowSquad(false)}
+          />
+        </div>
+      )}
+
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-20">
           <CreatePost
@@ -244,28 +260,25 @@ const Profile = () => {
       )}
 
       {isBlogModalOpen && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-10"></div>
-          <div className="fixed inset-0 flex justify-center items-center z-20">
-            <WriteBlog
-              onClose={() => {
-                setIsBlogModalOpen(false);
-                setEditingBlog(null);
-              }}
-              editingBlog={editingBlog}
-              onBlogCreated={(newBlog) => {
-                if (editingBlog) {
-                  setUserPosts((prev) =>
-                    prev.map((b) => (b.id === newBlog.id ? newBlog : b))
-                  );
-                } else {
-                  setUserPosts((prev) => [newBlog, ...prev]);
-                }
-                setRefreshKey(prev => prev + 1);
-              }}
-            />
-          </div>
-        </>
+        <div className="fixed inset-0 flex justify-center items-center z-20">
+          <WriteBlog
+            onClose={() => {
+              setIsBlogModalOpen(false);
+              setEditingBlog(null);
+            }}
+            editingBlog={editingBlog}
+            onBlogCreated={(newBlog) => {
+              if (editingBlog) {
+                setUserPosts((prev) =>
+                  prev.map((b) => (b.id === newBlog.id ? newBlog : b))
+                );
+              } else {
+                setUserPosts((prev) => [newBlog, ...prev]);
+              }
+              setRefreshKey(prev => prev + 1);
+            }}
+          />
+        </div>
       )}
     </div>
   );
