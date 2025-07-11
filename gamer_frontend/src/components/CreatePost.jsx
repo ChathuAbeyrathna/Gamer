@@ -3,8 +3,9 @@ import axios from "axios";
 import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import camera from '../images/camera.png';
 import EmojiPicker from "emoji-picker-react";
+import camera from '../images/camera.png';
+import defaultProfile from '../images/defaultProfile.png';
 
 const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     const [title, setTitle] = useState("");
@@ -16,6 +17,11 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     const [userProfile, setUserProfile] = useState(null);
     const [existingMediaUrl, setExistingMediaUrl] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    // Popup state
+    const [popupMessage, setPopupMessage] = useState("");
+    const [popupType, setPopupType] = useState("");
+    const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -47,12 +53,23 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
         }
     };
 
+    const showPopupMessage = (msg, type) => {
+        setPopupMessage(msg);
+        setPopupType(type);
+        setShowPopup(true);
+        setTimeout(() => {
+            setShowPopup(false);
+            setPopupMessage("");
+            setPopupType("");
+        }, 3000);
+    };
+
     const handleMediaUpload = async () => {
         if (!media) return existingMediaUrl || null;
 
         const fileType = media.type;
         if (!fileType.startsWith("image/") && !fileType.startsWith("video/")) {
-            alert("Only image and video files are allowed!");
+            showPopupMessage("Only image and video files are allowed!", "error");
             return null;
         }
 
@@ -67,6 +84,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                 (error) => {
                     console.error("Upload Error:", error);
                     setUploading(false);
+                    showPopupMessage("Upload failed!", "error");
                     reject(error);
                 },
                 async () => {
@@ -79,20 +97,20 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
     };
 
     const toggleEmojiPicker = () => {
-      setShowEmojiPicker(val => !val);
+        setShowEmojiPicker(val => !val);
     };
 
     const onEmojiClick = (emojiObject) => {
-      setTitle(prev => prev + emojiObject.emoji);
+        setTitle(prev => prev + emojiObject.emoji);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!title.trim()) return alert("Title is required!");
-        if (!tags) return alert("Please select a post tag!");
-        if (tags === "Others" && !customTag.trim()) return alert("Please specify your custom tag!");
-        if (!userProfile) return alert("User profile not loaded!");
+        if (!title.trim()) return showPopupMessage("Title is required!", "error");
+        if (!tags) return showPopupMessage("Please select a post tag!", "error");
+        if (tags === "Others" && !customTag.trim()) return showPopupMessage("Please specify your custom tag!", "error");
+        if (!userProfile) return showPopupMessage("User profile not loaded!", "error");
 
         try {
             const mediaUrl = await handleMediaUpload();
@@ -114,25 +132,40 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                 response = await axios.put(`http://localhost:8080/api/posts/edit/${editingPost.id}`, postData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                alert("Post Updated Successfully!");
+                showPopupMessage("Post updated successfully..!", "success"); // ✅ Show success first
             } else {
                 response = await axios.post("http://localhost:8080/api/posts/create", postData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                alert("Post Created Successfully!");
+                showPopupMessage("Post created successfully..!", "success"); // ✅ Show success first
             }
 
-            onPostCreated(response.data);
             setTitle(""); setTags(""); setCustomTag(""); setMedia(null);
-            onClose();
+
+            setTimeout(() => {
+                onPostCreated(response.data);
+                onClose();
+            }, 1500);
+
         } catch (error) {
             console.error("Error submitting post:", error);
-            alert("Error submitting post");
+            showPopupMessage("Error submitting post", "error");
         }
     };
 
+
     return (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur overflow-y-auto">
+            {/* Popup Alert */}
+            {showPopup && (
+                <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-2">
+                    <div className={`text-white text-center text-sm rounded shadow-md animate-fade-in 
+                        ${popupType === "success" ? "bg-green-600" : "bg-red-600"}`}>
+                        {popupMessage}
+                    </div>
+                </div>
+            )}
+
             <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
                 <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-center">
@@ -146,13 +179,12 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                     <div className="flex items-center space-x-4 mb-3">
                         {userProfile && (
                             <>
-                                <img src={userProfile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
+                                <img src={userProfile.imageUrl || defaultProfile} alt="User Avatar" className="h-10 w-10 rounded-full" />
                                 <div><h2 className="font-semibold">{userProfile.gamerName}</h2></div>
                             </>
                         )}
                     </div>
 
-                    {/* Title textarea with emoji picker */}
                     <div className="relative">
                         <textarea
                             placeholder="What's happening in your gaming world?"
@@ -162,23 +194,23 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null }) => {
                             required
                         />
                         <button
-                          type="button"
-                          onClick={toggleEmojiPicker}
-                          className="absolute right-3 top-3 text-white text-xl select-none"
-                          aria-label="Toggle emoji picker"
+                            type="button"
+                            onClick={toggleEmojiPicker}
+                            className="absolute right-3 top-3 text-white text-xl select-none"
+                            aria-label="Toggle emoji picker"
                         >
-                          😊
+                            😊
                         </button>
 
                         {showEmojiPicker && (
-                          <div className="absolute z-50 top-16 right-0">
-                            <EmojiPicker
-                              onEmojiClick={onEmojiClick}
-                              theme="dark"
-                              height={350}
-                              width={300}
-                            />
-                          </div>
+                            <div className="absolute z-50 top-16 right-0">
+                                <EmojiPicker
+                                    onEmojiClick={onEmojiClick}
+                                    theme="dark"
+                                    height={350}
+                                    width={300}
+                                />
+                            </div>
                         )}
                     </div>
 

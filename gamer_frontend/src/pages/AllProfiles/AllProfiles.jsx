@@ -56,8 +56,6 @@ const AllProfiles = () => {
         setFollowing(prev => prev.includes(profileEmail)
           ? prev.filter(e => e !== profileEmail)
           : [...prev, profileEmail]);
-      } else if (res.data.status === 'blocked') {
-        alert('Cannot follow this user (blocked).');
       }
     } catch (err) {
       console.error('Error toggling follow:', err);

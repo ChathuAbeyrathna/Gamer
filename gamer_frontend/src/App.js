@@ -6,26 +6,29 @@ import ResetPassword from './pages/Auth/ResetPassword';
 import Home from "./pages/Home";
 import ProtectedRoute from "./ProtectedRoute";
 import ProtectPages from "./ProtectPages";
+import { Alert } from "./Alert";
 
 function App() {
     return (
         <Router>
-            <Routes>
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgotpassword" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/" element={<Home />} />
-                
-                <Route
-                    path="/*"
-                    element={
-                        <ProtectedRoute>
-                            <ProtectPages />
-                        </ProtectedRoute>
-                    }
-                />          
-            </Routes>
+            <Alert>
+                <Routes>
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/forgotpassword" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/" element={<Home />} />
+
+                    <Route
+                        path="/*"
+                        element={
+                            <ProtectedRoute>
+                                <ProtectPages />
+                            </ProtectedRoute>
+                        }
+                    />
+                </Routes>
+            </Alert>
         </Router>
     );
 }

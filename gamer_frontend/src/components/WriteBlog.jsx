@@ -7,6 +7,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import EmojiPicker from "emoji-picker-react";
 import camera from '../images/camera.png';
+import defaultProfile from '../images/defaultProfile.png';
 
 const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null }) => {
   const [title, setTitle] = useState("");
@@ -20,13 +21,29 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   const [existingImageUrl, setExistingImageUrl] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Popup message state
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+
+  const showPopupMessage = (msg, type) => {
+    setPopupMessage(msg);
+    setPopupType(type);
+    setShowPopup(true);
+    setTimeout(() => {
+      setShowPopup(false);
+      setPopupMessage("");
+      setPopupType("");
+    }, 3000);
+  };
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     fetchUserProfile();
 
     if (editingBlog) {
       setTitle(editingBlog.title || "");
-      setContent((editingBlog.content || ""));
+      setContent(editingBlog.content || "");
       setTags(editingBlog.tags?.[0] || "");
       setExistingImageUrl(editingBlog.imageUrl || "");
 
@@ -66,6 +83,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
         (error) => {
           console.error("Upload Error:", error);
           setUploading(false);
+          showPopupMessage("Upload failed!", "error");
           reject(error);
         },
         async () => {
@@ -88,10 +106,10 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim()) return alert("Title is required!");
-    if (!tags) return alert("Please select a blog tag!");
-    if (tags === "Others" && !customTag.trim()) return alert("Please specify your custom tag!");
-    if (!userProfile) return alert("User profile not loaded!");
+    if (!title.trim()) return showPopupMessage("Title is required!", "error");
+    if (!tags) return showPopupMessage("Please select a blog tag!", "error");
+    if (tags === "Others" && !customTag.trim()) return showPopupMessage("Please specify your custom tag!", "error");
+    if (!userProfile) return showPopupMessage("User profile not loaded!", "error");
 
     try {
       const imageUrl = await handleImageUpload();
@@ -114,20 +132,27 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
         response = await axios.put(`http://localhost:8080/api/blogs/edit/${editingBlog.id}`, blogData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert("Blog Updated Successfully!");
+        showPopupMessage("Blog Updated Successfully..!", "success");
       } else {
         response = await axios.post("http://localhost:8080/api/blogs/create", blogData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert("Blog Published Successfully!");
+        showPopupMessage("Blog Published Successfully..!", "success");
       }
 
-      onBlogCreated(response.data);
-      setTitle(""); setTags(""); setCustomTag(""); setImage(null);
-      onClose();
+      setTitle("");
+      setTags("");
+      setCustomTag("");
+      setImage(null);
+
+      setTimeout(() => {
+        onBlogCreated(response.data);
+        onClose();
+      }, 1500);
+
     } catch (error) {
       console.error("Error submitting blog:", error);
-      alert("Error submitting blog");
+      showPopupMessage("Error submitting blog", "error");
     }
   };
 
@@ -150,6 +175,16 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur overflow-y-auto">
+      {/* Popup Alert */}
+      {showPopup && (
+        <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-4">
+          <div className={`text-white text-center text-sm rounded shadow-md animate-fade-in 
+            ${popupType === "success" ? "bg-green-600" : "bg-red-600"}`}>
+            {popupMessage}
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
         <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg relative">
           <div className="flex justify-between items-center mb-2">
@@ -166,7 +201,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
           <div className="flex items-center space-x-4 mb-4">
             {userProfile && (
               <>
-                <img src={userProfile.imageUrl} alt="User Avatar" className="h-10 w-10 rounded-full" />
+                <img src={userProfile.imageUrl || defaultProfile} alt="User Avatar" className="h-10 w-10 rounded-full" />
                 <h2 className="font-semibold">{userProfile.gamerName}</h2>
               </>
             )}

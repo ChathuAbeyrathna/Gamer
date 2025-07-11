@@ -175,15 +175,16 @@ const NavBar = () => {
             {profile && (
               <Link
                 to="/profile"
-                className={({ isActive }) =>
-                  `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
-            ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
-                }
+                className="flex items-center rounded-lg group"
               >
                 <img
                   src={profile.imageUrl || defaultProfile}
                   alt="User Avatar"
-                  className="h-10 w-10 rounded-full mr-2"
+                  className={`h-10 w-10 rounded-full mr-2 transition-all duration-200
+                      ${location.pathname === "/profile"
+                      ? "border border-blue-400"
+                      : "border border-transparent group-hover:border-blue-400"
+                    }`}
                 />
               </Link>
             )}

@@ -87,10 +87,12 @@ const FeedCard = ({
       .catch(console.error);
   }, [item.id, currentUserEmail]);
 
-  const handleToggleBoost = () => {
+  const handleToggleBoost = async () => {
     if (!token) {
-      alert("Please login to boost.");
-      window.location.href = "/login";
+      const result = await window.confirm("Please login to boost. Go to login page?");
+      if (result) {
+        window.location.href = "/login";
+      }
       return;
     }
 
@@ -125,10 +127,12 @@ const FeedCard = ({
       .catch(console.error);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!token) {
-      alert("Please login to comment.");
-      window.location.href = "/login";
+      const result = await window.confirm("Please login to comment. Go to login page?");
+      if (result) {
+        window.location.href = "/login";
+      }
       return;
     }
     if (!newComment.trim()) return;
@@ -169,8 +173,8 @@ const FeedCard = ({
       .catch(console.error);
   };
 
-  const handleDeleteComment = (id) => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
+  const handleDeleteComment = async (id) => {
+    if (await window.confirm("Are you sure you want to delete this comment?")) {
       axios
         .delete(`http://localhost:8080/api/comments/delete/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -372,19 +376,21 @@ const FeedCard = ({
       </div>
 
       {/* Header */}
-      <Link to={`/profile/view/${item.email}`} className="flex items-center space-x-4 mb-2">
-        <img
-          src={profileImage || item.userImage}
-          alt="User Avatar"
-          className="h-10 w-10 rounded-full"
-        />
+      <div className="flex items-center space-x-4 mb-2">
+        <Link to={`/profile/view/${item.email}`}>
+          <img
+            src={item.userImage || defaultProfile}
+            alt="User Avatar"
+            className="h-10 w-10 rounded-full"
+          />
+        </Link>
         <div>
-          <h2 className="font-semibold text-white">
-            {profileName || item.userName}
-          </h2>
+          <Link to={`/profile/view/${item.email}`}>
+            <h2 className="font-semibold text-white">{item.userName}</h2>
+          </Link>
           <p className="text-sm text-gray-400">{formatTime(item.createdAt)}</p>
         </div>
-      </Link>
+      </div>
 
       {/* Content */}
       <div
@@ -525,14 +531,14 @@ const FeedCard = ({
         <div className="bg-gray-900 p-2 rounded mt-2 max-h-48 overflow-y-auto">
           {[...boosts].reverse().map((b, index) => (
             <Link to={`/profile/view/${b.userEmail}`}>
-            <div key={b.id || b.userEmail || index} className="flex items-center space-x-2 text-white text-sm mb-2">
-              <img
-                src={b.userImage || defaultProfile}
-                className="h-8 w-8 rounded-full"
-                alt={b.userName || "User"}
-              />
-              <span>{b.userName || "Unknown"}</span>
-            </div>
+              <div key={b.id || b.userEmail || index} className="flex items-center space-x-2 text-white text-sm mb-2">
+                <img
+                  src={b.userImage || defaultProfile}
+                  className="h-8 w-8 rounded-full"
+                  alt={b.userName || "User"}
+                />
+                <span>{b.userName || "Unknown"}</span>
+              </div>
             </Link>
           ))}
         </div>

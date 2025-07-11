@@ -105,7 +105,8 @@ const Profile = () => {
 
   const handleDeleteItem = async (itemId, isBlog = false) => {
     const type = isBlog ? "blog" : "post";
-    const confirmDelete = window.confirm(`Are you sure you want to delete this ${type}?`);
+
+    const confirmDelete = await window.confirm(`Are you sure you want to delete this ${type}?`);
     if (!confirmDelete) return;
 
     const url = isBlog
@@ -121,7 +122,7 @@ const Profile = () => {
       if (res.ok) {
         setUserPosts(prevItems => prevItems.filter(item => item.id !== itemId));
       } else {
-        alert(`Failed to delete ${type}`);
+        window.alert(`Failed to delete ${type}`);
       }
     } catch (err) {
       console.error(`Error deleting ${type}`, err);
@@ -213,7 +214,7 @@ const Profile = () => {
                   showMenu={true}
                   onEdit={() => handleEditItem(item)}
                   onDelete={() => handleDeleteItem(item.id, item.type === "blog")}
-                  profileImage={profile.imageUrl || defaultProfile}
+                  profileImage={profile.imageUrl}
                   profileName={profile.gamerName}
                 />
               ))

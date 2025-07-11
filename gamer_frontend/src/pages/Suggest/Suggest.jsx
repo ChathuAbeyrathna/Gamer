@@ -25,6 +25,7 @@ const Suggest = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [viewType, setViewType] = useState("posts");
   const [exploreGroups, setExploreGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,23 +35,30 @@ const Suggest = () => {
   }, []);
 
   const fetchFeed = async () => {
+    setLoading(true);
     const token = localStorage.getItem("token");
-    const [postsRes, blogsRes] = await Promise.all([
-      axios.get("http://localhost:8080/api/posts/all", {
-        headers: { Authorization: `Bearer ${token}` }
-      }),
-      axios.get("http://localhost:8080/api/blogs/all", {
-        headers: { Authorization: `Bearer ${token}` }
-      }),
-    ]);
+    try {
+      const [postsRes, blogsRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/posts/all", {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get("http://localhost:8080/api/blogs/all", {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+      ]);
 
-    const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
-    const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
+      const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
+      const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
 
-    const combinedFeed = [...posts, ...blogs].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    setFeedItems(combinedFeed);
+      const combinedFeed = [...posts, ...blogs].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setFeedItems(combinedFeed);
+    } catch (error) {
+      console.error("Error fetching feed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchGroups = async () => {
@@ -127,13 +135,20 @@ const Suggest = () => {
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
 
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="text-[#01C0D3] text-xl font-semibold animate-pulse">
+            Loading...
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
           <Sidebar />
         </div>
 
         <div className="w-full flex flex-col">
-          {/* Category Title with Back Arrow */}
           <div className="sticky top-[80px] bg-gray-900 z-30 pt-6 pb-4">
             <div className="container mx-auto flex items-center space-x-3 px-10 text-3xl ml-20">
               {selectedCategory && (
@@ -155,7 +170,6 @@ const Suggest = () => {
             </div>
           </div>
 
-          {/* Posts/Groups Tabs */}
           {selectedCategory && (
             <div className="sticky top-[140px] bg-gray-900 z-30 py-2 flex justify-center">
               <div className="mb-2 space-x-8 text-lg font-semibold">
@@ -181,7 +195,6 @@ const Suggest = () => {
             </div>
           )}
 
-          {/* Category List */}
           {!selectedCategory && (
             <div className="flex flex-col space-y-6 w-3/4 mt-24 ml-40">
               {categories.map((cat) => (
@@ -197,9 +210,8 @@ const Suggest = () => {
             </div>
           )}
 
-          {/* Main Content Area */}
           <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[27%]">
-            {selectedCategory ? (
+            {!loading && selectedCategory ? (
               viewType === "posts" ? (
                 filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
@@ -239,7 +251,7 @@ const Suggest = () => {
                   )}
                 </div>
               )
-            ) : (
+            ) : !loading && (
               <p className="text-center text-gray-400">Please select a category to view items.</p>
             )}
 

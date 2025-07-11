@@ -75,18 +75,17 @@ const Home = () => {
       }
     };
 
-    // call all functions
     fetchFeed();
     fetchSavedPosts();
     fetchProfiles();
     fetchFollowing();
-
   }, [currentUserEmail, token]);
 
   const handleToggleFollow = async (email, e) => {
     e.stopPropagation();
     if (!token) {
-      alert("Please log in to follow users.");
+      const result = await window.confirm("You need to log in to follow users. Go to login page?");
+      if (result) navigate("/login");
       return;
     }
     try {
@@ -110,7 +109,8 @@ const Home = () => {
 
   const toggleSave = async (postId) => {
     if (!token) {
-      navigate("/login");
+      const result = await window.confirm("You need to log in to save posts. Go to login page?");
+      if (result) navigate("/login");
       return;
     }
 
@@ -145,7 +145,7 @@ const Home = () => {
         <Sidebar />
 
         {/* Feed */}
-        <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[25%]">
+        <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[5%] ml-[25%]">
           {loading ? (
             <div className="flex justify-center items-center h-40 text-gray-400 text-lg font-medium">
               Loading...
