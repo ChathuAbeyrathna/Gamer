@@ -9,7 +9,7 @@ import EmojiPicker from "emoji-picker-react";
 import camera from '../images/camera.png';
 import defaultProfile from '../images/defaultProfile.png';
 
-const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null }) => {
+const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null, groupId = null }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
@@ -21,7 +21,6 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   const [existingImageUrl, setExistingImageUrl] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // Popup message state
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("");
   const [showPopup, setShowPopup] = useState(false);
@@ -122,7 +121,8 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
         imageUrl: imageUrl || null,
         email: userProfile.email,
         userName: userProfile.name,
-        userImage: userProfile.imageUrl
+        userImage: userProfile.imageUrl,
+        groupId: groupId || null // ✅ Add groupId
       };
 
       const token = localStorage.getItem("token");
@@ -165,7 +165,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
       ['clean'],
     ],
   };
-  
+
   const formats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
@@ -174,7 +174,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-40 backdrop-blur overflow-y-auto">
       {/* Popup Alert */}
       {showPopup && (
         <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-4">
@@ -191,9 +191,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
             <div className="flex justify-center items-center w-full">
               <h2 className="text-lg font-semibold">{editingBlog ? "Edit Blog" : "Write Blog"}</h2>
             </div>
-            <button onClick={onClose}>
-              <IoMdClose size={24} />
-            </button>
+            <button onClick={onClose}><IoMdClose size={24} /></button>
           </div>
 
           <hr className="border-t border-white opacity-50 my-2 mb-6" />
@@ -218,7 +216,6 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
             </label>
           </div>
 
-          {/* Title input with emoji picker */}
           <div className="relative mt-5">
             <input
               type="text"
@@ -248,7 +245,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
             )}
           </div>
 
-          <ReactQuill 
+          <ReactQuill
             theme="snow"
             value={content}
             onChange={setContent}
@@ -264,7 +261,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null 
             onChange={(e) => setTags(e.target.value)}
             required
           >
-            <option value="">Select Post Tag</option>
+            <option value="">Select Blog Tag</option>
             <option value="Action Game">Action Game</option>
             <option value="Adventure Game">Adventure Game</option>
             <option value="RPG Game">RPG Game</option>

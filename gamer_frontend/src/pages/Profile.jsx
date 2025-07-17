@@ -62,8 +62,13 @@ const Profile = () => {
         const postData = postRes.ok ? await postRes.json() : [];
         const blogData = blogRes.ok ? await blogRes.json() : [];
 
-        const postsWithType = postData.map(p => ({ ...p, type: "post" }));
-        const blogsWithType = blogData.map(b => ({ ...b, type: "blog" }));
+        const postsWithType = postData
+          .filter(p => !p.groupId) // only global posts (not in group)
+          .map(p => ({ ...p, type: "post" }));
+
+        const blogsWithType = blogData
+          .filter(b => !b.groupId) // only global blogs (not in group)
+          .map(b => ({ ...b, type: "blog" }));
 
         const combined = [...postsWithType, ...blogsWithType].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -152,7 +157,7 @@ const Profile = () => {
               <img
                 src={profile.imageUrl || defaultProfile}
                 alt="Profile"
-                className="w-52 h-52 rounded-full mr-12 ml-10"
+                className="w-52 h-52 rounded-full mr-12 ml-10 object-cover"
               />
               <div className="flex-1 text-left relative">
                 <div>

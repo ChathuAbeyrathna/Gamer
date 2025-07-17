@@ -33,7 +33,7 @@ const Profile = () => {
           {/* Group Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 cursor-pointer">
             {/* Card 1 */}
-            <div className="relative rounded-xl overflow-hidden">
+            <div className="relative rounded-xl overflow-hidden" onClick={() => navigate("/joinedgroups")}>
               <img
                 src={group1}
                 alt="Group Joined"

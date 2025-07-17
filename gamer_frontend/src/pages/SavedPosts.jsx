@@ -20,9 +20,20 @@ const SavedPosts = () => {
       const res = await axios.get("http://localhost:8080/api/saved-posts", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const savedPostIds = res.data.map((p) => p.postId);
-      const allPosts = await axios.get("http://localhost:8080/api/posts/all");
-      const idToPostMap = new Map(allPosts.data.map((post) => [post.id, post]));
+
+      const [allPostsRes, groupPostsRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/posts/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("http://localhost:8080/api/groups/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const allPosts = [...allPostsRes.data, ...groupPostsRes.data];
+      const idToPostMap = new Map(allPosts.map((post) => [post.id, post]));
       const filtered = savedPostIds.map((id) => idToPostMap.get(id)).filter(Boolean);
       setSavedPosts(filtered);
     } catch (error) {

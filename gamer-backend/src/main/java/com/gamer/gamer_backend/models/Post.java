@@ -17,5 +17,6 @@ public class Post {
     private String title;
     private String imageUrl;
     private String[] tags;
-    private Instant createdAt = Instant.now(); 
+    private Instant createdAt = Instant.now();
+    private String groupId; 
 }

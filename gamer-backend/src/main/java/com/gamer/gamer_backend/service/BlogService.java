@@ -6,6 +6,7 @@ import com.gamer.gamer_backend.repository.BlogRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BlogService {
@@ -21,7 +22,9 @@ public class BlogService {
     }
 
     public List<Blog> getAllBlogs() {
-        return blogRepository.findAll();
+        return blogRepository.findAll().stream()
+                .filter(blog -> blog.getGroupId() == null) 
+                .collect(Collectors.toList());
     }
 
     public Optional<Blog> getBlogById(String id) {

@@ -4,6 +4,9 @@ import Profile from './pages/Profile';
 import Group from './pages/Group/Group';
 import CreateGroup from './pages/Group/CreateGroup';
 import YourGroupList from './pages/Group/YourGroupList';
+import JoinedGrpList from "./pages/Group/JoinedGrpList";
+import GroupView from "./pages/Group/GroupView";
+import OthersGrpView from "./pages/Group/OthersGrpView"
 import Suggest from './pages/Suggest/Suggest';
 import Save from './pages/SavedPosts';
 import AllProfiles from './pages/AllProfiles/AllProfiles';
@@ -19,7 +22,11 @@ function App() {
 
                 <Route path="/group" element={<Group />} />
                 <Route path="/creategroup" element={<CreateGroup />} />
+                <Route path="/group/edit/:groupId" element={<CreateGroup />} />
                 <Route path="/yourgrouplist" element={<YourGroupList />} />
+                <Route path="/joinedgroups" element={<JoinedGrpList />} />
+                <Route path="/group/view/:id" element={<GroupView />} />
+                <Route path="/group/view/:id" element={<OthersGrpView />} />
 
                 <Route path="/suggest" element={<Suggest />} />
 

@@ -25,72 +25,86 @@ const Suggest = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [viewType, setViewType] = useState("posts");
   const [exploreGroups, setExploreGroups] = useState([]);
+  const [joinedGroupIds, setJoinedGroupIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const currentUserEmail = localStorage.getItem("email");
+  const token = localStorage.getItem("token");
+
+  const knownTags = ["action", "adventure", "rpg", "simulation", "sports"];
+
   useEffect(() => {
+    const fetchFeed = async () => {
+      setLoading(true);
+      try {
+        const [postsRes, blogsRes] = await Promise.all([
+          axios.get("http://localhost:8080/api/posts/all", {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get("http://localhost:8080/api/blogs/all", {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+        ]);
+
+        const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
+        const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
+
+        const combinedFeed = [...posts, ...blogs].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setFeedItems(combinedFeed);
+      } catch (error) {
+        console.error("Error fetching feed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchGroups = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/groups", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const otherGroups = res.data.filter(g => g.ownerEmail !== currentUserEmail);
+        setExploreGroups(otherGroups);
+      } catch (err) {
+        console.error("Error loading groups:", err);
+      }
+    };
+
+    const fetchSavedPosts = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get("http://localhost:8080/api/saved-posts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSavedPostIds(res.data.map((sp) => sp.postId));
+      } catch (error) {
+        console.error("Error fetching saved posts:", error);
+      }
+    };
+
+    const fetchJoinedGroups = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8080/api/groups/user/${currentUserEmail}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const joinedIds = res.data.map(g => g.id);
+        setJoinedGroupIds(joinedIds);
+      } catch (err) {
+        console.error("Error loading joined groups", err);
+      }
+    };
+
     fetchFeed();
     fetchGroups();
     fetchSavedPosts();
-  }, []);
-
-  const fetchFeed = async () => {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    try {
-      const [postsRes, blogsRes] = await Promise.all([
-        axios.get("http://localhost:8080/api/posts/all", {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get("http://localhost:8080/api/blogs/all", {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-      ]);
-
-      const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
-      const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
-
-      const combinedFeed = [...posts, ...blogs].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setFeedItems(combinedFeed);
-    } catch (error) {
-      console.error("Error fetching feed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGroups = async () => {
-    const userEmail = localStorage.getItem("email");
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:8080/api/groups", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const otherGroups = res.data.filter(g => g.ownerEmail !== userEmail);
-      setExploreGroups(otherGroups);
-    } catch (err) {
-      console.error("Error loading groups:", err);
-    }
-  };
-
-  const fetchSavedPosts = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await axios.get("http://localhost:8080/api/saved-posts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSavedPostIds(res.data.map((sp) => sp.postId));
-    } catch (error) {
-      console.error("Error fetching saved posts:", error);
-    }
-  };
+    fetchJoinedGroups();
+    window.scrollTo(0, 0);
+  }, [currentUserEmail, token]);
 
   const toggleSave = async (postId) => {
-    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
@@ -107,7 +121,32 @@ const Suggest = () => {
     }
   };
 
-  const knownTags = ["action", "adventure", "rpg", "simulation", "sports"];
+  const handleJoinGroup = async (groupId) => {
+    try {
+      await axios.post(`http://localhost:8080/api/groups/${groupId}/join?email=${currentUserEmail}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setJoinedGroupIds(prev => [...prev, groupId]);
+    } catch (err) {
+      console.error("Join failed:", err);
+    }
+  };
+
+  const handleLeaveGroup = async (groupId) => {
+    const confirmed = await window.confirm("Leave this group?");
+    if (!confirmed) return;
+
+    try {
+      await axios.post(
+        `http://localhost:8080/api/groups/${groupId}/leave?email=${currentUserEmail}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setJoinedGroupIds(prev => prev.filter(id => id !== groupId));
+    } catch (err) {
+      console.error("Leave failed:", err);
+    }
+  };
 
   const filteredItems = selectedCategory
     ? feedItems.filter((item) => {
@@ -124,24 +163,33 @@ const Suggest = () => {
     })
     : [];
 
-  const currentUserEmail = localStorage.getItem("email");
+  const filteredGroups = selectedCategory
+    ? exploreGroups.filter(group => {
+      const groupTags = group.tags?.map(tag => tag.toLowerCase()) || [];
+      if (selectedCategory === "others") {
+        return !groupTags.some(tag =>
+          knownTags.some(known => tag.includes(known))
+        );
+      } else {
+        return groupTags.some(tag => tag.includes(selectedCategory.toLowerCase()));
+      }
+    })
+    : [];
 
   useEffect(() => {
+    if (!selectedCategory) {
+      window.scrollTo(0, 0);
+    }
+  }, [selectedCategory]);
+
+  if (filteredItems.length > 0) {
     window.scrollTo(0, 0);
-  }, []);
+  }
 
   return (
     <div className="relative min-h-screen text-white">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
-
-      {loading && (
-        <div className="fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center">
-          <div className="text-[#01C0D3] text-xl font-semibold animate-pulse">
-            Loading...
-          </div>
-        </div>
-      )}
 
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
         <div className="w-1/4">
@@ -149,6 +197,7 @@ const Suggest = () => {
         </div>
 
         <div className="w-full flex flex-col">
+          {/* Top header */}
           <div className="sticky top-[80px] bg-gray-900 z-30 pt-6 pb-4">
             <div className="container mx-auto flex items-center space-x-3 px-10 text-3xl ml-20">
               {selectedCategory && (
@@ -159,7 +208,7 @@ const Suggest = () => {
                   }}
                   className="hover:text-gray-400"
                 >
-                  <FaArrowLeft className="text-2xl font-light mr-1" style={{ strokeWidth: 1 }} />
+                  <FaArrowLeft className="text-2xl font-light mr-1" />
                 </button>
               )}
               <h2>
@@ -170,6 +219,7 @@ const Suggest = () => {
             </div>
           </div>
 
+          {/* Tab switcher */}
           {selectedCategory && (
             <div className="sticky top-[140px] bg-gray-900 z-30 py-2 flex justify-center">
               <div className="mb-2 space-x-8 text-lg font-semibold">
@@ -195,6 +245,7 @@ const Suggest = () => {
             </div>
           )}
 
+          {/* Category selection */}
           {!selectedCategory && (
             <div className="flex flex-col space-y-6 w-3/4 mt-24 ml-40">
               {categories.map((cat) => (
@@ -210,8 +261,11 @@ const Suggest = () => {
             </div>
           )}
 
+          {/* Main display area */}
           <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[27%]">
-            {!loading && selectedCategory ? (
+            {loading ? (
+              <p className="text-center text-gray-400">Loading...</p>
+            ) : selectedCategory ? (
               viewType === "posts" ? (
                 filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
@@ -232,26 +286,48 @@ const Suggest = () => {
                 )
               ) : (
                 <div className="mt-8 space-y-4">
-                  {exploreGroups.length > 0 ? (
-                    exploreGroups.map(group => (
-                      <div
-                        key={group.id}
-                        className="bg-gradient-to-r from-[rgba(1,192,211,0.2)] to-[rgba(32,89,182,0.2)] p-4 rounded-xl flex items-center space-x-4"
-                      >
-                        <img
-                          src={group.coverPhotoUrl || defaultGroup}
-                          alt="Group Cover"
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="text-white font-semibold">{group.name}</div>
-                      </div>
-                    ))
+                  {filteredGroups.length > 0 ? (
+                    filteredGroups.map(group => {
+                      const isJoined = joinedGroupIds.includes(group.id);
+                      return (
+                        <div
+                          key={group.id}
+                          onClick={() => navigate(`/group/view/${group.id}`)}
+                          className="bg-gradient-to-r from-[rgba(1,192,211,0.2)] to-[rgba(32,89,182,0.2)] p-4 rounded-xl flex items-center justify-between space-x-4 cursor-pointer hover:brightness-110 transition"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <img
+                              src={group.coverPhotoUrl || defaultGroup}
+                              alt="Group Cover"
+                              className="w-12 h-12 rounded-full object-cover border border-white"
+                            />
+                            <div className="font-semibold text-white">
+                              {group.name}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card navigation
+                              isJoined ? handleLeaveGroup(group.id) : handleJoinGroup(group.id);
+                            }}
+                            className={`px-4 py-1 rounded-md text-sm font-medium ${isJoined
+                              ? "bg-red-600 hover:bg-red-700 text-white"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                              }`}
+                          >
+                            {isJoined ? "Leave" : "Join"}
+                          </button>
+                        </div>
+
+                      );
+                    })
                   ) : (
                     <p className="text-center text-gray-400">No groups found in this category.</p>
                   )}
                 </div>
               )
-            ) : !loading && (
+            ) : (
               <p className="text-center text-gray-400">Please select a category to view items.</p>
             )}
 

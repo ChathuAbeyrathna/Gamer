@@ -19,4 +19,5 @@ public class Blog {
     private String imageUrl;
     private String[] tags;
     private Instant createdAt = Instant.now();
+    private String groupId;
 }

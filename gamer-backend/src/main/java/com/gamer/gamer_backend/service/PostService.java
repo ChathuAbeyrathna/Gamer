@@ -5,6 +5,7 @@ import com.gamer.gamer_backend.models.Post;
 import com.gamer.gamer_backend.repository.PostRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
@@ -19,7 +20,9 @@ public class PostService {
     }
 
     public List<Post> getAllPosts() {
-        return postRepository.findAll();
+        return postRepository.findAll().stream()
+                .filter(post -> post.getGroupId() == null) 
+                .collect(Collectors.toList());
     }
 
     public List<Post> getPostsByEmail(String email) {
@@ -36,12 +39,12 @@ public class PostService {
     }
 
     public Post updatePost(String id, Post updatedPost) {
-    return postRepository.findById(id).map(post -> {
-        post.setTitle(updatedPost.getTitle());
-        post.setImageUrl(updatedPost.getImageUrl());
-        post.setTags(updatedPost.getTags());
-        return postRepository.save(post);
-    }).orElse(null);
+        return postRepository.findById(id).map(post -> {
+            post.setTitle(updatedPost.getTitle());
+            post.setImageUrl(updatedPost.getImageUrl());
+            post.setTags(updatedPost.getTags());
+            return postRepository.save(post);
+        }).orElse(null);
     }
 
     public void deletePost(String id) {
