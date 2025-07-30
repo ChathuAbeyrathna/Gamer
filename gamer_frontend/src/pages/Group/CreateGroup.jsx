@@ -3,12 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { storage } from '../../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import EmojiPicker from "emoji-picker-react";
 import NavBar from "../../components/NavBar";
 import photo from '../../images/photo.png';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
-  const { groupId } = useParams(); 
+  const { groupId } = useParams();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [coverPhoto, setCoverPhoto] = useState(null);
@@ -16,6 +17,8 @@ const CreateGroup = () => {
   const [creating, setCreating] = useState(false);
   const [tags, setTags] = useState('');
   const [customTag, setCustomTag] = useState('');
+  const [showNameEmojiPicker, setShowNameEmojiPicker] = useState(false);
+  const [showDescEmojiPicker, setShowDescEmojiPicker] = useState(false);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -40,6 +43,19 @@ const CreateGroup = () => {
     }
   }, [groupId, token]);
 
+
+  const toggleNameEmojiPicker = () => setShowNameEmojiPicker((prev) => !prev);
+  const toggleDescEmojiPicker = () => setShowDescEmojiPicker((prev) => !prev);
+
+  const onNameEmojiClick = (emojiData) => {
+    setName((prev) => prev + emojiData.emoji);
+  };
+
+  const onDescEmojiClick = (emojiData) => {
+    setDescription((prev) => prev + emojiData.emoji);
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCreating(true);
@@ -63,22 +79,20 @@ const CreateGroup = () => {
 
     try {
       if (groupId) {
-        // ✏️ UPDATE group
+        // UPDATE group
         await axios.put(`http://localhost:8080/api/groups/${groupId}`, groupData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert("Group updated!");
-        navigate(`/groups/view/${groupId}`); 
+        navigate(`/yourgroups`);
       } else {
-        const res = await axios.post('http://localhost:8080/api/groups', {
+        await axios.post('http://localhost:8080/api/groups', {
           ...groupData,
           ownerEmail: email,
           memberEmails: [email],
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert("Group created!");
-        navigate(`/groups/view/${res.data.id}`); 
+        navigate(`/yourgroups`);
       }
     } catch (err) {
       alert("Error saving group");
@@ -118,23 +132,41 @@ const CreateGroup = () => {
             />
           </div>
 
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Add a group name"
-            required
-            className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Add a group name"
+              required
+              className="w-full p-3 pr-10 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
+            />
+            <button type="button" onClick={toggleNameEmojiPicker} className="absolute right-3 top-3">😊</button>
 
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add a description"
-            required
-            className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
-          />
+            {showNameEmojiPicker && (
+              <div className="absolute z-50 top-14 right-0">
+                <EmojiPicker onEmojiClick={onNameEmojiClick} theme="dark" height={350} width={300} />
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add a description"
+              required
+              className="w-full p-3 pr-10 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none"
+            />
+            <button type="button" onClick={toggleDescEmojiPicker} className="absolute right-3 top-3">😊</button>
+
+            {showDescEmojiPicker && (
+              <div className="absolute z-50 top-14 right-0">
+                <EmojiPicker onEmojiClick={onDescEmojiClick} theme="dark" height={350} width={300} />
+              </div>
+            )}
+          </div>
 
           <select
             className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none cursor-pointer"

@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
@@ -51,7 +50,7 @@ const Profile = () => {
             </div>
 
             {/* Card 2 */}
-            <div className="relative rounded-xl overflow-hidden" onClick={() => navigate("/yourgrouplist")}>
+            <div className="relative rounded-xl overflow-hidden" onClick={() => navigate("/yourgroups")}>
               <img
                 src={group2}
                 alt="Your Game Groups"

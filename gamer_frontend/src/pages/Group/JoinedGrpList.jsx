@@ -1,16 +1,18 @@
-// src/pages/JoinedGroupList.jsx
-
-import React, { useEffect, useState } from 'react';
-import { Link } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
 import axios from 'axios';
-import defaultImg from '../../images/default.png';
+import defaultGroup from '../../images/default.png';
+import viewMore from '../../images/viewMore.png';
 
 const JoinedGrpList = () => {
   const email = localStorage.getItem("email");
   const token = localStorage.getItem("token");
   const [groups, setGroups] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(8);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!email || !token) return;
@@ -22,8 +24,10 @@ const JoinedGrpList = () => {
       .catch(err => console.error("Error loading joined groups", err));
   }, [email, token]);
 
-  // Filter out groups where user is the owner
-  const joinedGroups = groups.filter(group => group.ownerEmail !== email);
+  // Filter and reverse order
+  const joinedGroups = groups
+    .filter(group => group.ownerEmail !== email)
+    .reverse(); // newest at top
 
   return (
     <div className="relative min-h-screen text-white">
@@ -36,57 +40,77 @@ const JoinedGrpList = () => {
         </div>
 
         <div className="w-3/4 px-4 mt-16 mr-40 ml-40">
-          <div className="min-h-screen bg-gray-900 px-6 py-10 text-white">
-            <h1 className="text-3xl mb-2">Game Groups You've Joined</h1>
-            <p className="mb-6 text-gray-300">{joinedGroups.length} Groups</p>
-
-            {joinedGroups.length === 0 && (
-              <p className="text-gray-500">You haven’t joined any groups yet.</p>
-            )}
-
-            <div className="space-y-5">
-              {joinedGroups.map(group => (
-                <div
-                  key={group.id}
-                  className="bg-gradient-to-r from-[rgba(1,192,211,0.7)] to-[rgba(32,89,182,0.7)] p-4 rounded-2xl flex justify-between items-center shadow-lg hover:scale-[1.01] transition-all"
-                >
-                  <Link to={`/group/view/${group.id}`} className="flex items-center">
-                    <img
-                      src={group.coverPhotoUrl || defaultImg}
-                      alt="Group Cover"
-                      className="w-16 h-16 rounded-full object-cover mr-4 border border-white"
-                    />
-                    <div>
-                      <h2 className="text-lg font-semibold">{group.name}</h2>
-                      <p className="text-sm text-gray-200 mt-1">{group.memberEmails.length} Gamers</p>
-                    </div>
-                  </Link>
-
-                  <button
-                    onClick={async () => {
-                      const confirmed = await window.confirm("Leave this group?");
-                      if (!confirmed) return;
-
-                      try {
-                        await axios.post(
-                          `http://localhost:8080/api/groups/${group.id}/leave?email=${email}`,
-                          {},
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
-                        setGroups(prev => prev.filter(g => g.id !== group.id));
-                      } catch (error) {
-                        console.error("Failed to leave group", error);
-                      }
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm"
-                  >
-                    Leave Group
-                  </button>
-
-                </div>
-              ))}
+          <div className="sticky top-[80px] bg-gray-900 z-30 pt-8 pb-1 mb-4">
+            <div className="flex items-center space-x-3 -ml-10">
+              <FaArrowLeft
+                className="text-2xl font-light mr-1 cursor-pointer hover:text-gray-400"
+                onClick={() => navigate("/group")}
+              />
+              <h1 className="text-3xl mb-2">Game Groups You've Joined</h1>
             </div>
+            <p className="mb-6 text-gray-300">{joinedGroups.length} Groups</p>
+          </div>
 
+          {joinedGroups.length === 0 && (
+            <p className="text-gray-500">You haven’t joined any groups yet.</p>
+          )}
+
+          <div className="space-y-5">
+            {joinedGroups.slice(0, visibleCount).map(group => (
+              <div
+                key={group.id}
+                onClick={() => navigate(`/group/view/${group.id}`)}
+                className="w-[700px] bg-gradient-to-r from-[#01C0D3B3] to-[#2059B6B3] p-4 rounded-xl flex justify-between items-center space-x-4 cursor-pointer hover:brightness-110 transition"
+              >
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={group.coverPhotoUrl || defaultGroup}
+                    alt="Group Cover"
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div className="font-semibold text-white">
+                    {group.name}
+                  </div>
+                </div>
+
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirmed = await window.confirm("Leave this group?");
+                    if (!confirmed) return;
+
+                    try {
+                      await axios.post(
+                        `http://localhost:8080/api/groups/${group.id}/leave?email=${email}`,
+                        {},
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      setGroups(prev => prev.filter(g => g.id !== group.id));
+                    } catch (error) {
+                      console.error("Failed to leave group", error);
+                    }
+                  }}
+                  className="px-4 py-1 rounded-md text-sm font-medium border border-white text-white"
+                >
+                  Leave Group
+                </button>
+              </div>
+            ))}
+
+            {joinedGroups.length > visibleCount && (
+              <div className="text-center mt-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setVisibleCount(prev => prev + 8);
+                  }}
+                  className="mx-[300px] mt-8 mb-10 flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
+                >
+                  View More
+                  <img src={viewMore} alt="Mario Icon" className="w-5 h-5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

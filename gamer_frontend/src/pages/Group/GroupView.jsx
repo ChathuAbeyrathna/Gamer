@@ -1,5 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+import { UserIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import axios from "axios";
 import NavBar from "../../components/NavBar";
 import defaultImg from "../../images/default.png";
@@ -24,11 +27,11 @@ const GroupView = () => {
     const [openBlog, setOpenBlog] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
     const [editingBlog, setEditingBlog] = useState(null);
-    const [refreshKey, setRefreshKey] = useState(0);
-    const menuRef = useRef(null);
-
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [showBlogModal, setShowBlogModal] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const menuRef = useRef(null);
 
     useEffect(() => {
         const fetchGroup = async () => {
@@ -164,8 +167,6 @@ const GroupView = () => {
         setDropdownOpenId(null);
     };
 
-
-
     const filteredFeed = showMyPostsOnly
         ? groupFeed.filter((item) => item.email === email)
         : groupFeed;
@@ -179,16 +180,23 @@ const GroupView = () => {
             <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
             <NavBar />
 
-            <div className="relative z-10 bg-gray-900 min-h-screen pt-20 px-6 flex flex-col items-center">
+            <button
+                onClick={() => navigate(-1)}
+                className="fixed top-24 left-32 mt-4 z-50 text-white hover:text-gray-400"
+            >
+                <FaArrowLeft className="text-2xl font-light" style={{ strokeWidth: 1 }} />
+            </button>
+
+            <div className="mx-auto mt-20 px-4 py-8 flex flex-col items-center">
                 {group && (
                     <>
                         <img
                             src={group.coverPhotoUrl || defaultImg}
                             alt="Group Cover"
-                            className="w-full max-w-4xl h-60 object-cover rounded-lg shadow-lg"
+                            className="w-full max-w-4xl h-80 object-cover shadow-lg"
                         />
 
-                        <div className="max-w-4xl w-full bg-gray-800 rounded-xl mt-6 p-6">
+                        <div className="max-w-4xl w-full mt-6 mb-4">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h1 className="text-3xl font-bold">{group.name}</h1>
@@ -200,33 +208,48 @@ const GroupView = () => {
 
                                 <div className="flex gap-2">
                                     {isOwner && (
-                                        <>
+                                        <div className="relative" ref={menuRef}>
                                             <button
-                                                onClick={() => navigate(`/group/edit/${group.id}`)}
-                                                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-1 rounded"
+                                                onClick={() => setShowMenu(prev => !prev)}
+                                                className="p-2"
                                             >
-                                                ✏️ Edit
+                                                <Cog6ToothIcon className="w-5 h-5" />
                                             </button>
-                                            <button
-                                                onClick={async () => {
-                                                    if (window.confirm("Are you sure you want to delete this group?")) {
-                                                        try {
-                                                            await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, {
-                                                                headers: { Authorization: `Bearer ${token}` },
-                                                            });
-                                                            alert("Group deleted successfully");
-                                                            navigate("/groups");
-                                                        } catch (err) {
-                                                            alert("Failed to delete group");
-                                                            console.error(err);
-                                                        }
-                                                    }
-                                                }}
-                                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded"
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </>
+
+                                            {showMenu && (
+                                                <div className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowMenu(false);
+                                                            navigate(`/group/edit/${group.id}`);
+                                                        }}
+                                                        className="w-full text-left px-4 py-2 hover:bg-gray-600"
+                                                    >
+                                                        Edit Group
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            setShowMenu(false);
+                                                            if (window.confirm("Are you sure you want to delete this group?")) {
+                                                                try {
+                                                                    await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, {
+                                                                        headers: { Authorization: `Bearer ${token}` },
+                                                                    });
+                                                                    alert("Group deleted successfully");
+                                                                    navigate("/groups");
+                                                                } catch (err) {
+                                                                    alert("Failed to delete group");
+                                                                    console.error(err);
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="w-full text-left px-4 py-2 hover:bg-gray-600"
+                                                    >
+                                                        Delete Group
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
 
                                     {!isOwner && !isMember && (
@@ -266,7 +289,7 @@ const GroupView = () => {
                                                     console.error("Leave failed:", err);
                                                 }
                                             }}
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                                            className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white"
                                         >
                                             Leave Group
                                         </button>
@@ -276,50 +299,49 @@ const GroupView = () => {
                                 </div>
                             </div>
 
-                            {group.tags?.length > 0 && (
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                    {group.tags.map((tag, idx) => (
-                                        <span key={idx} className="bg-blue-700 px-3 py-1 rounded-full text-sm">
-                                            #{tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
                             {(isOwner || isMember) && (
-                                <div className="flex gap-4 mt-6 flex-wrap">
-                                    <button
-                                        onClick={() => {
-                                            setEditingPost(null);
-                                            setShowCreatePost(true);
-                                        }}
-                                        className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded"
-                                    >
-                                        Create a Post
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setEditingBlog(null);
-                                            setShowBlogModal(true);
-                                        }}
-                                        className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded"
-                                    >
-                                        ✍️ Write Blog
-                                    </button>
-                                    <button
-                                        onClick={() => setShowMyPostsOnly((prev) => !prev)}
-                                        className="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded"
-                                    >
-                                        {showMyPostsOnly ? "Show All Posts" : "My Posts"}
-                                    </button>
+                                <div className="flex flex-wrap items-center justify-between w-full mt-6">
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => {
+                                                setEditingPost(null);
+                                                setShowCreatePost(true);
+                                            }}
+                                            className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
+                                        >
+                                            Create a Post
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setEditingBlog(null);
+                                                setShowBlogModal(true);
+                                            }}
+                                            className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
+                                        >
+                                            Write a Blog
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <button
+                                            onClick={() => setShowMyPostsOnly((prev) => !prev)}
+                                            className="border border-white text-white rounded-full p-2 hover:bg-white/20 transition duration-200"
+                                        >
+                                            {showMyPostsOnly ? (
+                                                <ClipboardDocumentListIcon className="w-5 h-5" alt="All Posts" />
+                                            ) : (
+                                                <UserIcon className="w-5 h-5" alt="My Posts" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
 
                         {/* Feed */}
-                        <div className="max-w-4xl w-full mt-10 space-y-6">
+                        <div className="w-2/4 mx-4 mt-8 space-y-6">
                             {filteredFeed.length === 0 ? (
-                                <div className="bg-gray-800 p-4 rounded-lg text-center text-gray-400">
+                                <div className="text-center text-gray-400">
                                     No posts or blogs yet.
                                 </div>
                             ) : (

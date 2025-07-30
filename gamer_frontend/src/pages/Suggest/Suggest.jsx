@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 import FeedCard from "../../components/FeedCard";
 import NavBar from "../../components/NavBar";
 import Sidebar from "../../components/SideBar";
 import ViewBlog from "../../components/ViewBlog";
-import { FaArrowLeft } from "react-icons/fa";
 import defaultGroup from '../../images/default.png';
+import viewMore from '../../images/viewMore.png';
 
 const categories = [
   { name: "Action Game", icon: "🎯", tag: "action" },
@@ -26,6 +27,7 @@ const Suggest = () => {
   const [viewType, setViewType] = useState("posts");
   const [exploreGroups, setExploreGroups] = useState([]);
   const [joinedGroupIds, setJoinedGroupIds] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -285,43 +287,56 @@ const Suggest = () => {
                   <p className="text-center text-gray-400">No posts found for this category.</p>
                 )
               ) : (
-                <div className="mt-8 space-y-4">
+                <div className="mt-8 mb-8 space-y-4">
                   {filteredGroups.length > 0 ? (
-                    filteredGroups.map(group => {
-                      const isJoined = joinedGroupIds.includes(group.id);
-                      return (
-                        <div
-                          key={group.id}
-                          onClick={() => navigate(`/group/view/${group.id}`)}
-                          className="bg-gradient-to-r from-[rgba(1,192,211,0.2)] to-[rgba(32,89,182,0.2)] p-4 rounded-xl flex items-center justify-between space-x-4 cursor-pointer hover:brightness-110 transition"
-                        >
-                          <div className="flex items-center space-x-4">
-                            <img
-                              src={group.coverPhotoUrl || defaultGroup}
-                              alt="Group Cover"
-                              className="w-12 h-12 rounded-full object-cover border border-white"
-                            />
-                            <div className="font-semibold text-white">
-                              {group.name}
+                    <>
+                      {[...filteredGroups].reverse().slice(0, visibleCount).map(group => {
+                        const isJoined = joinedGroupIds.includes(group.id);
+                        return (
+                          <div
+                            key={group.id}
+                            onClick={() => navigate(`/group/view/${group.id}`)}
+                            className="w-[700px] bg-gradient-to-r from-[#01C0D3B3] to-[#2059B6B3] p-4 rounded-xl flex items-center justify-between space-x-4 cursor-pointer -ml-24 -mt-8 hover:brightness-110 transition"
+                          >
+                            <div className="flex items-center space-x-4">
+                              <img
+                                src={group.coverPhotoUrl || defaultGroup}
+                                alt="Group Cover"
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                              <div className="font-semibold text-white">
+                                {group.name}
+                              </div>
                             </div>
-                          </div>
 
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                isJoined ? handleLeaveGroup(group.id) : handleJoinGroup(group.id);
+                              }}
+                              className="px-4 py-1 rounded-md text-sm font-medium border border-white text-white"
+                            >
+                              {isJoined ? "Leave Group" : "Join Group"}
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                      {filteredGroups.length > visibleCount && (
+                        <div className="text-center mt-4">
                           <button
                             onClick={(e) => {
-                              e.stopPropagation(); // Prevent card navigation
-                              isJoined ? handleLeaveGroup(group.id) : handleJoinGroup(group.id);
+                              e.stopPropagation();
+                              setVisibleCount(prev => prev + 8);
                             }}
-                            className={`px-4 py-1 rounded-md text-sm font-medium ${isJoined
-                              ? "bg-red-600 hover:bg-red-700 text-white"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
-                              }`}
+                            className="mx-auto mt-8 flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
                           >
-                            {isJoined ? "Leave" : "Join"}
+                            View More
+                            <img src={viewMore} alt="Mario Icon" className="w-5 h-5" />
                           </button>
                         </div>
-
-                      );
-                    })
+                      )}
+                    </>
                   ) : (
                     <p className="text-center text-gray-400">No groups found in this category.</p>
                   )}

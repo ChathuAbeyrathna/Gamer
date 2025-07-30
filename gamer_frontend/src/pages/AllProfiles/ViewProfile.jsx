@@ -91,7 +91,6 @@ const ViewProfile = () => {
     }
   };
 
-
   const toggleSave = async (postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -118,9 +117,8 @@ const ViewProfile = () => {
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   useEffect(() => {
-  window.scrollTo(0, 0);
-}, []);
-
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -162,11 +160,7 @@ const ViewProfile = () => {
                 {email !== currentUserEmail && (
                   <button
                     onClick={toggleFollow}
-                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
-                    style={{
-                      background:
-                        'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
-                    }}
+                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
                   >
                     {isFollowing ? 'Unfollow' : 'Follow'}
                   </button>
@@ -175,11 +169,7 @@ const ViewProfile = () => {
                 {/* Message button (could be linked to chat) */}
                 {email !== currentUserEmail && (
                   <button
-                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90"
-                    style={{
-                      background:
-                        'linear-gradient(to right, rgba(33, 80, 182, 0.5), rgba(1, 192, 211, 0.5))',
-                    }}
+                    className="w-36 py-1 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
                     onClick={() => alert("Implement messaging!")}
                   >
                     Message
