@@ -2,6 +2,7 @@ package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.Boost;
 import com.gamer.gamer_backend.service.BoostService;
+import com.gamer.gamer_backend.service.NotificationService; // Import this
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +18,18 @@ import java.util.Map;
 public class BoostController {
 
     private final BoostService boostService;
+    private final NotificationService notificationService; // Inject it here
 
     @PostMapping("/toggle/{postId}")
     public Map<String, Boolean> toggleBoost(@PathVariable String postId, Principal principal) {
         boolean boosted = boostService.toggleBoost(principal.getName(), postId);
+
+        if (boosted) {
+            String receiverId = boostService.getPostOwnerId(postId); // ✅ Make sure this method exists
+            notificationService.sendNotification(
+                    principal.getName(), receiverId, "BOOST", postId, "boosted to your post");
+        }
+
         Map<String, Boolean> response = new HashMap<>();
         response.put("boosted", boosted);
         return response;
@@ -31,4 +40,3 @@ public class BoostController {
         return boostService.getBoosts(postId);
     }
 }
-

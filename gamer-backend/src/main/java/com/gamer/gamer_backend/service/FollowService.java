@@ -17,9 +17,8 @@ public class FollowService {
     private final UserProfileRepository profileRepo;
 
     private FollowInfo getOrCreate(String email) {
-        return repo.findByEmail(email).orElseGet(() ->
-            repo.save(new FollowInfo(null, email, new HashSet<>(), new HashSet<>()))
-        );
+        return repo.findByEmail(email)
+                .orElseGet(() -> repo.save(new FollowInfo(null, email, new HashSet<>(), new HashSet<>())));
     }
 
     public String toggleFollow(String fromEmail, String toEmail) {
@@ -31,14 +30,16 @@ public class FollowService {
 
         if (from.getFollowing().remove(toEmail)) {
             to.getFollowers().remove(fromEmail);
+            repo.save(from);
+            repo.save(to);
+            return "UNFOLLOWED";
         } else {
             from.getFollowing().add(toEmail);
             to.getFollowers().add(fromEmail);
+            repo.save(from);
+            repo.save(to);
+            return "FOLLOWED";
         }
-
-        repo.save(from);
-        repo.save(to);
-        return "ok";
     }
 
     public List<UserProfile> getFollowing(String email) {
@@ -54,8 +55,7 @@ public class FollowService {
     public Map<String, Boolean> getStatus(String myEmail, String targetEmail) {
         FollowInfo me = getOrCreate(myEmail);
         return Map.of(
-                "isFollowing", me.getFollowing().contains(targetEmail)
-        );
+                "isFollowing", me.getFollowing().contains(targetEmail));
     }
 
     public FollowInfo getFollowInfo(String email) {

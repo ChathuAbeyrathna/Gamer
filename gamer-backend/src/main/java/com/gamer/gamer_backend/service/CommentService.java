@@ -1,8 +1,12 @@
 package com.gamer.gamer_backend.service;
 
+import com.gamer.gamer_backend.models.Blog;
 import com.gamer.gamer_backend.models.Comment;
+import com.gamer.gamer_backend.models.Post;
 import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.repository.CommentRepository;
+import com.gamer.gamer_backend.repository.PostRepository;
+import com.gamer.gamer_backend.repository.BlogRepository;
 import com.gamer.gamer_backend.repository.UserProfileRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,12 @@ public class CommentService {
 
     @Autowired
     private UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private BlogRepository blogRepository;
 
     // Create new comment (top-level)
     public Comment createComment(Comment comment) {
@@ -56,28 +66,29 @@ public class CommentService {
         return commentRepository.save(reply);
     }
 
-    // Get all top-level comments for a post, with nested replies
+
+    public String getPostOwnerId(String id) {
+        String owner = postRepository.findById(id).map(Post::getEmail).orElse(null);
+        if (owner != null) return owner;
+        return blogRepository.findById(id).map(Blog::getEmail).orElse(null);
+    }
+
     public List<Comment> getCommentsWithReplies(String postId) {
         List<Comment> topComments = commentRepository.findByPostIdAndParentCommentIdIsNullOrderByCreatedAtAsc(postId);
-
-        // For each top-level comment, fetch its replies recursively
         for (Comment c : topComments) {
             c.setReplies(getRepliesRecursive(c.getId()));
         }
         return topComments;
     }
 
-    // Recursive method to get replies for a comment
     private List<Comment> getRepliesRecursive(String parentCommentId) {
         List<Comment> replies = commentRepository.findByParentCommentIdOrderByCreatedAtAsc(parentCommentId);
-
         for (Comment r : replies) {
             r.setReplies(getRepliesRecursive(r.getId()));
         }
         return replies;
     }
 
-    // Edit comment content
     public Comment updateComment(String id, String newContent) {
         Optional<Comment> opt = commentRepository.findById(id);
         if (opt.isEmpty()) {
@@ -88,15 +99,12 @@ public class CommentService {
         return commentRepository.save(comment);
     }
 
-    // Delete comment (and optionally delete all replies recursively)
     public void deleteCommentAndReplies(String id) {
-        // delete replies first recursively
         List<Comment> replies = commentRepository.findByParentCommentIdOrderByCreatedAtAsc(id);
         for (Comment reply : replies) {
             deleteCommentAndReplies(reply.getId());
         }
 
-        // delete the comment itself
         commentRepository.deleteById(id);
     }
 }

@@ -22,11 +22,11 @@ const FeedCard = ({
   showMenu = false,
   onEdit,
   onDelete,
-  profileImage,
-  profileName,
+  openCommentSection = false,  // NEW prop
+  openBoostSection = false,
   currentUserEmail,
 }) => {
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(openCommentSection);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
@@ -37,7 +37,7 @@ const FeedCard = ({
   const [shareMessage, setShareMessage] = useState("");
   const [boosted, setBoosted] = useState(false);
   const [boosts, setBoosts] = useState([]);
-  const [showBoostList, setShowBoostList] = useState(false);
+  const [showBoostList, setShowBoostList] = useState(openBoostSection);
   const [animateBoost, setAnimateBoost] = useState(false);
 
   const commentInputRef = useRef(null);
@@ -50,6 +50,21 @@ const FeedCard = ({
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent || "";
   };
+
+  useEffect(() => {
+    if (openCommentSection && commentInputRef.current) {
+      commentInputRef.current.focus();
+    }
+  }, [openCommentSection]);
+
+  // If you want to sync if props change dynamically (optional)
+  useEffect(() => {
+    setShowComments(openCommentSection);
+  }, [openCommentSection]);
+
+  useEffect(() => {
+    setShowBoostList(openBoostSection);
+  }, [openBoostSection]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -52,16 +52,19 @@ const AllProfiles = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.data.status === 'ok') {
-        setFollowing(prev => prev.includes(profileEmail)
-          ? prev.filter(e => e !== profileEmail)
-          : [...prev, profileEmail]);
+
+      if (res.data.status === 'FOLLOWED') {
+        // Add profileEmail to following list if not already present
+        setFollowing(prev => (prev.includes(profileEmail) ? prev : [...prev, profileEmail]));
+      } else if (res.data.status === 'UNFOLLOWED') {
+        // Remove profileEmail from following list
+        setFollowing(prev => prev.filter(email => email !== profileEmail));
       }
     } catch (err) {
       console.error('Error toggling follow:', err);
     }
   };
- 
+
   const goToProfile = (email) => navigate(`/profile/view/${encodeURIComponent(email)}`);
 
   const filteredProfiles = profiles.filter(p => p.email !== currentUserEmail);

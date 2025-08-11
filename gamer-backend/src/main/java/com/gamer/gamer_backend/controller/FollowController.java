@@ -2,6 +2,7 @@ package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.service.FollowService;
+import com.gamer.gamer_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +17,24 @@ import java.util.Map;
 public class FollowController {
 
     private final FollowService service;
+    private final NotificationService notificationService; // ✅ Injected
 
     @PostMapping("/toggle-follow/{email}")
     public Map<String, String> toggleFollow(@PathVariable String email, Principal principal) {
-        String status = service.toggleFollow(principal.getName(), email);
+        String senderId = principal.getName();
+        String status = service.toggleFollow(senderId, email);
+
+        // ✅ Only send notification if newly followed
+        if ("FOLLOWED".equals(status) && !senderId.equals(email)) {
+            notificationService.sendNotification(
+                    senderId,
+                    email,
+                    "FOLLOW",
+                    null,
+                    "started following you"
+            );
+        }
+
         return Map.of("status", status);
     }
 
@@ -38,3 +53,4 @@ public class FollowController {
         return service.getFollowing(email);
     }
 }
+

@@ -97,11 +97,14 @@ const NavBar = () => {
               </div>
             </Link>
 
-            <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
-              <button className="bg-gray-800 w-10 h-10 rounded-full text-white transition hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110 flex items-center justify-center">
-                <img src={notifi} alt="notifi" className="h-5 w-5" />
-              </button>
-            </div>
+            <Link to="/notifications">
+              <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
+                <button className={`w-10 h-10 rounded-full text-white transition flex items-center justify-center 
+                ${location.pathname === "/allprof" ? "bg-gradient-to-b from-[#2059B6] to-[#0E2750] scale-110" : "bg-gray-800 hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110"}`}>
+                  <img src={notifi} alt="notifi" className="h-5 w-5" />
+                </button>
+              </div>
+            </Link>
 
             <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
               <button
@@ -182,8 +185,8 @@ const NavBar = () => {
                   alt="User Avatar"
                   className={`h-10 w-10 rounded-full mr-2 transition-all duration-200
                       ${location.pathname === "/profile"
-                      ? "border border-blue-400"
-                      : "border border-transparent group-hover:border-blue-400"
+                      ? "border-2 border-blue-400"
+                      : "border-2 border-transparent group-hover:border-blue-400"
                     }`}
                 />
               </Link>

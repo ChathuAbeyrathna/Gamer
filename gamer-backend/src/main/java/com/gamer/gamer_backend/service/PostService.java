@@ -1,10 +1,12 @@
 package com.gamer.gamer_backend.service;
 
 import org.springframework.stereotype.Service;
+
 import com.gamer.gamer_backend.models.Post;
 import com.gamer.gamer_backend.repository.PostRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,6 +19,10 @@ public class PostService {
 
     public Post createPost(Post post) {
         return postRepository.save(post);
+    }
+
+    public Optional<Post> getPostById(String id) {
+        return postRepository.findById(id);
     }
 
     public List<Post> getAllPosts() {
@@ -50,5 +56,4 @@ public class PostService {
     public void deletePost(String id) {
         postRepository.deleteById(id);
     }
-
 }

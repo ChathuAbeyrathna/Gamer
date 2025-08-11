@@ -83,8 +83,12 @@ const ViewProfile = () => {
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-      if (res.data.status === "ok") {
-        setIsFollowing(!isFollowing);
+
+      // The backend returns "FOLLOWED" or "UNFOLLOWED"
+      if (res.data.status === "FOLLOWED") {
+        setIsFollowing(true);
+      } else if (res.data.status === "UNFOLLOWED") {
+        setIsFollowing(false);
       }
     } catch (error) {
       console.error("Follow toggle failed", error);
@@ -112,8 +116,8 @@ const ViewProfile = () => {
   };
 
   const combinedItems = [
-    ...posts.map(p => ({ ...p, type: 'post' })),
-    ...blogs.map(b => ({ ...b, type: 'blog' }))
+    ...posts.filter(p => !p.groupId).map(p => ({ ...p, type: 'post' })),
+    ...blogs.filter(b => !b.groupId).map(b => ({ ...b, type: 'blog' }))
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   useEffect(() => {

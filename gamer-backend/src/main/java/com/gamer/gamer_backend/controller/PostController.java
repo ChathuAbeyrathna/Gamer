@@ -1,6 +1,8 @@
 package com.gamer.gamer_backend.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import com.gamer.gamer_backend.models.Post;
 import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.service.PostService;
@@ -33,6 +35,12 @@ public class PostController {
         }
 
         return postService.createPost(post);
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<Post> getPostById(@PathVariable String postId) {
+        Optional<Post> post = postService.getPostById(postId);
+        return post.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/all")
