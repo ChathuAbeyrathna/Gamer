@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import NavBar from "../components/NavBar";
-import Sidebar from "../components/SideBar";
-import FeedCard from "../components/FeedCard";
-import ViewBlog from "../components/ViewBlog";
+import NavBar from "../../components/NavBar";
+import Sidebar from "../../components/SideBar";
+import FeedCard from "../../components/FeedCard";
+import ViewBlog from "../../components/ViewBlog";
 import axios from "axios";
 import moment from "moment";
 
-const Notifications = () => {
+const Notifications = ({ userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,11 +18,31 @@ const Notifications = () => {
 
   const navigate = useNavigate();
 
+  // Fetch notifications on mount
   useEffect(() => {
     window.scrollTo(0, 0);
+    localStorage.setItem("notificationsLastSeenAt", new Date().toISOString());
+
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const config = token
+          ? { headers: { Authorization: `Bearer ${token}` } }
+          : { withCredentials: true };
+
+        const res = await axios.get("http://localhost:8080/api/notifications", config);
+        setNotifications(res.data);
+      } catch (err) {
+        console.error("Error fetching notifications", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchNotifications();
   }, []);
 
+  // Lock scroll when modal or blog is open
   useEffect(() => {
     if (modalItem || openBlog) {
       document.body.style.overflow = "hidden";
@@ -34,28 +54,13 @@ const Notifications = () => {
     };
   }, [modalItem, openBlog]);
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` } }
-        : { withCredentials: true };
-
-      const res = await axios.get("http://localhost:8080/api/notifications", config);
-      setNotifications(res.data);
-    } catch (err) {
-      console.error("Error fetching notifications", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem("token");
       const config = token
         ? { headers: { Authorization: `Bearer ${token}` } }
         : { withCredentials: true };
+
       await axios.patch(`http://localhost:8080/api/notifications/${id}/read`, {}, config);
     } catch (err) {
       console.error("Failed to mark notification as read", err);
@@ -94,7 +99,6 @@ const Notifications = () => {
   };
 
   const handleNotificationClick = (notification) => {
-    // Mark as read in backend & frontend
     markAsRead(notification.id);
     setNotifications((prev) =>
       prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
@@ -179,9 +183,6 @@ const Notifications = () => {
               <FeedCard
                 item={modalItem}
                 currentUserEmail={modalItem.email}
-                showMenu={false}
-                onEdit={null}
-                onDelete={null}
                 openCommentSection={openCommentSection}
                 openBoostSection={openBoostSection}
                 setOpenBlog={setOpenBlog}
@@ -191,9 +192,7 @@ const Notifications = () => {
         </div>
       )}
 
-      {openBlog && (
-        <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />
-      )}
+      {openBlog && <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />}
     </div>
   );
 };

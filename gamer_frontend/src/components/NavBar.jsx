@@ -16,12 +16,16 @@ import Loading from "../components/Loading";
 import defaultProfile from '../images/defaultProfile.png';
 import { getUserEmail } from "../authUtils";
 
-const NavBar = () => {
+const NavBar = ({ hasUnread = false }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMenu1Popup, setShowMenu1Popup] = useState(false);
   const [showMenu2Popup, setShowMenu2Popup] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // State to track if there are unread notifications created after last seen time
+  const [hasUnreadAndUnseen, setHasUnreadAndUnseen] = useState(false);
+
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
   const email = getUserEmail();
@@ -34,6 +38,41 @@ const NavBar = () => {
       navigate("/login");
     }, 3000); // wait before redirect
   };
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setHasUnreadAndUnseen(false);
+          return;
+        }
+
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await fetch("http://localhost:8080/api/notifications", config);
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        const data = await res.json();
+
+        const lastSeenStr = localStorage.getItem("notificationsLastSeenAt");
+        const lastSeen = lastSeenStr ? new Date(lastSeenStr) : new Date(0);
+
+        const newUnreadExists = data.some(
+          (n) => !n.read && new Date(n.createdAt) > lastSeen
+        );
+
+        setHasUnreadAndUnseen(newUnreadExists);
+      } catch (err) {
+        console.error("Failed to fetch notifications for unread check", err);
+        setHasUnreadAndUnseen(false);
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const showRedDot = hasUnread || hasUnreadAndUnseen;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -99,9 +138,19 @@ const NavBar = () => {
 
             <Link to="/notifications">
               <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
-                <button className={`w-10 h-10 rounded-full text-white transition flex items-center justify-center 
-                ${location.pathname === "/allprof" ? "bg-gradient-to-b from-[#2059B6] to-[#0E2750] scale-110" : "bg-gray-800 hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110"}`}>
+                <button
+                  className={`w-10 h-10 rounded-full text-white transition flex items-center justify-center 
+          ${location.pathname === "/notifications"
+                      ? "bg-gradient-to-b from-[#2059B6] to-[#0E2750] scale-110"
+                      : "bg-gray-800 hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110"}`}
+                >
                   <img src={notifi} alt="notifi" className="h-5 w-5" />
+                  {showRedDot && (
+                    <span
+                      className="absolute top-1 right-1 block w-3 h-3 rounded-full bg-red-500 border-2 border-gray-800"
+                      aria-label="Unread notifications"
+                    />
+                  )}
                 </button>
               </div>
             </Link>

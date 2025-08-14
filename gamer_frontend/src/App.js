@@ -1,36 +1,54 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Signup from "./pages/Auth/Signup";
-import Login from './pages/Auth/Login';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
+import { useState, useMemo } from "react";
+import NotificationListener from "./pages/Notification/NotificationListener";
 import Home from "./pages/Home";
 import ProtectedRoute from "./ProtectedRoute";
 import ProtectPages from "./ProtectPages";
+import Signup from "./pages/Auth/Signup";
+import Login from "./pages/Auth/Login";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
+import ResetPassword from "./pages/Auth/ResetPassword";
 import { Alert } from "./Alert";
 
 function App() {
-    return (
-        <Router>
-            <Alert>
-                <Routes>
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/forgotpassword" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/" element={<Home />} />
+  const [hasUnread, setHasUnread] = useState(false);
+  const userId = useMemo(() => localStorage.getItem("email"), []);
 
-                    <Route
-                        path="/*"
-                        element={
-                            <ProtectedRoute>
-                                <ProtectPages />
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
-            </Alert>
-        </Router>
-    );
+  return (
+    <Router>
+      <Alert>
+        {userId && (
+          <NotificationListener
+            userId={userId}
+            onNewNotification={(notification) => {
+              setHasUnread(true);
+
+              window.dispatchEvent(
+                new CustomEvent("NEW_NOTIFICATION", { detail: notification })
+              );
+            }}
+          />
+        )}
+
+        <Routes>
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgotpassword" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/" element={<Home hasUnread={hasUnread} />} />
+
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <ProtectPages hasUnread={hasUnread} setHasUnread={setHasUnread} userId={userId} />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Alert>
+    </Router>
+  );
 }
 
 export default App;

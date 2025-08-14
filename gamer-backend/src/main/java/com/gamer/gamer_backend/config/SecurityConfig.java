@@ -21,6 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Allow everyone to authenticate and get tokens
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
 
                 // Allow everyone to GET posts, blogs, profiles, comments, boosts etc.
                 .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()

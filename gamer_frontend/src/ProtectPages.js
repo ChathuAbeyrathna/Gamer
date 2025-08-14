@@ -10,35 +10,49 @@ import Suggest from './pages/Suggest/Suggest';
 import Save from './pages/SavedPosts';
 import AllProfiles from './pages/AllProfiles/AllProfiles';
 import ViewProfile from './pages/AllProfiles/ViewProfile';
-import Notifications from "./pages/Notifications";
+import Notifications from "./pages/Notification/Notifications";
 import Chat from './pages/Chat';
+import NavBar from "./components/NavBar";
 
-function App() {
-    return (
-        <Routes>
-            <Route path="/createprof" element={<CreateProf />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/editprof" element={<CreateProf editMode={true} />} />
+const ProtectPages = ({ hasUnread, setHasUnread, userId }) => {
+  return (
+    <>
+      {/* Pass hasUnread into NavBar so it can show the dot immediately */}
+      <NavBar hasUnread={hasUnread} />
 
-            <Route path="/group" element={<Group />} />
-            <Route path="/creategroup" element={<CreateGroup />} />
-            <Route path="/group/edit/:groupId" element={<CreateGroup />} />
-            <Route path="/yourgroups" element={<YourGroupList />} />
-            <Route path="/joinedgroups" element={<JoinedGrpList />} />
-            <Route path="/group/view/:id" element={<GroupView />} />
+      <Routes>
+        <Route path="/createprof" element={<CreateProf />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/editprof" element={<CreateProf editMode={true} />} />
 
-            <Route path="/suggest" element={<Suggest />} />
+        <Route path="/group" element={<Group />} />
+        <Route path="/creategroup" element={<CreateGroup />} />
+        <Route path="/group/edit/:groupId" element={<CreateGroup />} />
+        <Route path="/yourgroups" element={<YourGroupList />} />
+        <Route path="/joinedgroups" element={<JoinedGrpList />} />
+        <Route path="/group/view/:id" element={<GroupView />} />
 
-            <Route path="/save" element={<Save />} />
+        <Route path="/suggest" element={<Suggest />} />
 
-            <Route path="/allprof" element={<AllProfiles />} />
-            <Route path="/profile/view/:email" element={<ViewProfile />} />
+        <Route path="/save" element={<Save />} />
 
-            <Route path="/notifications" element={<Notifications />} />
+        <Route path="/allprof" element={<AllProfiles />} />
+        <Route path="/profile/view/:email" element={<ViewProfile />} />
 
-            <Route path="/chat" element={<Chat />} />
-        </Routes>
-    );
-}
+        <Route
+          path="/notifications"
+          element={
+            <Notifications
+              userId={userId}
+              setHasUnread={setHasUnread}
+            />
+          }
+        />
 
-export default App;
+        <Route path="/chat" element={<Chat />} />
+      </Routes>
+    </>
+  );
+};
+
+export default ProtectPages;
