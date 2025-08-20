@@ -24,6 +24,7 @@ const GroupView = () => {
     const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
     const [dropdownOpenId, setDropdownOpenId] = useState(null);
     const [savedPostIds, setSavedPostIds] = useState([]);
+    const [savedBlogIds, setSavedBlogIds] = useState([]);
     const [openBlog, setOpenBlog] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
     const [editingBlog, setEditingBlog] = useState(null);
@@ -50,12 +51,8 @@ const GroupView = () => {
         const fetchGroupFeed = async () => {
             try {
                 const [postsRes, blogsRes] = await Promise.all([
-                    axios.get(`http://localhost:8080/api/groups/${id}/posts`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    axios.get(`http://localhost:8080/api/groups/${id}/blogs`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
+                    axios.get(`http://localhost:8080/api/groups/${id}/posts`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`http://localhost:8080/api/groups/${id}/blogs`, { headers: { Authorization: `Bearer ${token}` } }),
                 ]);
 
                 const posts = postsRes.data.map((p) => ({ ...p, type: "post" }));
@@ -76,19 +73,22 @@ const GroupView = () => {
     }, [id, email, token, refreshKey]);
 
     useEffect(() => {
-        const fetchSavedPosts = async () => {
+        const fetchSavedItems = async () => {
             if (!token) return;
             try {
-                const res = await axios.get("http://localhost:8080/api/saved-posts", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setSavedPostIds(res.data.map((sp) => sp.postId));
-            } catch (error) {
-                console.error("Error fetching saved posts:", error);
+                // Saved posts
+                const postsRes = await axios.get("http://localhost:8080/api/saved-posts", { headers: { Authorization: `Bearer ${token}` } });
+                setSavedPostIds(postsRes.data.map(sp => sp.postId));
+
+                // Saved blogs
+                const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", { headers: { Authorization: `Bearer ${token}` } });
+                setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
+            } catch (err) {
+                console.error("Error fetching saved items:", err);
             }
         };
 
-        fetchSavedPosts();
+        fetchSavedItems();
     }, [token]);
 
     useEffect(() => {
@@ -98,50 +98,43 @@ const GroupView = () => {
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const toggleSave = async (postId) => {
+    const toggleSavePost = async (postId) => {
         if (!token) {
             const result = await window.confirm("You need to log in to save posts. Go to login page?");
             if (result) navigate("/login");
             return;
         }
-
         try {
-            const res = await axios.post(
-                `http://localhost:8080/api/saved-posts/toggle/${postId}`,
-                {},
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-            if (res.data) {
-                setSavedPostIds((prev) => [...prev, postId]);
-            } else {
-                setSavedPostIds((prev) => prev.filter((id) => id !== postId));
-            }
-        } catch (err) {
-            console.error("Error toggling save:", err);
+            const res = await axios.post(`http://localhost:8080/api/saved-posts/toggle/${postId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            if (res.data) setSavedPostIds(prev => [...prev, postId]);
+            else setSavedPostIds(prev => prev.filter(id => id !== postId));
+        } catch (err) { console.error("Error toggling save post:", err); }
+    };
+
+    const toggleSaveBlog = async (blogId) => {
+        if (!token) {
+            const result = await window.confirm("You need to log in to save blogs. Go to login page?");
+            if (result) navigate("/login");
+            return;
         }
+        try {
+            const res = await axios.post(`http://localhost:8080/api/saved-blogs/toggle/${blogId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            if (res.data) setSavedBlogIds(prev => [...prev, blogId]);
+            else setSavedBlogIds(prev => prev.filter(id => id !== blogId));
+        } catch (err) { console.error("Error toggling save blog:", err); }
     };
 
     const handleEditItem = (item) => {
-        if (item.type === "post") {
-            setEditingPost(item);
-            setShowCreatePost(true);
-        } else {
-            setEditingBlog(item);
-            setShowBlogModal(true);
-        }
+        if (item.type === "post") { setEditingPost(item); setShowCreatePost(true); }
+        else { setEditingBlog(item); setShowBlogModal(true); }
         setDropdownOpenId(null);
     };
 
     const handleDeleteItem = async (itemId, isBlog = false) => {
         const type = isBlog ? "blog" : "post";
-
         const confirmDelete = await window.confirm(`Are you sure you want to delete this ${type}?`);
         if (!confirmDelete) return;
 
@@ -150,60 +143,37 @@ const GroupView = () => {
             : `http://localhost:8080/api/posts/delete/${itemId}`;
 
         try {
-            const res = await fetch(url, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (res.ok) {
-                setGroupFeed(prevItems => prevItems.filter(item => item.id !== itemId));
-            } else {
-                window.alert(`Failed to delete ${type}`);
-            }
-        } catch (err) {
-            console.error(`Error deleting ${type}`, err);
-        }
+            const res = await fetch(url, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+            if (res.ok) setGroupFeed(prev => prev.filter(item => item.id !== itemId));
+            else window.alert(`Failed to delete ${type}`);
+        } catch (err) { console.error(`Error deleting ${type}`, err); }
 
         setDropdownOpenId(null);
     };
 
-    const filteredFeed = showMyPostsOnly
-        ? groupFeed.filter((item) => item.email === email)
-        : groupFeed;
+    const filteredFeed = showMyPostsOnly ? groupFeed.filter(item => item.email === email) : groupFeed;
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
+    useEffect(() => { window.scrollTo(0, 0); }, []);
 
     return (
         <div className="relative min-h-screen text-white">
             <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
             <NavBar />
 
-            <button
-                onClick={() => navigate(-1)}
-                className="fixed top-24 left-32 mt-4 z-50 text-white hover:text-gray-400"
-            >
+            <button onClick={() => navigate(-1)} className="fixed top-24 left-32 mt-4 z-50 text-white hover:text-gray-400">
                 <FaArrowLeft className="text-2xl font-light" style={{ strokeWidth: 1 }} />
             </button>
 
             <div className="mx-auto mt-20 px-4 py-8 flex flex-col items-center">
                 {group && (
                     <>
-                        <img
-                            src={group.coverPhotoUrl || defaultImg}
-                            alt="Group Cover"
-                            className="w-full max-w-4xl h-80 object-cover shadow-lg"
-                        />
-
+                        <img src={group.coverPhotoUrl || defaultImg} alt="Group Cover" className="w-full max-w-4xl h-80 object-cover shadow-lg" />
                         <div className="max-w-4xl w-full mt-6 mb-4">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h1 className="text-3xl font-bold">{group.name}</h1>
                                     <p className="text-gray-300 mt-1">{group.description}</p>
-                                    <p className="mt-1 text-sm text-gray-400">
-                                        {group.memberEmails.length} Gamers
-                                    </p>
+                                    <p className="mt-1 text-sm text-gray-400">{group.memberEmails.length} Gamers</p>
                                 </div>
 
                                 <div className="flex gap-2">
@@ -266,7 +236,7 @@ const GroupView = () => {
                                                     console.error("Join failed:", err);
                                                 }
                                             }}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                                            className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white"
                                         >
                                             Join Group
                                         </button>
@@ -295,43 +265,19 @@ const GroupView = () => {
                                         </button>
 
                                     )}
-
                                 </div>
                             </div>
 
                             {(isOwner || isMember) && (
                                 <div className="flex flex-wrap items-center justify-between w-full mt-6">
                                     <div className="flex gap-4">
-                                        <button
-                                            onClick={() => {
-                                                setEditingPost(null);
-                                                setShowCreatePost(true);
-                                            }}
-                                            className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
-                                        >
-                                            Create a Post
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setEditingBlog(null);
-                                                setShowBlogModal(true);
-                                            }}
-                                            className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
-                                        >
-                                            Write a Blog
-                                        </button>
+                                        <button onClick={() => { setEditingPost(null); setShowCreatePost(true); }} className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]">Create a Post</button>
+                                        <button onClick={() => { setEditingBlog(null); setShowBlogModal(true); }} className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]">Write a Blog</button>
                                     </div>
 
                                     <div>
-                                        <button
-                                            onClick={() => setShowMyPostsOnly((prev) => !prev)}
-                                            className="border border-white text-white rounded-full p-2 hover:bg-white/20 transition duration-200"
-                                        >
-                                            {showMyPostsOnly ? (
-                                                <ClipboardDocumentListIcon className="w-5 h-5" alt="All Posts" />
-                                            ) : (
-                                                <UserIcon className="w-5 h-5" alt="My Posts" />
-                                            )}
+                                        <button onClick={() => setShowMyPostsOnly(prev => !prev)} className="border border-white text-white rounded-full p-2 hover:bg-white/20 transition duration-200">
+                                            {showMyPostsOnly ? <ClipboardDocumentListIcon className="w-5 h-5" alt="All Posts" /> : <UserIcon className="w-5 h-5" alt="My Posts" />}
                                         </button>
                                     </div>
                                 </div>
@@ -341,9 +287,7 @@ const GroupView = () => {
                         {/* Feed */}
                         <div className="w-2/4 mx-4 mt-8 space-y-6">
                             {filteredFeed.length === 0 ? (
-                                <div className="text-center text-gray-400">
-                                    No posts or blogs yet.
-                                </div>
+                                <div className="text-center text-gray-400">No posts or blogs yet.</div>
                             ) : (
                                 filteredFeed.map((item) => (
                                     <FeedCard
@@ -352,8 +296,8 @@ const GroupView = () => {
                                         currentUserEmail={email}
                                         dropdownOpenId={dropdownOpenId}
                                         setDropdownOpenId={setDropdownOpenId}
-                                        toggleSave={toggleSave}
-                                        savedPostIds={savedPostIds}
+                                        toggleSave={item.type === "post" ? toggleSavePost : toggleSaveBlog}
+                                        savedPostIds={item.type === "post" ? savedPostIds : savedBlogIds}
                                         setOpenBlog={setOpenBlog}
                                         showMenu={showMyPostsOnly}
                                         onEdit={() => handleEditItem(item)}
@@ -369,20 +313,12 @@ const GroupView = () => {
 
                 {showCreatePost && (
                     <CreatePost
-                        onClose={() => {
-                            setShowCreatePost(false);
-                            setEditingPost(null);
-                        }}
+                        onClose={() => { setShowCreatePost(false); setEditingPost(null); }}
                         editingPost={editingPost}
                         onPostCreated={(newPost) => {
-                            if (editingPost) {
-                                setGroupFeed((prev) =>
-                                    prev.map((p) => (p.id === newPost.id ? { ...newPost, type: "post" } : p))
-                                );
-                            } else {
-                                setGroupFeed((prev) => [{ ...newPost, type: "post" }, ...prev]);
-                            }
-                            setRefreshKey((prev) => prev + 1);
+                            if (editingPost) setGroupFeed(prev => prev.map(p => p.id === newPost.id ? { ...newPost, type: "post" } : p));
+                            else setGroupFeed(prev => [{ ...newPost, type: "post" }, ...prev]);
+                            setRefreshKey(prev => prev + 1);
                         }}
                         groupId={id}
                     />
@@ -390,20 +326,12 @@ const GroupView = () => {
 
                 {showBlogModal && (
                     <WriteBlog
-                        onClose={() => {
-                            setShowBlogModal(false);
-                            setEditingBlog(null);
-                        }}
+                        onClose={() => { setShowBlogModal(false); setEditingBlog(null); }}
                         editingBlog={editingBlog}
                         onBlogCreated={(newBlog) => {
-                            if (editingBlog) {
-                                setGroupFeed((prev) =>
-                                    prev.map((b) => (b.id === newBlog.id ? { ...newBlog, type: "blog" } : b))
-                                );
-                            } else {
-                                setGroupFeed((prev) => [{ ...newBlog, type: "blog" }, ...prev]);
-                            }
-                            setRefreshKey((prev) => prev + 1);
+                            if (editingBlog) setGroupFeed(prev => prev.map(b => b.id === newBlog.id ? { ...newBlog, type: "blog" } : b));
+                            else setGroupFeed(prev => [{ ...newBlog, type: "blog" }, ...prev]);
+                            setRefreshKey(prev => prev + 1);
                         }}
                         groupId={id}
                     />

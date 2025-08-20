@@ -356,39 +356,41 @@ const FeedCard = ({
   return (
     <div className={`bg-gray-800 p-4 rounded mb-6 relative w-full ${customStyle}`}>
       {/* Dropdown menu icon */}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={() =>
-            setDropdownOpenId(dropdownOpenId === item.id ? null : item.id)
-          }
-        >
-          <img src={menuIcon} alt="menu" className="h-5" />
-        </button>
-        {dropdownOpenId === item.id && (
-          <div
-            ref={dropdownRef}
-            className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10"
+      {showMenu !== "hide" && (
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() =>
+              setDropdownOpenId(dropdownOpenId === item.id ? null : item.id)
+            }
           >
-            {showMenu ? (
-              <>
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onEdit}>Edit</button>
-                <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onDelete}>Delete</button>
-              </>
-            ) : (
-              <>
-                <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => toggleSave(item.id)}>
-                  {savedPostIds?.includes(item.id) ? <FaBookmark className="text-white mr-2" /> : <FaRegBookmark className="text-white mr-2" />}
-                  {savedPostIds?.includes(item.id) ? "Unsave" : "Save"}
-                </button>
-                <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
-                  <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
-                  <span>Report</span>
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+            <img src={menuIcon} alt="menu" className="h-5" />
+          </button>
+          {dropdownOpenId === item.id && (
+            <div
+              ref={dropdownRef}
+              className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10"
+            >
+              {showMenu ? (
+                <>
+                  <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onEdit}>Edit</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-gray-600" onClick={onDelete}>Delete</button>
+                </>
+              ) : (
+                <>
+                  <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600" onClick={() => toggleSave(item.id)}>
+                    {savedPostIds?.includes(item.id) ? <FaBookmark className="text-white mr-2" /> : <FaRegBookmark className="text-white mr-2" />}
+                    {savedPostIds?.includes(item.id) ? "Unsave" : "Save"}
+                  </button>
+                  <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
+                    <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
+                    <span>Report</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center space-x-4 mb-2">

@@ -21,6 +21,7 @@ const categories = [
 const Suggest = () => {
   const [feedItems, setFeedItems] = useState([]);
   const [savedPostIds, setSavedPostIds] = useState([]);
+  const [savedBlogIds, setSavedBlogIds] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [openBlog, setOpenBlog] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -75,15 +76,23 @@ const Suggest = () => {
       }
     };
 
-    const fetchSavedPosts = async () => {
+    const fetchSavedItems = async () => {
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:8080/api/saved-posts", {
+        // Fetch saved posts
+        const postsRes = await axios.get("http://localhost:8080/api/saved-posts", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSavedPostIds(res.data.map((sp) => sp.postId));
-      } catch (error) {
-        console.error("Error fetching saved posts:", error);
+        setSavedPostIds(postsRes.data.map(sp => sp.postId));
+
+        // Fetch saved blogs
+        const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
+
+      } catch (err) {
+        console.error("Error fetching saved items:", err);
       }
     };
 
@@ -101,25 +110,53 @@ const Suggest = () => {
 
     fetchFeed();
     fetchGroups();
-    fetchSavedPosts();
+    fetchSavedItems();
     fetchJoinedGroups();
-    window.scrollTo(0, 0);
   }, [currentUserEmail, token]);
 
-  const toggleSave = async (postId) => {
+  const toggleSavePost = async (postId) => {
     if (!token) {
-      navigate("/login");
+      const result = await window.confirm("You need to log in to save posts. Go to login page?");
+      if (result) navigate("/login");
       return;
     }
 
-    const res = await axios.post(`http://localhost:8080/api/saved-posts/toggle/${postId}`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    try {
+      const res = await axios.post(
+        `http://localhost:8080/api/saved-posts/toggle/${postId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data) {
+        setSavedPostIds(prev => [...prev, postId]);
+      } else {
+        setSavedPostIds(prev => prev.filter(id => id !== postId));
+      }
+    } catch (err) {
+      console.error("Error toggling save post:", err);
+    }
+  };
 
-    if (res.data) {
-      setSavedPostIds(prev => [...prev, postId]);
-    } else {
-      setSavedPostIds(prev => prev.filter(id => id !== postId));
+  const toggleSaveBlog = async (blogId) => {
+    if (!token) {
+      const result = await window.confirm("You need to log in to save blogs. Go to login page?");
+      if (result) navigate("/login");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://localhost:8080/api/saved-blogs/toggle/${blogId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data) {
+        setSavedBlogIds(prev => [...prev, blogId]);
+      } else {
+        setSavedBlogIds(prev => prev.filter(id => id !== blogId));
+      }
+    } catch (err) {
+      console.error("Error toggling save blog:", err);
     }
   };
 
@@ -180,13 +217,15 @@ const Suggest = () => {
 
   useEffect(() => {
     if (!selectedCategory) {
-      window.scrollTo(0, 0);
     }
   }, [selectedCategory]);
 
   if (filteredItems.length > 0) {
-    window.scrollTo(0, 0);
   }
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -277,8 +316,8 @@ const Suggest = () => {
                       currentUserEmail={currentUserEmail}
                       dropdownOpenId={dropdownOpenId}
                       setDropdownOpenId={setDropdownOpenId}
-                      toggleSave={toggleSave}
-                      savedPostIds={savedPostIds}
+                      toggleSave={item.type === "post" ? toggleSavePost : toggleSaveBlog}
+                      savedPostIds={item.type === "post" ? savedPostIds : savedBlogIds}
                       setOpenBlog={setOpenBlog}
                       customStyle="w-[550px] min-h-[400px]"
                     />

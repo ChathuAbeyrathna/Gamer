@@ -4,59 +4,100 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/SideBar";
 import FeedCard from "../components/FeedCard";
 
-const SavedPosts = () => {
-  const [savedPosts, setSavedPosts] = useState([]);
+const SavedItems = () => {
+  const [savedItems, setSavedItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
 
-  useEffect(() => {
-    fetchSavedPosts();
-  }, []);
-
-  const fetchSavedPosts = async () => {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    try {
-      const res = await axios.get("http://localhost:8080/api/saved-posts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const savedPostIds = res.data.map((p) => p.postId);
-
-      const [allPostsRes, groupPostsRes] = await Promise.all([
-        axios.get("http://localhost:8080/api/posts/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:8080/api/groups/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      const allPosts = [...allPostsRes.data, ...groupPostsRes.data];
-      const idToPostMap = new Map(allPosts.map((post) => [post.id, post]));
-      const filtered = savedPostIds.map((id) => idToPostMap.get(id)).filter(Boolean);
-      setSavedPosts(filtered);
-    } catch (error) {
-      console.error("Error fetching saved posts:", error);
-    }
-    setLoading(false);
-  };
-
-  const unsavePost = async (postId) => {
-    const token = localStorage.getItem("token");
-    try {
-      await axios.post(
-        `http://localhost:8080/api/saved-posts/toggle/${postId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSavedPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-    } catch (error) {
-      console.error("Error unsaving post:", error);
-    }
-  };
-
+  const token = localStorage.getItem("token");
   const currentUserEmail = localStorage.getItem("email");
+
+  useEffect(() => {
+    const fetchSavedItems = async () => {
+      if (!token) return;
+      setLoading(true);
+      try {
+        // Fetch saved posts
+        const savedPostsRes = await axios.get("http://localhost:8080/api/saved-posts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const savedPostsData = savedPostsRes.data; // includes postId and savedAt
+
+        // Fetch saved blogs
+        const savedBlogsRes = await axios.get("http://localhost:8080/api/saved-blogs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const savedBlogsData = savedBlogsRes.data; // includes blogId and savedAt
+
+        // Fetch all posts and blogs
+        const [allPostsRes, allBlogsRes, allGroupPostsRes, allGroupBlogsRes] = await Promise.all([
+  axios.get("http://localhost:8080/api/posts/all", { headers: { Authorization: `Bearer ${token}` } }),
+  axios.get("http://localhost:8080/api/blogs/all", { headers: { Authorization: `Bearer ${token}` } }),
+  axios.get("http://localhost:8080/api/groups/all-posts", { headers: { Authorization: `Bearer ${token}` } }),
+  axios.get("http://localhost:8080/api/groups/all-blogs", { headers: { Authorization: `Bearer ${token}` } }),
+]);
+
+// Merge global + group posts/blogs
+const allPosts = [...allPostsRes.data, ...allGroupPostsRes.data];
+const allBlogs = [...allBlogsRes.data, ...allGroupBlogsRes.data];
+
+const idToPostMap = new Map(allPosts.map(p => [p.id, p]));
+const idToBlogMap = new Map(allBlogs.map(b => [b.id, b]));
+
+
+        // Map saved items with savedAt
+        const posts = savedPostsData
+          .map(sp => {
+            const post = idToPostMap.get(sp.postId);
+            return post ? { ...post, type: "post", savedAt: sp.savedAt } : null;
+          })
+          .filter(Boolean);
+
+        const blogs = savedBlogsData
+          .map(sb => {
+            const blog = idToBlogMap.get(sb.blogId);
+            return blog ? { ...blog, type: "blog", savedAt: sb.savedAt } : null;
+          })
+          .filter(Boolean);
+
+        // Combine and sort by savedAt descending
+        setSavedItems([...posts, ...blogs].sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt)));
+
+      } catch (err) {
+        console.error("Error fetching saved items:", err);
+      }
+      setLoading(false);
+    };
+
+    fetchSavedItems();
+  }, [token]); // <- added token as dependency, warning removed
+
+  const toggleSave = async (item) => {
+    if (!token) return;
+
+    try {
+      let res;
+      if (item.type === "post") {
+        res = await axios.post(
+          `http://localhost:8080/api/saved-posts/toggle/${item.id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else if (item.type === "blog") {
+        res = await axios.post(
+          `http://localhost:8080/api/saved-blogs/toggle/${item.id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      if (res && res.data !== undefined) {
+        setSavedItems(prev => prev.filter(i => i.id !== item.id));
+      }
+    } catch (err) {
+      console.error("Error toggling save:", err);
+    }
+  };
 
   return (
     <div className="relative min-h-screen text-white">
@@ -72,21 +113,20 @@ const SavedPosts = () => {
           <div className="mt-20">
             {loading ? (
               <p className="text-gray-400">Loading...</p>
-            ) : savedPosts.length === 0 ? (
-              <p className="text-gray-400">You haven't saved any posts yet.</p>
+            ) : savedItems.length === 0 ? (
+              <p className="text-gray-400">You haven't saved any items yet.</p>
             ) : (
-              savedPosts.map((post) => (
+              savedItems.map((item) => (
                 <FeedCard
-                  key={post.id}
-                  item={post}
+                  key={item.id}
+                  item={item}
                   currentUserEmail={currentUserEmail}
                   dropdownOpenId={dropdownOpenId}
                   setDropdownOpenId={setDropdownOpenId}
-                  toggleSave={unsavePost}
-                  savedPostIds={savedPosts.map((p) => p.id)}
-                  profileImage={post.userImage}
-                  profileName={post.userName || "Unknown"}
-                  showMenu={false}
+                  toggleSave={() => toggleSave(item)}
+                  savedPostIds={savedItems.map((i) => i.id)}
+                  profileImage={item.userImage || item.authorImage}
+                  profileName={item.userName || item.authorName || "Unknown"}
                 />
               ))
             )}
@@ -97,4 +137,4 @@ const SavedPosts = () => {
   );
 };
 
-export default SavedPosts;
+export default SavedItems;

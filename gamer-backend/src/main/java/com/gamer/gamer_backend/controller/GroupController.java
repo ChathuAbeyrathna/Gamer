@@ -4,6 +4,7 @@ import com.gamer.gamer_backend.models.Group;
 import com.gamer.gamer_backend.models.Post;
 import com.gamer.gamer_backend.repository.PostRepository;
 import com.gamer.gamer_backend.models.Blog;
+import com.gamer.gamer_backend.repository.BlogRepository;
 import com.gamer.gamer_backend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,9 @@ public class GroupController {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private BlogRepository blogRepository;
 
     @PostMapping
     public ResponseEntity<Group> createGroup(@RequestBody Group group) {
@@ -78,9 +82,15 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getBlogsByGroup(groupId));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/all-posts")
     public ResponseEntity<List<Post>> getAllGroupPosts() {
         List<Post> groupPosts = postRepository.findByGroupIdNotNull();
         return ResponseEntity.ok(groupPosts);
+    }
+
+    @GetMapping("/all-blogs")
+    public ResponseEntity<List<Blog>> getAllGroupBlogs() {
+        List<Blog> groupBlogs = blogRepository.findByGroupIdNotNull();
+        return ResponseEntity.ok(groupBlogs);
     }
 }

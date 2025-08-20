@@ -10,6 +10,7 @@ import defaultProfile from '../images/defaultProfile.png';
 const Home = () => {
   const [feedItems, setFeedItems] = useState([]);
   const [savedPostIds, setSavedPostIds] = useState([]);
+  const [savedBlogIds, setSavedBlogIds] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [following, setFollowing] = useState([]);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
@@ -41,15 +42,23 @@ const Home = () => {
       }
     };
 
-    const fetchSavedPosts = async () => {
+    const fetchSavedItems = async () => {
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:8080/api/saved-posts", {
+        // Fetch saved posts
+        const postsRes = await axios.get("http://localhost:8080/api/saved-posts", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSavedPostIds(res.data.map((sp) => sp.postId));
-      } catch (error) {
-        console.error("Error fetching saved posts:", error);
+        setSavedPostIds(postsRes.data.map(sp => sp.postId));
+
+        // Fetch saved blogs
+        const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
+
+      } catch (err) {
+        console.error("Error fetching saved items:", err);
       }
     };
 
@@ -76,7 +85,7 @@ const Home = () => {
     };
 
     fetchFeed();
-    fetchSavedPosts();
+    fetchSavedItems();
     fetchProfiles();
     fetchFollowing();
   }, [currentUserEmail, token]);
@@ -88,6 +97,7 @@ const Home = () => {
       if (result) navigate("/login");
       return;
     }
+
     try {
       const res = await axios.post(
         `http://localhost:8080/api/follow/toggle-follow/${email}`,
@@ -95,19 +105,17 @@ const Home = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (res.data.status === "ok") {
-        setFollowing((prev) =>
-          prev.includes(email)
-            ? prev.filter((e) => e !== email)
-            : [...prev, email]
-        );
+      if (res.data.status === "FOLLOWED") {
+        setFollowing(prev => (prev.includes(email) ? prev : [...prev, email]));
+      } else if (res.data.status === "UNFOLLOWED") {
+        setFollowing(prev => prev.filter(e => e !== email));
       }
     } catch (err) {
       console.error("Error toggling follow:", err);
     }
   };
 
-  const toggleSave = async (postId) => {
+  const toggleSavePost = async (postId) => {
     if (!token) {
       const result = await window.confirm("You need to log in to save posts. Go to login page?");
       if (result) navigate("/login");
@@ -118,17 +126,38 @@ const Home = () => {
       const res = await axios.post(
         `http://localhost:8080/api/saved-posts/toggle/${postId}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data) {
-        setSavedPostIds((prev) => [...prev, postId]);
+        setSavedPostIds(prev => [...prev, postId]);
       } else {
-        setSavedPostIds((prev) => prev.filter((id) => id !== postId));
+        setSavedPostIds(prev => prev.filter(id => id !== postId));
       }
     } catch (err) {
-      console.error("Error toggling save:", err);
+      console.error("Error toggling save post:", err);
+    }
+  };
+
+  const toggleSaveBlog = async (blogId) => {
+    if (!token) {
+      const result = await window.confirm("You need to log in to save blogs. Go to login page?");
+      if (result) navigate("/login");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://localhost:8080/api/saved-blogs/toggle/${blogId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data) {
+        setSavedBlogIds(prev => [...prev, blogId]);
+      } else {
+        setSavedBlogIds(prev => prev.filter(id => id !== blogId));
+      }
+    } catch (err) {
+      console.error("Error toggling save blog:", err);
     }
   };
 
@@ -158,8 +187,8 @@ const Home = () => {
                 currentUserEmail={currentUserEmail}
                 dropdownOpenId={dropdownOpenId}
                 setDropdownOpenId={setDropdownOpenId}
-                toggleSave={toggleSave}
-                savedPostIds={savedPostIds}
+                toggleSave={item.type === "post" ? toggleSavePost : toggleSaveBlog}
+                savedPostIds={item.type === "post" ? savedPostIds : savedBlogIds}
                 setOpenBlog={setOpenBlog}
               />
             ))
@@ -196,8 +225,8 @@ const Home = () => {
                     <button
                       onClick={(e) => handleToggleFollow(p.email, e)}
                       className={`text-xs px-2 py-1 rounded hover:brightness-110 transition duration-150 ${following.includes(p.email)
-                          ? "bg-gradient-to-b from-[#407CDE] to-[#2059B6]"
-                          : "bg-gradient-to-b from-[#2059B6] to-[#407CDE]"
+                        ? "bg-gradient-to-b from-[#407CDE] to-[#2059B6]"
+                        : "bg-gradient-to-b from-[#2059B6] to-[#407CDE]"
                         }`}
                     >
                       {following.includes(p.email) ? "Unfollow" : "Follow"}

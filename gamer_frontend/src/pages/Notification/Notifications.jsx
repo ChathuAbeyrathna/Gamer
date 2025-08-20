@@ -186,6 +186,7 @@ const Notifications = ({ userId }) => {
                 openCommentSection={openCommentSection}
                 openBoostSection={openBoostSection}
                 setOpenBlog={setOpenBlog}
+                showMenu="hide"
               />
             </div>
           </div>
