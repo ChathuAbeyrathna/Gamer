@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import CreateProf from './pages/CreateProf';
 import Profile from './pages/Profile';
 import Group from './pages/Group/Group';
@@ -11,14 +11,17 @@ import Save from './pages/SavedPosts';
 import AllProfiles from './pages/AllProfiles/AllProfiles';
 import ViewProfile from './pages/AllProfiles/ViewProfile';
 import Notifications from "./pages/Notification/Notifications";
-import Chat from './pages/Chat';
+import Chat from './pages/Chat/Chat';
 import NavBar from "./components/NavBar";
 
 const ProtectPages = ({ hasUnread, setHasUnread, userId }) => {
+  const location = useLocation();
+
+  const hideNavBar = ["/createprof", "/editprof"].includes(location.pathname);
+
   return (
     <>
-      {/* Pass hasUnread into NavBar so it can show the dot immediately */}
-      <NavBar hasUnread={hasUnread} />
+      {!hideNavBar && <NavBar hasUnread={hasUnread} />}
 
       <Routes>
         <Route path="/createprof" element={<CreateProf />} />
@@ -50,6 +53,7 @@ const ProtectPages = ({ hasUnread, setHasUnread, userId }) => {
         />
 
         <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/:email" element={<Chat />} />
       </Routes>
     </>
   );
