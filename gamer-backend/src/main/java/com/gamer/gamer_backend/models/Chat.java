@@ -19,4 +19,5 @@ public class Chat {
     private String receiverEmail;
     private String message;
     private Instant timestamp = Instant.now();
+    private boolean read = false; // track unread
 }

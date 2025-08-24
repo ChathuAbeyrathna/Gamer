@@ -1,13 +1,15 @@
 package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.Chat;
-import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.service.ChatService;
+import com.gamer.gamer_backend.service.ChatService.UserProfileWithMeta;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -19,23 +21,53 @@ public class ChatController {
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/send") // WebSocket endpoint
-    public void sendMessage(Chat chat) {
-        chatService.saveMessage(chat);
+    // ✅ Save to DB + send to receiver
+    @MessageMapping("/send")
+    public void sendMessage(@Payload Chat chat, Principal principal) {
+        // set sender from logged-in user
+        if (principal != null) {
+            chat.setSenderEmail(principal.getName());
+        }
+
+        // persist message
+        Chat saved = chatService.saveMessage(chat);
+
         // send to receiver
-        messagingTemplate.convertAndSendToUser(chat.getReceiverEmail(), "/queue/messages", chat);
+        messagingTemplate.convertAndSendToUser(
+                chat.getReceiverEmail(),
+                "/queue/messages",
+                saved
+        );
+
+        // also send back to sender for instant UI update
+        messagingTemplate.convertAndSendToUser(
+                saved.getSenderEmail(),
+                "/queue/messages",
+                saved
+        );
     }
 
-    // HTTP endpoint to fetch chat history
+    // ✅ REST fallback (in case you want to send messages via API too)
+    @PostMapping("/send")
+    public Chat sendMessageRest(@RequestBody Chat chat, Principal principal) {
+        if (principal != null) {
+            chat.setSenderEmail(principal.getName());
+        }
+        Chat saved = chatService.saveMessage(chat);
+
+        messagingTemplate.convertAndSendToUser(chat.getReceiverEmail(), "/queue/messages", saved);
+        messagingTemplate.convertAndSendToUser(saved.getSenderEmail(), "/queue/messages", saved);
+
+        return saved;
+    }
+
     @GetMapping("/history/{user1}/{user2}")
     public List<Chat> getChatHistory(@PathVariable String user1, @PathVariable String user2) {
         return chatService.getChatHistory(user1, user2);
     }
 
-    // New endpoint
     @GetMapping("/list")
-    public List<UserProfile> getChatList(@RequestParam String currentUserEmail) {
+    public List<UserProfileWithMeta> getChatList(@RequestParam String currentUserEmail) {
         return chatService.getChatUsersWithProfile(currentUserEmail);
     }
-
 }

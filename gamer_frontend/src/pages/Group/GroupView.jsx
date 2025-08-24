@@ -91,15 +91,6 @@ const GroupView = () => {
         fetchSavedItems();
     }, [token]);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setDropdownOpenId(null);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
 
     const toggleSavePost = async (postId) => {
         if (!token) {
@@ -200,17 +191,19 @@ const GroupView = () => {
                                                     <button
                                                         onClick={async () => {
                                                             setShowMenu(false);
-                                                            if (window.confirm("Are you sure you want to delete this group?")) {
-                                                                try {
-                                                                    await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, {
-                                                                        headers: { Authorization: `Bearer ${token}` },
-                                                                    });
-                                                                    alert("Group deleted successfully");
-                                                                    navigate("/groups");
-                                                                } catch (err) {
-                                                                    alert("Failed to delete group");
-                                                                    console.error(err);
-                                                                }
+                                                            // Wait for confirmation before proceeding
+                                                            const confirmed = await window.confirm("Are you sure you want to delete this group?");
+                                                            if (!confirmed) return; // Stop if user cancels
+
+                                                            try {
+                                                                await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, {
+                                                                    headers: { Authorization: `Bearer ${token}` },
+                                                                });
+                                                                alert("Group deleted successfully");
+                                                                navigate("/yourgroups");
+                                                            } catch (err) {
+                                                                alert("Failed to delete group");
+                                                                console.error(err);
                                                             }
                                                         }}
                                                         className="w-full text-left px-4 py-2 hover:bg-gray-600"

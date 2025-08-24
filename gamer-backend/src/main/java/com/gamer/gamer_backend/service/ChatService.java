@@ -4,6 +4,8 @@ import com.gamer.gamer_backend.models.Chat;
 import com.gamer.gamer_backend.models.UserProfile;
 import com.gamer.gamer_backend.repository.ChatRepository;
 import com.gamer.gamer_backend.repository.UserProfileRepository;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,31 +19,62 @@ public class ChatService {
     private final UserProfileRepository userProfileRepository;
 
     public Chat saveMessage(Chat chat) {
+        chat.setRead(false); // new messages are unread
         return chatRepository.save(chat);
     }
 
     public List<Chat> getChatHistory(String user1, String user2) {
-        return chatRepository.findBySenderEmailAndReceiverEmailOrReceiverEmailAndSenderEmailOrderByTimestampAsc(
-                user1, user2, user1, user2);
+        List<Chat> history = chatRepository.findBySenderEmailAndReceiverEmailOrReceiverEmailAndSenderEmailOrderByTimestampAsc(
+                user1, user2, user1, user2
+        );
+
+        // Mark all messages received by user1 as read
+        history.stream()
+                .filter(c -> c.getReceiverEmail().equals(user1) && !c.isRead())
+                .forEach(c -> { c.setRead(true); chatRepository.save(c); });
+
+        return history;
     }
 
-    // Fetch list of users the current user has chatted with
-    public List<UserProfile> getChatUsersWithProfile(String currentUserEmail) {
-        // fetch only chats where current user is sender or receiver
+    public List<UserProfileWithMeta> getChatUsersWithProfile(String currentUserEmail) {
         List<Chat> chats = chatRepository.findBySenderEmailOrReceiverEmail(currentUserEmail, currentUserEmail);
 
-        Set<String> otherEmails = new HashSet<>();
+        Map<String, Chat> lastMessageMap = new HashMap<>();
+        Map<String, Boolean> unreadMap = new HashMap<>();
+
         for (Chat chat : chats) {
-            if (!chat.getSenderEmail().equals(currentUserEmail)) {
-                otherEmails.add(chat.getSenderEmail());
+            String other = chat.getSenderEmail().equals(currentUserEmail) ? chat.getReceiverEmail() : chat.getSenderEmail();
+
+            if (!lastMessageMap.containsKey(other) || chat.getTimestamp().isAfter(lastMessageMap.get(other).getTimestamp())) {
+                lastMessageMap.put(other, chat);
             }
-            if (!chat.getReceiverEmail().equals(currentUserEmail)) {
-                otherEmails.add(chat.getReceiverEmail());
+
+            if (!chat.isRead() && chat.getReceiverEmail().equals(currentUserEmail)) {
+                unreadMap.put(other, true);
+            } else {
+                unreadMap.putIfAbsent(other, false);
             }
         }
 
-        // fetch profiles of those users
-        return userProfileRepository.findByEmailIn(otherEmails);
+        Set<String> emails = lastMessageMap.keySet();
+        List<UserProfile> profiles = userProfileRepository.findByEmailIn(emails);
+
+        List<UserProfileWithMeta> result = new ArrayList<>();
+        for (UserProfile profile : profiles) {
+            Chat lastMsg = lastMessageMap.get(profile.getEmail());
+            boolean hasUnread = unreadMap.getOrDefault(profile.getEmail(), false);
+            result.add(new UserProfileWithMeta(profile, lastMsg, hasUnread));
+        }
+
+        result.sort((a, b) -> b.getLastMessage().getTimestamp().compareTo(a.getLastMessage().getTimestamp()));
+        return result;
     }
 
+    @Data
+    @AllArgsConstructor
+    public static class UserProfileWithMeta {
+        private UserProfile profile;
+        private Chat lastMessage;
+        private boolean hasUnread;
+    }
 }
