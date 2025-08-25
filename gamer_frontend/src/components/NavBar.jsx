@@ -158,7 +158,7 @@ const NavBar = () => {
                 >
                   <img src={notifi} alt="notifi" className="h-5 w-5" />
                   {showNotiRedDot && (
-                    <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-gray-800" />
+                    <span className="absolute top-1 right-0.5 w-3 h-3 rounded-full bg-red-500 border-2 border-gray-800" />
                   )}
                 </button>
               </div>
@@ -205,13 +205,13 @@ const NavBar = () => {
               <div className="relative inline-block rounded-full p-[2px] bg-gradient-to-b from-[#01C0D3] to-[#2059B6]">
                 <button
                   className={`bg-gray-800 w-10 h-10 rounded-full text-white transition flex items-center justify-center
-                  ${location.pathname === "/chat" ? "bg-gradient-to-b from-[#2059B6] to-[#0E2750] scale-110" : "hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110"}`}
+                  ${location.pathname.startsWith("/chat") ? "bg-gradient-to-b from-[#2059B6] to-[#0E2750] scale-110" : "hover:bg-gradient-to-b hover:from-[#2059B6] hover:to-[#0E2750] hover:scale-110"}`}
                 >
                   <img src={chat} alt="chat" className="h-5 w-5" />
                 </button>
               </div>
               {showChatRedDot && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-gray-900" />
+                <span className="absolute top-1 right-0.5 w-3 h-3 rounded-full bg-red-500 border-2 border-gray-800" />
               )}
             </Link>
 
