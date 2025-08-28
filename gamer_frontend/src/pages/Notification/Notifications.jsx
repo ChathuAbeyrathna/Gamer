@@ -104,10 +104,10 @@ const Notifications = ({ userId }) => {
       prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
     );
 
-    if ((notification.type === "COMMENT" || notification.type === "BOOST") && notification.postId) {
+    if ((notification.type === "COMMENT" || notification.type === "COMMENT_REPLY" || notification.type === "BOOST") && notification.postId) {
       openItemModal(
         notification.postId,
-        notification.type === "COMMENT",
+        notification.type === "COMMENT" || notification.type === "COMMENT_REPLY",
         notification.type === "BOOST"
       );
     } else if (notification.type === "FOLLOW") {

@@ -13,6 +13,7 @@ import ViewProfile from './pages/AllProfiles/ViewProfile';
 import Notifications from "./pages/Notification/Notifications";
 import Chat from './pages/Chat/Chat';
 import NavBar from "./components/NavBar";
+import Search from "./pages/Search";
 
 const ProtectPages = ({ hasUnread, setHasUnread, userId }) => {
   const location = useLocation();
@@ -54,6 +55,8 @@ const ProtectPages = ({ hasUnread, setHasUnread, userId }) => {
 
         <Route path="/chat" element={<Chat />} />
         <Route path="/chat/:email" element={<Chat />} />
+
+        <Route path="/search" element={<Search />} />
       </Routes>
     </>
   );

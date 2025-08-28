@@ -117,7 +117,16 @@ const NavBar = () => {
                     type="text"
                     className="bg-transparent text-white placeholder-white/70 p-2 w-58 focus:outline-none"
                     placeholder="Search Gamer"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const query = e.target.value.trim();
+                        if (query) {
+                          navigate(`/search?query=${encodeURIComponent(query)}`);
+                        }
+                      }
+                    }}
                   />
+
                 </div>
               </div>
             </div>

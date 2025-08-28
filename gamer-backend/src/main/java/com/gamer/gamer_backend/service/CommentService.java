@@ -66,11 +66,18 @@ public class CommentService {
         return commentRepository.save(reply);
     }
 
-
+    // Get post or blog owner email
     public String getPostOwnerId(String id) {
         String owner = postRepository.findById(id).map(Post::getEmail).orElse(null);
         if (owner != null) return owner;
         return blogRepository.findById(id).map(Blog::getEmail).orElse(null);
+    }
+
+    // Get author email of a comment
+    public String getCommentAuthor(String commentId) {
+        return commentRepository.findById(commentId)
+                .map(Comment::getEmail)
+                .orElse(null);
     }
 
     public List<Comment> getCommentsWithReplies(String postId) {

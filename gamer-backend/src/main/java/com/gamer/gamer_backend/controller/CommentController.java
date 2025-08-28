@@ -18,19 +18,19 @@ public class CommentController {
     private CommentService commentService;
 
     @Autowired
-    private NotificationService notificationService; //  Injected
+    private NotificationService notificationService;
 
     // Add new top-level comment
     @PostMapping("/add")
     public Comment addComment(@RequestBody Comment comment) {
         Comment saved = commentService.createComment(comment);
 
-        //  Send notification to post owner
-        String receiverId = commentService.getPostOwnerId(saved.getPostId());
-        if (receiverId != null && !receiverId.equals(saved.getEmail())) {
+        // Notify post owner if not commenting on own post
+        String postOwnerId = commentService.getPostOwnerId(saved.getPostId());
+        if (postOwnerId != null && !postOwnerId.equals(saved.getEmail())) {
             notificationService.sendNotification(
                     saved.getEmail(),
-                    receiverId,
+                    postOwnerId,
                     "COMMENT",
                     saved.getPostId(),
                     "commented on your post"
@@ -45,12 +45,26 @@ public class CommentController {
     public Comment addReply(@RequestBody Comment reply) {
         Comment saved = commentService.createReply(reply);
 
-        //  Send notification to post owner
-        String receiverId = commentService.getPostOwnerId(saved.getPostId());
-        if (receiverId != null && !receiverId.equals(saved.getEmail())) {
+        // Notify parent comment author
+        String parentCommentAuthor = commentService.getCommentAuthor(reply.getParentCommentId());
+        if (parentCommentAuthor != null && !parentCommentAuthor.equals(saved.getEmail())) {
             notificationService.sendNotification(
                     saved.getEmail(),
-                    receiverId,
+                    parentCommentAuthor,
+                    "COMMENT_REPLY",
+                    saved.getPostId(),
+                    "replied to your comment"
+            );
+        }
+
+        // Notify post owner if different from reply author and parent comment author
+        String postOwnerId = commentService.getPostOwnerId(saved.getPostId());
+        if (postOwnerId != null &&
+            !postOwnerId.equals(saved.getEmail()) &&
+            !postOwnerId.equals(parentCommentAuthor)) {
+            notificationService.sendNotification(
+                    saved.getEmail(),
+                    postOwnerId,
                     "COMMENT",
                     saved.getPostId(),
                     "replied to a comment on your post"
@@ -78,4 +92,3 @@ public class CommentController {
         commentService.deleteCommentAndReplies(id);
     }
 }
-

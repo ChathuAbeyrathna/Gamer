@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import EmojiPicker from "emoji-picker-react";
 import { FiSend, FiMoreVertical } from "react-icons/fi";
 import defaultProfile from "../../images/defaultProfile.png";
 import chatBackground from "../../images/chatBg.png";
@@ -14,6 +15,7 @@ const ChatPage = () => {
   const currentUserEmail = localStorage.getItem("email");
 
   const { chatList, markChatAsRead } = useChat();
+  const markChatAsReadRef = useRef(markChatAsRead);
 
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -21,8 +23,14 @@ const ChatPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const messageEndRef = useRef(null);
   const clientRef = useRef(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // scroll only when history first loads or when new messages arrive
+  // Keep the latest markChatAsRead function in a ref
+  useEffect(() => {
+    markChatAsReadRef.current = markChatAsRead;
+  }, [markChatAsRead]);
+
+  // Scroll helper
   const scrollToBottom = (smooth = false) => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({
@@ -31,9 +39,8 @@ const ChatPage = () => {
     }
   };
 
+  // Fetch receiver profile
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
     const fetchReceiverProfile = async () => {
       if (!receiverEmail) return;
       try {
@@ -41,10 +48,15 @@ const ChatPage = () => {
           `http://localhost:8080/api/profile/${receiverEmail}`
         );
         setReceiverProfile(res.data);
-      } catch (err) {
-        console.error(err);
-      }
+      } catch { }
     };
+    fetchReceiverProfile();
+  }, [receiverEmail]);
+
+  // Fetch chat history
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let isMounted = true;
 
     const fetchHistory = async () => {
       if (!receiverEmail) return;
@@ -53,27 +65,30 @@ const ChatPage = () => {
           `http://localhost:8080/api/chat/history/${currentUserEmail}/${receiverEmail}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setMessages(res.data);
-        markChatAsRead(receiverEmail);
-
-        // scroll directly to bottom when history loads
-        setTimeout(() => scrollToBottom(false), 0);
-      } catch (err) {
-        console.error(err);
-      }
+        if (isMounted) {
+          setMessages(res.data);
+          markChatAsReadRef.current(receiverEmail);
+          setTimeout(() => scrollToBottom(false), 0);
+        }
+      } catch { }
     };
 
-    fetchReceiverProfile();
     fetchHistory();
-  }, [receiverEmail]);
+    return () => { isMounted = false; };
+  }, [receiverEmail, currentUserEmail]);
 
-  // WebSocket for sending/receiving messages
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    setTimeout(() => scrollToBottom(true), 50);
+  }, [messages]);
+
+  // WebSocket for new messages
   useEffect(() => {
     clientRef.current = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
       onConnect: () => { },
-      debug: (str) => console.log(str),
+      debug: () => { },
     });
     clientRef.current.activate();
 
@@ -81,17 +96,15 @@ const ChatPage = () => {
       const msg = e.detail;
       if (msg.senderEmail === receiverEmail || msg.receiverEmail === receiverEmail) {
         setMessages((prev) => [...prev, msg]);
-        markChatAsRead(
+        markChatAsReadRef.current(
           msg.senderEmail === currentUserEmail ? msg.receiverEmail : msg.senderEmail
         );
-        // smooth scroll when new messages arrive
-        setTimeout(() => scrollToBottom(true), 50);
       }
     };
 
     window.addEventListener("newMessage", handleNewMessage);
     return () => window.removeEventListener("newMessage", handleNewMessage);
-  }, [receiverEmail]);
+  }, [receiverEmail, currentUserEmail]);
 
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -107,7 +120,6 @@ const ChatPage = () => {
     });
     setMessages((prev) => [...prev, chat]);
     setMessage("");
-    setTimeout(() => scrollToBottom(true), 50);
   };
 
   const formatDateTime = (timestamp) =>
@@ -126,6 +138,10 @@ const ChatPage = () => {
     new Date(prevMsg.timestamp).toDateString() !==
     new Date(currentMsg.timestamp).toDateString();
 
+  const onEmojiClick = (emojiData) => {
+    setMessage((prev) => prev + emojiData.emoji);
+  };
+
   return (
     <div className="flex h-screen text-white pt-20">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
@@ -140,7 +156,7 @@ const ChatPage = () => {
               key={chat.profile.email}
               onClick={() => {
                 navigate(`/chat/${chat.profile.email}`);
-                markChatAsRead(chat.profile.email);
+                markChatAsReadRef.current(chat.profile.email);
               }}
               className={`flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-800 ${isActive ? "bg-gray-800" : ""
                 }`}
@@ -148,6 +164,7 @@ const ChatPage = () => {
               <div className="relative">
                 <img
                   src={chat.profile.imageUrl || defaultProfile}
+                  alt={chat.profile.gamerName || "Profile"}
                   className="w-10 h-10 rounded-full"
                 />
                 {chat.hasUnread && (
@@ -164,7 +181,6 @@ const ChatPage = () => {
                     })
                     : ""}
                 </span>
-
               </div>
             </div>
           );
@@ -179,6 +195,7 @@ const ChatPage = () => {
               <div className="flex items-center space-x-4">
                 <img
                   src={receiverProfile?.imageUrl || defaultProfile}
+                  alt={receiverProfile?.gamerName || "Profile"}
                   className="w-12 h-12 rounded-full"
                 />
                 <h2 className="text-lg font-semibold">
@@ -221,14 +238,14 @@ const ChatPage = () => {
                     )}
                     <div
                       className={`flex ${msg.senderEmail === currentUserEmail
-                          ? "justify-end"
-                          : "justify-start"
+                        ? "justify-end"
+                        : "justify-start"
                         }`}
                     >
                       <div
                         className={`px-4 py-2 rounded-lg max-w-xs break-words ${msg.senderEmail === currentUserEmail
-                            ? "bg-gradient-to-r from-[#01C0D3]/80 to-[#2059B6]/80"
-                            : "bg-gradient-to-r from-gray-700/80 to-gray-500/80"
+                          ? "bg-gradient-to-r from-[#01C0D3]/80 to-[#2059B6]/80"
+                          : "bg-gradient-to-r from-gray-700/80 to-gray-500/80"
                           }`}
                       >
                         {msg.message}
@@ -241,6 +258,18 @@ const ChatPage = () => {
             </div>
 
             <div className="flex items-center gap-2 p-4 bg-[#1a2232]">
+              {showEmojiPicker && (
+                <div className="absolute bottom-14 z-50">
+                  <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" height={400} width={400} />
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="text-xl"
+              >
+                😊
+              </button>
               <input
                 type="text"
                 value={message}
