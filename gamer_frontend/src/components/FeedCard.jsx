@@ -381,9 +381,6 @@ const FeedCard = ({
                     {savedPostIds?.includes(item.id) ? <FaBookmark className="text-white mr-2" /> : <FaRegBookmark className="text-white mr-2" />}
                     {savedPostIds?.includes(item.id) ? "Unsave" : "Save"}
                   </button>
-                  <button className="flex items-center w-full text-left px-4 py-2 hover:bg-gray-600">
-                    <div className="bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-black mr-2">!</div>
-                  </button>
                 </>
               )}
             </div>
