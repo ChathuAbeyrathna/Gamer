@@ -278,7 +278,7 @@ const GroupView = () => {
                         </div>
 
                         {/* Feed */}
-                        <div className="w-2/4 mx-4 mt-8 space-y-6">
+                        <div className="w-2/5 mx-4 mt-8 space-y-6">
                             {filteredFeed.length === 0 ? (
                                 <div className="text-center text-gray-400">No posts or blogs yet.</div>
                             ) : (

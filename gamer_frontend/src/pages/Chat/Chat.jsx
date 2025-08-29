@@ -4,7 +4,7 @@ import axios from "axios";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import EmojiPicker from "emoji-picker-react";
-import { FiSend, FiMoreVertical } from "react-icons/fi";
+import { FiSend } from "react-icons/fi";
 import defaultProfile from "../../images/defaultProfile.png";
 import chatBackground from "../../images/chatBg.png";
 import { useChat } from "../Chat/ChatContext";
@@ -20,7 +20,6 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [receiverProfile, setReceiverProfile] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const messageEndRef = useRef(null);
   const clientRef = useRef(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -201,20 +200,6 @@ const ChatPage = () => {
                 <h2 className="text-lg font-semibold">
                   {receiverProfile?.gamerName}
                 </h2>
-              </div>
-              <div className="relative">
-                <FiMoreVertical
-                  className="cursor-pointer"
-                  size={22}
-                  onClick={() => setMenuOpen(!menuOpen)}
-                />
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-gray-800 rounded-md shadow-lg p-2 z-50">
-                    <button className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded">
-                      Delete Chat
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 
