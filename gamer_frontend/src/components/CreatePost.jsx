@@ -119,7 +119,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
         email: userProfile.email,
         userName: userProfile.name,
         userImage: userProfile.imageUrl,
-        groupId: groupId || null  // ✅ Send groupId if present
+        groupId: groupId || null
       };
 
       const token = localStorage.getItem("token");
@@ -162,9 +162,9 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
         </div>
       )}
 
-      {/* Form */}
-      <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
-        <div className="bg-gray-800 p-6 rounded-lg w-[500px] min-h-[550px] text-white shadow-lg">
+      {/* Responsive Form */}
+      <div className="min-h-screen flex justify-center items-start py-6 px-2 sm:px-4 mt-24 mb-20">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg w-full max-w-[500px] min-h-[550px] text-white shadow-lg">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">{editingPost ? "Edit Post" : "Create Post"}</h2>
             <button onClick={onClose}><IoMdClose size={24} /></button>
@@ -176,7 +176,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             {userProfile && (
               <>
                 <img src={userProfile.imageUrl || defaultProfile} alt="User Avatar" className="h-10 w-10 rounded-full" />
-                <div><h2 className="font-semibold">{userProfile.gamerName}</h2></div>
+                <div><h2 className="font-semibold text-base sm:text-lg">{userProfile.gamerName}</h2></div>
               </>
             )}
           </div>
@@ -186,7 +186,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
               placeholder="What's happening in your gaming world?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full h-40 mt-3 p-3 bg-gray-800 text-white rounded resize-none pr-10 outline-none"
+              className="w-full h-32 sm:h-40 mt-3 p-3 bg-gray-800 text-white rounded resize-none pr-10 outline-none"
               required
             />
             <button type="button" onClick={toggleEmojiPicker} className="absolute right-3 top-3">😊</button>
@@ -243,7 +243,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
           <div className="flex justify-center">
             <button
               type="submit"
-              className={`w-40 mt-9 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`w-full sm:w-40 mt-9 py-2 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
               onClick={handleSubmit}
               disabled={uploading}
             >

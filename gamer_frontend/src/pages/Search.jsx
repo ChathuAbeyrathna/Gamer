@@ -137,8 +137,22 @@ const Search = () => {
         console.error("Error fetching saved items:", err);
       }
     };
+
+    const fetchJoinedGroups = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8080/api/groups/user/${currentUserEmail}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const joinedIds = res.data.map(g => g.id);
+        setJoinedGroupIds(joinedIds);
+      } catch (err) {
+        console.error("Error loading joined groups", err);
+      }
+    };
+
     fetchSavedItems();
-  }, [token]);
+    fetchJoinedGroups();
+  }, [currentUserEmail, token]);
 
   const toggleSavePost = async (postId) => {
     if (!token) {
@@ -374,7 +388,7 @@ const Search = () => {
                     })}
 
                     {(results.groups || []).length > visibleGroupsCount && (
-                      <div className="text-center mt-10 mb-10">
+                      <div className="text-center mt-10 mb-20">
                         <button
                           onClick={() => setVisibleGroupsCount((s) => s + 8)}
                           className="mx-auto flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"

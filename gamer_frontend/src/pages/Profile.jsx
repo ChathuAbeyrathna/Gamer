@@ -63,11 +63,11 @@ const Profile = () => {
         const blogData = blogRes.ok ? await blogRes.json() : [];
 
         const postsWithType = postData
-          .filter(p => !p.groupId) // only global posts (not in group)
+          .filter(p => !p.groupId)
           .map(p => ({ ...p, type: "post" }));
 
         const blogsWithType = blogData
-          .filter(b => !b.groupId) // only global blogs (not in group)
+          .filter(b => !b.groupId)
           .map(b => ({ ...b, type: "blog" }));
 
         const combined = [...postsWithType, ...blogsWithType].sort(
@@ -146,24 +146,26 @@ const Profile = () => {
     <div className="relative min-h-screen text-white">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
-      <div className="container mx-auto flex mt-4 space-x-4 px-4">
-        <div className="w-1/4">
+      <div className="flex flex-col md:flex-row container mx-auto mt-4 px-4 md:space-x-4">
+        {/* Sidebar */}
+        <div className="w-full md:w-1/4 mb-4 md:mb-0">
           <Sidebar />
         </div>
 
-        <div className="w-full flex flex-col items-center mt-20">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col items-center mt-6 md:mt-20">
           {profile && (
-            <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg flex items-center mb-4">
+            <div className="w-full max-w-6xl bg-gray-900 p-4 sm:p-6 md:p-6 rounded-lg flex flex-col md:flex-row items-center md:items-start mb-6">
               <img
                 src={profile.imageUrl || defaultProfile}
                 alt="Profile"
-                className="w-52 h-52 rounded-full mr-12 ml-10 object-cover"
+                className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full object-cover mb-4 md:mb-0 md:mr-8"
               />
-              <div className="flex-1 text-left relative">
-                <div>
-                  <h1 className="text-2xl font-semibold">{profile.gamerName}</h1>
-                  <p className="text-gray-400 mt-4">{profile.bio}</p>
-                  <p className="text-gray-400 mt-3">{profile.role?.join(" | ")}</p>
+              <div className="flex-1 w-full relative text-center md:text-left">
+                <div className="mb-4 md:mb-0">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold">{profile.gamerName}</h1>
+                  <p className="text-gray-400 mt-2 sm:mt-4">{profile.bio}</p>
+                  <p className="text-gray-400 mt-1 sm:mt-3">{profile.role?.join(" | ")}</p>
                 </div>
                 <div className="absolute top-0 right-0">
                   <Link to="/editprof">
@@ -177,9 +179,9 @@ const Profile = () => {
                   <img src={squad} alt="Squad Icon" className="w-6 h-6" />
                   <span>Squad</span>
                 </div>
-                <div className="flex space-x-4 mt-8">
+                <div className="flex flex-col sm:flex-row justify-center md:justify-start space-y-2 sm:space-y-0 sm:space-x-4 mt-6 md:mt-8">
                   <button
-                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white w-full sm:w-auto"
                     onClick={() => {
                       setIsModalOpen(true);
                       setEditingPost(null);
@@ -188,7 +190,7 @@ const Profile = () => {
                     Create a post
                   </button>
                   <button
-                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white"
+                    className="bg-gray-900 px-4 py-2 rounded-full border-2 border-white w-full sm:w-auto"
                     onClick={() => {
                       setIsBlogModalOpen(true);
                       setEditingBlog(null);
@@ -202,7 +204,7 @@ const Profile = () => {
           )}
 
           {/* Feed Section */}
-          <div className="w-full max-w-2xl bg-gray-900 p-4">
+          <div className="w-full max-w-2xl bg-gray-900 p-4 sm:p-6 rounded-lg">
             {isLoadingPosts ? (
               <p className="text-center text-gray-400">Loading...</p>
             ) : userPosts.length === 0 ? (
@@ -234,7 +236,7 @@ const Profile = () => {
 
       {/* Modals */}
       {showSquad && (
-        <div className="fixed inset-0 flex justify-center items-center z-20">
+        <div className="fixed inset-0 flex justify-center items-center z-20 p-4">
           <SquadModal
             email={profile?.email}
             show={showSquad}
@@ -244,7 +246,7 @@ const Profile = () => {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex justify-center items-center z-20">
+        <div className="fixed inset-0 flex justify-center items-center z-20 p-4">
           <CreatePost
             onClose={() => {
               setIsModalOpen(false);
@@ -266,7 +268,7 @@ const Profile = () => {
       )}
 
       {isBlogModalOpen && (
-        <div className="fixed inset-0 flex justify-center items-center z-20">
+        <div className="fixed inset-0 flex justify-center items-center z-20 p-4">
           <WriteBlog
             onClose={() => {
               setIsBlogModalOpen(false);
