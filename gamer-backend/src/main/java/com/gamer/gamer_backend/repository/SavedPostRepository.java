@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface SavedPostRepository extends MongoRepository<SavedPost, String> {
     List<SavedPost> findByUserEmailOrderBySavedAtDesc(String userEmail);
+
     Optional<SavedPost> findByUserEmailAndPostId(String userEmail, String postId);
+
     void deleteByUserEmailAndPostId(String userEmail, String postId);
 }
-
-

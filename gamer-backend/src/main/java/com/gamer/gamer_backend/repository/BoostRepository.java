@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface BoostRepository extends MongoRepository<Boost, String> {
     Optional<Boost> findByUserEmailAndPostId(String userEmail, String postId);
+
     List<Boost> findByPostId(String postId);
+
     void deleteByUserEmailAndPostId(String userEmail, String postId);
-} 
+}

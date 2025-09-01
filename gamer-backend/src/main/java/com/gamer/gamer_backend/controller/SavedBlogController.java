@@ -30,5 +30,5 @@ public class SavedBlogController {
     public void unsaveBlog(@PathVariable String blogId, Principal principal) {
         service.unsaveBlog(principal.getName(), blogId);
     }
- 
+
 }

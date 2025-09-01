@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface GroupRepository extends MongoRepository<Group, String> {
     List<Group> findByOwnerEmail(String email);
+
     List<Group> findByMemberEmailsContaining(String email);
 }

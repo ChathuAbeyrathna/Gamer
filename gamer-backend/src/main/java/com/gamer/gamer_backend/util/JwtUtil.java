@@ -12,8 +12,8 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "mysecretkeymysecretkeymysecretkey12"; // Must be 32+ characters
-    private final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
+    private final String SECRET = "mysecretkeymysecretkeymysecretkey12";
+    private final long EXPIRATION_TIME = 86400000;
 
     private Key getKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
@@ -46,4 +46,3 @@ public class JwtUtil {
         }
     }
 }
-

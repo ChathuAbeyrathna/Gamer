@@ -19,7 +19,7 @@ public class BoostService {
 
     private final BoostRepository boostRepository;
     private final UserProfileRepository userProfileRepository;
-    private final PostRepository postRepository; 
+    private final PostRepository postRepository;
     private final BlogRepository blogRepository;
 
     public boolean toggleBoost(String email, String postId) {
@@ -46,8 +46,8 @@ public class BoostService {
 
     public String getPostOwnerId(String id) {
         String owner = postRepository.findById(id).map(Post::getEmail).orElse(null);
-        if (owner != null) return owner;
+        if (owner != null)
+            return owner;
         return blogRepository.findById(id).map(Blog::getEmail).orElse(null);
     }
 }
-

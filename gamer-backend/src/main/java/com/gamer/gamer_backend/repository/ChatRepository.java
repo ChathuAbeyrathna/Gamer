@@ -7,8 +7,7 @@ import java.util.List;
 
 public interface ChatRepository extends MongoRepository<Chat, String> {
     List<Chat> findBySenderEmailAndReceiverEmailOrReceiverEmailAndSenderEmailOrderByTimestampAsc(
-        String senderEmail, String receiverEmail, String senderEmail2, String receiverEmail2
-    );
+            String senderEmail, String receiverEmail, String senderEmail2, String receiverEmail2);
 
     List<Chat> findBySenderEmailOrReceiverEmail(String sender, String receiver);
 }

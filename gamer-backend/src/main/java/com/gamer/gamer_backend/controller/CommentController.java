@@ -33,8 +33,7 @@ public class CommentController {
                     postOwnerId,
                     "COMMENT",
                     saved.getPostId(),
-                    "commented on your post"
-            );
+                    "commented on your post");
         }
 
         return saved;
@@ -53,22 +52,20 @@ public class CommentController {
                     parentCommentAuthor,
                     "COMMENT_REPLY",
                     saved.getPostId(),
-                    "replied to your comment"
-            );
+                    "replied to your comment");
         }
 
         // Notify post owner if different from reply author and parent comment author
         String postOwnerId = commentService.getPostOwnerId(saved.getPostId());
         if (postOwnerId != null &&
-            !postOwnerId.equals(saved.getEmail()) &&
-            !postOwnerId.equals(parentCommentAuthor)) {
+                !postOwnerId.equals(saved.getEmail()) &&
+                !postOwnerId.equals(parentCommentAuthor)) {
             notificationService.sendNotification(
                     saved.getEmail(),
                     postOwnerId,
                     "COMMENT",
                     saved.getPostId(),
-                    "replied to a comment on your post"
-            );
+                    "replied to a comment on your post");
         }
 
         return saved;
@@ -80,13 +77,11 @@ public class CommentController {
         return commentService.getCommentsWithReplies(postId);
     }
 
-    // Edit comment
     @PutMapping("/edit/{id}")
     public Comment editComment(@PathVariable String id, @RequestBody Comment updated) {
         return commentService.updateComment(id, updated.getContent());
     }
 
-    // Delete comment (and replies)
     @DeleteMapping("/delete/{id}")
     public void deleteComment(@PathVariable String id) {
         commentService.deleteCommentAndReplies(id);

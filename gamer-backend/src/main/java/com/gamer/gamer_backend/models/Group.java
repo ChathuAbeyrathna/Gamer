@@ -21,5 +21,5 @@ public class Group {
     private String coverPhotoUrl;
     private String ownerEmail;
     private List<String> tags;
-    private List<String> memberEmails; // emails of joined users
+    private List<String> memberEmails; 
 }

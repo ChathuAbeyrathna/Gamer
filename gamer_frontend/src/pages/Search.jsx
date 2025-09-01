@@ -1,11 +1,10 @@
-// src/pages/SearchPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
-import FeedCard from "../components/FeedCard"; // path consistent with your other pages
+import FeedCard from "../components/FeedCard";
 import ViewBlog from "../components/ViewBlog";
 import defaultProfile from "../images/defaultProfile.png";
-import defaultGroup from "../images/default.png"; // add this image to /images or swap for any existing placeholder
+import defaultGroup from "../images/default.png";
 import viewMore from "../images/viewMore.png";
 
 const Search = () => {
@@ -13,11 +12,10 @@ const Search = () => {
   const navigate = useNavigate();
   const query = new URLSearchParams(location.search).get("query") || "";
 
-  const [results, setResults] = useState(null); // { posts:[], blogs:[], groups:[], users:[] }
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
 
-  // UI state similar to other pages
   const [visibleProfilesCount, setVisibleProfilesCount] = useState(9);
   const [visibleGroupsCount, setVisibleGroupsCount] = useState(8);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
@@ -68,7 +66,6 @@ const Search = () => {
 
   }, [query]);
 
-  // prepare tabs only for categories that exist and contain items
   const tabMeta = [
     { key: "gamers", label: "Gamers", items: results?.users || [] },
     { key: "posts", label: "Posts", items: results?.posts || [] },
@@ -76,7 +73,6 @@ const Search = () => {
     { key: "groups", label: "Groups", items: results?.groups || [] },
   ].filter((t) => t.items && t.items.length > 0);
 
-  // helpers
   const goToProfile = (email) => navigate(`/profile/view/${encodeURIComponent(email)}`);
   const goToGroup = (id) => navigate(`/group/view/${id}`);
 
@@ -95,10 +91,8 @@ const Search = () => {
       );
 
       if (res.data.status === 'FOLLOWED') {
-        // Add profileEmail to following list if not already present
         setFollowing(prev => (prev.includes(profileEmail) ? prev : [...prev, profileEmail]));
       } else if (res.data.status === 'UNFOLLOWED') {
-        // Remove profileEmail from following list
         setFollowing(prev => prev.filter(email => email !== profileEmail));
       }
     } catch (err) {
@@ -106,7 +100,6 @@ const Search = () => {
     }
   };
 
-  // For feedcards we reuse your patterns: transform posts/blogs into item objects with "type"
   const feedItemsForTab = (key) => {
     if (key === "posts") {
       return (results?.posts || []).map((p) => ({ ...p, type: "post" }));

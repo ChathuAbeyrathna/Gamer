@@ -15,14 +15,14 @@ public class Notification {
     @Id
     private String id;
 
-    private String senderId;     // who did the action (email)
-    private String receiverId;   // who receives it (email)
-    private String type;         // "BOOST", "COMMENT", "FOLLOW"
-    private String postId;       // id of post or blog that got boosted/commented
+    private String senderId;
+    private String receiverId;
+    private String type;
+    private String postId;
     private String message;
     private boolean read;
     private LocalDateTime createdAt;
-    
-    private String senderName;    // added
-    private String senderImageUrl; // added
+
+    private String senderName;
+    private String senderImageUrl;
 }

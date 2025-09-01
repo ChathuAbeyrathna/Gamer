@@ -4,7 +4,7 @@ import { getUserEmail } from "../authUtils";
 import game from '../images/game.png';
 import group from '../images/group.png';
 import save from '../images/save.png';
-import defaultProfile from '../images/defaultProfile.png'; // imported fallback image
+import defaultProfile from '../images/defaultProfile.png';
 
 const SideBar = () => {
   const email = getUserEmail();
@@ -30,7 +30,7 @@ const SideBar = () => {
 
   return (
     <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed h-full left-6 mt-[6%]">
-      
+
       {profile && (
         <NavLink
           to="/profile"
@@ -49,10 +49,10 @@ const SideBar = () => {
       )}
 
       <ul>
-        <NavLink 
-          to="/suggest" 
+        <NavLink
+          to="/suggest"
           className={({ isActive }) =>
-              `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+            `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
               ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
           }
         >
@@ -64,10 +64,10 @@ const SideBar = () => {
           </li>
         </NavLink>
 
-        <NavLink 
-          to="/group" 
+        <NavLink
+          to="/group"
           className={({ isActive }) =>
-              `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
+            `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
               ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
           }
         >
@@ -80,21 +80,21 @@ const SideBar = () => {
         </NavLink>
 
         {email && (
-        <NavLink 
-          to="/save" 
-          className={({ isActive }) =>
+          <NavLink
+            to="/save"
+            className={({ isActive }) =>
               `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
               ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
-          }
-        >
-          <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
-            <button className="w-8 h-8 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
-              <img src={save} alt="save" className="h-6 w-6" />
-            </button>
-            <span>Saved Items</span>
-          </li>
-        </NavLink>
-      )}
+            }
+          >
+            <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
+              <button className="w-8 h-8 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
+                <img src={save} alt="save" className="h-6 w-6" />
+              </button>
+              <span>Saved Items</span>
+            </li>
+          </NavLink>
+        )}
 
       </ul>
     </div>

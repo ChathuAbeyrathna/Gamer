@@ -10,7 +10,7 @@ const NotificationListener = ({ userId, onNewNotification }) => {
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
-      debug: () => {}, // disable debug logs
+      debug: () => {}, 
       onConnect: () => {
         stompClient.subscribe(`/topic/notifications/${userId}`, (message) => {
           try {

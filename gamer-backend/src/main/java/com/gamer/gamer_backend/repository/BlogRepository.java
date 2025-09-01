@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface BlogRepository extends MongoRepository<Blog, String> {
     List<Blog> findByEmail(String email);
+
     List<Blog> findByGroupId(String groupId);
+
     List<Blog> findByGroupIdNotNull();
 }

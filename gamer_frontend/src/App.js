@@ -9,6 +9,7 @@ import Signup from "./pages/Auth/Signup";
 import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ResetPassword from "./pages/Auth/ResetPassword";
+import HelpSupport from "./pages/HelpSupport";
 import { Alert } from "./Alert";
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/forgotpassword" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<Home hasUnread={hasUnread} />} />
+            <Route path="/help-support" element={<HelpSupport />} />
 
             <Route
               path="/*"

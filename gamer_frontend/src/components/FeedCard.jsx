@@ -22,7 +22,7 @@ const FeedCard = ({
   showMenu = false,
   onEdit,
   onDelete,
-  openCommentSection = false,  // NEW prop
+  openCommentSection = false,  
   openBoostSection = false,
   currentUserEmail,
 }) => {
@@ -57,7 +57,6 @@ const FeedCard = ({
     }
   }, [openCommentSection]);
 
-  // If you want to sync if props change dynamically (optional)
   useEffect(() => {
     setShowComments(openCommentSection);
   }, [openCommentSection]);
@@ -121,10 +120,9 @@ const FeedCard = ({
         const boostedNow = res.data.boosted;
         setBoosted(boostedNow);
 
-        // 👉 Animate only when boosting
         if (boostedNow) {
           setAnimateBoost(true);
-          setTimeout(() => setAnimateBoost(false), 300); // Remove after animation
+          setTimeout(() => setAnimateBoost(false), 300); 
         }
 
         return axios.get(`http://localhost:8080/api/boosts/${item.id}`);

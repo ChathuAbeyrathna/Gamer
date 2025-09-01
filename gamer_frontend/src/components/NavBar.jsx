@@ -184,23 +184,25 @@ const NavBar = () => {
               </button>
               {showMenu1Popup && (
                 <div className="absolute right-0 mt-2 w-56 bg-gradient-to-b from-[#222] to-[#444] text-white rounded-xl shadow-lg p-4 space-y-4">
-                  <Link to="/suggest" className="flex items-center space-x-3">
-                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
+                  <Link to="/suggest" className="flex items-center space-x-3 hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-1">
+                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
                       <img src={game} alt="game" className="h-6 w-6" />
                     </button>
-                    <span>Game Suggestions</span>
+                    <span className="hover:text-blue-400 transition-colors duration-200">Game Suggestions</span>
                   </Link>
-                  <Link to="/group" className="flex items-center space-x-3">
-                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
+
+                  <Link to="/group" className="flex items-center space-x-3 hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-1">
+                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
                       <img src={group} alt="group" className="h-6 w-6" />
                     </button>
-                    <span>Groups</span>
+                    <span className="hover:text-blue-400 transition-colors duration-200">Groups</span>
                   </Link>
-                  <Link to="/save" className="flex items-center space-x-3">
-                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white">
+
+                  <Link to="/save" className="flex items-center space-x-3 hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-1">
+                    <button className="w-7 h-7 rounded-full bg-gradient-to-b from-[#01C0D3] to-[#2059B6] flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
                       <img src={save} alt="save" className="h-5 w-5" />
                     </button>
-                    <span>Saved Items</span>
+                    <span className="hover:text-blue-400 transition-colors duration-200">Saved Items</span>
                   </Link>
                 </div>
               )}
@@ -234,22 +236,25 @@ const NavBar = () => {
               </button>
               {showMenu2Popup && (
                 <div className="absolute right-0 mt-2 w-56 bg-gradient-to-b from-[#222] to-[#444] text-white rounded-xl shadow-lg p-4 space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">?</div>
-                    <span>Help & Support</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">!</div>
-                    <span>Give Feedback</span>
-                  </div>
+                  <Link to="/help-support">
+                    <div className="flex items-center space-x-3 hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-1 cursor-pointer">
+                      <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black hover:scale-105 transition-transform duration-200">?</div>
+                      <span className="hover:text-blue-400 transition-colors duration-200">Help & Support</span>
+                    </div>
+                  </Link>
+
                   {localStorage.getItem("token") && (
-                    <div onClick={handleLogout} className="flex items-center space-x-3 cursor-pointer">
-                      <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black">→</div>
-                      <span>Log Out</span>
+                    <div
+                      onClick={handleLogout}
+                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-1"
+                    >
+                      <div className="bg-gray-400 rounded-full w-8 h-8 flex items-center justify-center text-xl text-black hover:scale-105 transition-transform duration-200">→</div>
+                      <span className="hover:text-blue-400 transition-colors duration-200">Log Out</span>
                     </div>
                   )}
                 </div>
               )}
+
             </div>
 
             {/* Profile */}
@@ -275,17 +280,27 @@ const NavBar = () => {
         </div>
 
         {/* Mobile Menu */}
+        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-20 left-0 w-full bg-gray-800 p-5 flex flex-col space-y-4 text-center">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link to="/friends" onClick={() => setMobileMenuOpen(false)}>Friends</Link>
-            <Link to="/notifications" onClick={() => setMobileMenuOpen(false)}>Notifications</Link>
-            <Link to="/chat" onClick={() => setMobileMenuOpen(false)}>Chat</Link>
-            <Link to="/gamesuggestions" onClick={() => setMobileMenuOpen(false)}>Game Suggestions</Link>
-            <Link to="/groups" onClick={() => setMobileMenuOpen(false)}>Groups</Link>
-            <Link to="/saved" onClick={() => setMobileMenuOpen(false)}>Saved Items</Link>
-            <Link to="/menu" onClick={() => setMobileMenuOpen(false)}>Settings</Link>
-            <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>Your Profile</Link>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Home</Link>
+            <Link to="/allprof" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Friends</Link>
+            <Link to="/notifications" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Notifications</Link>
+            <Link to="/chat" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Chat</Link>
+            <Link to="/suggest" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Game Suggestions</Link>
+            <Link to="/group" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Groups</Link>
+            <Link to="/save" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Saved Items</Link>
+            <Link to="/help-support" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Help & Support</Link>
+            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-400 transition-colors duration-200">Your Profile</Link>
+
+            {localStorage.getItem("token") && (
+              <div
+                onClick={handleLogout}
+                className="flex items-center justify-center space-x-3 cursor-pointer hover:bg-gray-700 hover:rounded-lg transition-all duration-200 p-2 mt-2"
+              >
+                <span className="hover:text-blue-400 transition-colors duration-200">Log Out</span>
+              </div>
+            )}
           </div>
         )}
       </nav>

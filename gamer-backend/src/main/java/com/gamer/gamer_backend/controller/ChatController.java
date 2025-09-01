@@ -21,33 +21,25 @@ public class ChatController {
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    // ✅ Save to DB + send to receiver
     @MessageMapping("/send")
     public void sendMessage(@Payload Chat chat, Principal principal) {
-        // set sender from logged-in user
         if (principal != null) {
             chat.setSenderEmail(principal.getName());
         }
 
-        // persist message
         Chat saved = chatService.saveMessage(chat);
 
-        // send to receiver
         messagingTemplate.convertAndSendToUser(
                 chat.getReceiverEmail(),
                 "/queue/messages",
-                saved
-        );
+                saved);
 
-        // also send back to sender for instant UI update
         messagingTemplate.convertAndSendToUser(
                 saved.getSenderEmail(),
                 "/queue/messages",
-                saved
-        );
+                saved);
     }
 
-    // ✅ REST fallback (in case you want to send messages via API too)
     @PostMapping("/send")
     public Chat sendMessageRest(@RequestBody Chat chat, Principal principal) {
         if (principal != null) {

@@ -20,4 +20,3 @@ public class SavedPost {
     private String postId;
     private Instant savedAt;
 }
-

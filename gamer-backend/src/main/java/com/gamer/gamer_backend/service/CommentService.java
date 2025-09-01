@@ -69,7 +69,8 @@ public class CommentService {
     // Get post or blog owner email
     public String getPostOwnerId(String id) {
         String owner = postRepository.findById(id).map(Post::getEmail).orElse(null);
-        if (owner != null) return owner;
+        if (owner != null)
+            return owner;
         return blogRepository.findById(id).map(Blog::getEmail).orElse(null);
     }
 

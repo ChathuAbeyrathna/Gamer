@@ -9,7 +9,7 @@ import EmojiPicker from "emoji-picker-react";
 import camera from '../images/camera.png';
 import defaultProfile from '../images/defaultProfile.png';
 
-const WriteBlogModal = ({ onClose, onBlogCreated = () => {}, editingBlog = null, groupId = null }) => {
+const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null, groupId = null }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");

@@ -31,18 +31,18 @@ const SavedItems = () => {
 
         // Fetch all posts and blogs
         const [allPostsRes, allBlogsRes, allGroupPostsRes, allGroupBlogsRes] = await Promise.all([
-  axios.get("http://localhost:8080/api/posts/all", { headers: { Authorization: `Bearer ${token}` } }),
-  axios.get("http://localhost:8080/api/blogs/all", { headers: { Authorization: `Bearer ${token}` } }),
-  axios.get("http://localhost:8080/api/groups/all-posts", { headers: { Authorization: `Bearer ${token}` } }),
-  axios.get("http://localhost:8080/api/groups/all-blogs", { headers: { Authorization: `Bearer ${token}` } }),
-]);
+          axios.get("http://localhost:8080/api/posts/all", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:8080/api/blogs/all", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:8080/api/groups/all-posts", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:8080/api/groups/all-blogs", { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-// Merge global + group posts/blogs
-const allPosts = [...allPostsRes.data, ...allGroupPostsRes.data];
-const allBlogs = [...allBlogsRes.data, ...allGroupBlogsRes.data];
+        // Merge global + group posts/blogs
+        const allPosts = [...allPostsRes.data, ...allGroupPostsRes.data];
+        const allBlogs = [...allBlogsRes.data, ...allGroupBlogsRes.data];
 
-const idToPostMap = new Map(allPosts.map(p => [p.id, p]));
-const idToBlogMap = new Map(allBlogs.map(b => [b.id, b]));
+        const idToPostMap = new Map(allPosts.map(p => [p.id, p]));
+        const idToBlogMap = new Map(allBlogs.map(b => [b.id, b]));
 
 
         // Map saved items with savedAt

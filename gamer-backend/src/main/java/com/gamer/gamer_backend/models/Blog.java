@@ -11,8 +11,8 @@ import java.time.Instant;
 public class Blog {
     @Id
     private String id;
-    private String email;         
-    private String userName;      
+    private String email;
+    private String userName;
     private String userImage;
     private String title;
     private String content;

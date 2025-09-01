@@ -17,22 +17,20 @@ import java.util.Map;
 public class FollowController {
 
     private final FollowService service;
-    private final NotificationService notificationService; // ✅ Injected
+    private final NotificationService notificationService; 
 
     @PostMapping("/toggle-follow/{email}")
     public Map<String, String> toggleFollow(@PathVariable String email, Principal principal) {
         String senderId = principal.getName();
         String status = service.toggleFollow(senderId, email);
 
-        // ✅ Only send notification if newly followed
         if ("FOLLOWED".equals(status) && !senderId.equals(email)) {
             notificationService.sendNotification(
                     senderId,
                     email,
                     "FOLLOW",
                     null,
-                    "started following you"
-            );
+                    "started following you");
         }
 
         return Map.of("status", status);
@@ -53,4 +51,3 @@ public class FollowController {
         return service.getFollowing(email);
     }
 }
-

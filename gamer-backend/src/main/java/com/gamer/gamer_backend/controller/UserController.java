@@ -34,9 +34,8 @@ public class UserController {
 
         if (token != null) {
             return ResponseEntity.ok(Map.of(
-                "token", token,
-                "email", email
-            ));
+                    "token", token,
+                    "email", email));
         } else {
             return ResponseEntity.status(401).body("Invalid email or password");
         }

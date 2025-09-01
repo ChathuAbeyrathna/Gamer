@@ -11,7 +11,7 @@ const Login = () => {
   });
 
   const [popupMessage, setPopupMessage] = useState("");
-  const [popupType, setPopupType] = useState(""); // 'success' or 'error'
+  const [popupType, setPopupType] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoadingPage, setShowLoadingPage] = useState(false);

@@ -30,5 +30,5 @@ public class SavedPostController {
     public void unsavePost(@PathVariable String postId, Principal principal) {
         service.unsavePost(principal.getName(), postId);
     }
- 
+
 }

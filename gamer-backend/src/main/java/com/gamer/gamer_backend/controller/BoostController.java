@@ -2,7 +2,7 @@ package com.gamer.gamer_backend.controller;
 
 import com.gamer.gamer_backend.models.Boost;
 import com.gamer.gamer_backend.service.BoostService;
-import com.gamer.gamer_backend.service.NotificationService; // Import this
+import com.gamer.gamer_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +18,7 @@ import java.util.Map;
 public class BoostController {
 
     private final BoostService boostService;
-    private final NotificationService notificationService; // Inject it here
+    private final NotificationService notificationService;
 
     @PostMapping("/toggle/{postId}")
     public Map<String, Boolean> toggleBoost(@PathVariable String postId, Principal principal) {

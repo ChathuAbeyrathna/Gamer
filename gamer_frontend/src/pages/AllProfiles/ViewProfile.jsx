@@ -174,7 +174,7 @@ const ViewProfile = () => {
                 {email !== currentUserEmail && (
                   <button
                     className="w-36 py-1 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]"
-                    onClick={() => navigate(`/chat/${email}`)} 
+                    onClick={() => navigate(`/chat/${email}`)}
                   >
                     Message
                   </button>

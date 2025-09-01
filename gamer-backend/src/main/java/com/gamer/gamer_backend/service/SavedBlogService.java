@@ -31,10 +31,10 @@ public class SavedBlogService {
 
     public List<SavedBlog> getSavedBlogs(String userEmail) {
         return repository.findByUserEmailOrderBySavedAtDesc(userEmail);
-    }    
+    }
 
     public void unsaveBlog(String userEmail, String blogId) {
         repository.deleteByUserEmailAndBlogId(userEmail, blogId);
     }
-    
+
 }

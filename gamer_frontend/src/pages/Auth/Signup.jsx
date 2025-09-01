@@ -11,7 +11,7 @@ const Signup = () => {
     });
 
     const [popupMessage, setPopupMessage] = useState("");
-    const [popupType, setPopupType] = useState(""); 
+    const [popupType, setPopupType] = useState("");
     const [showPopup, setShowPopup] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();

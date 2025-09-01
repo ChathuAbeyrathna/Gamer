@@ -20,4 +20,3 @@ public class SavedBlog {
     private String blogId;
     private Instant savedAt;
 }
-

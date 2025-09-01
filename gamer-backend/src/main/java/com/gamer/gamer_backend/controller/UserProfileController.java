@@ -18,8 +18,8 @@ import java.util.Optional;
 public class UserProfileController {
 
     private final UserProfileService profileService;
-    private final PostService postService; 
-    private final BlogService blogService; 
+    private final PostService postService;
+    private final BlogService blogService;
 
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createProfile(@RequestBody UserProfile profile) {
@@ -35,7 +35,7 @@ public class UserProfileController {
     public ResponseEntity<UserProfile> getProfile(@PathVariable String email) {
         Optional<UserProfile> profile = profileService.getProfileByEmail(email);
         return profile.map(ResponseEntity::ok)
-                      .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/exists/{email}")
@@ -51,22 +51,20 @@ public class UserProfileController {
             UserProfile existingProfile = existingProfileOptional.get();
             existingProfile.setGamerName(updatedProfile.getGamerName());
             existingProfile.setImageUrl(updatedProfile.getImageUrl());
-            existingProfile.setBio(updatedProfile.getBio());    
-            existingProfile.setRole(updatedProfile.getRole());    
+            existingProfile.setBio(updatedProfile.getBio());
+            existingProfile.setRole(updatedProfile.getRole());
 
             UserProfile savedProfile = profileService.createProfile(existingProfile);
 
             postService.updatePostsWithNewProfileInfo(
                     updatedProfile.getEmail(),
                     updatedProfile.getGamerName(),
-                    updatedProfile.getImageUrl()
-            );
+                    updatedProfile.getImageUrl());
 
             blogService.updateBlogsWithNewProfileInfo(
                     updatedProfile.getEmail(),
                     updatedProfile.getGamerName(),
-                    updatedProfile.getImageUrl()
-            );
+                    updatedProfile.getImageUrl());
 
             return ResponseEntity.ok(savedProfile);
         } else {

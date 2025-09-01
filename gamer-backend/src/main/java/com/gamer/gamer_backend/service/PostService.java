@@ -27,7 +27,7 @@ public class PostService {
 
     public List<Post> getAllPosts() {
         return postRepository.findAll().stream()
-                .filter(post -> post.getGroupId() == null) 
+                .filter(post -> post.getGroupId() == null)
                 .collect(Collectors.toList());
     }
 

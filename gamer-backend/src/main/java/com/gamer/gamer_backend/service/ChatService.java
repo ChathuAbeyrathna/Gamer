@@ -19,19 +19,21 @@ public class ChatService {
     private final UserProfileRepository userProfileRepository;
 
     public Chat saveMessage(Chat chat) {
-        chat.setRead(false); // new messages are unread
+        chat.setRead(false);
         return chatRepository.save(chat);
     }
 
     public List<Chat> getChatHistory(String user1, String user2) {
-        List<Chat> history = chatRepository.findBySenderEmailAndReceiverEmailOrReceiverEmailAndSenderEmailOrderByTimestampAsc(
-                user1, user2, user1, user2
-        );
+        List<Chat> history = chatRepository
+                .findBySenderEmailAndReceiverEmailOrReceiverEmailAndSenderEmailOrderByTimestampAsc(
+                        user1, user2, user1, user2);
 
-        // Mark all messages received by user1 as read
         history.stream()
                 .filter(c -> c.getReceiverEmail().equals(user1) && !c.isRead())
-                .forEach(c -> { c.setRead(true); chatRepository.save(c); });
+                .forEach(c -> {
+                    c.setRead(true);
+                    chatRepository.save(c);
+                });
 
         return history;
     }
@@ -43,9 +45,11 @@ public class ChatService {
         Map<String, Boolean> unreadMap = new HashMap<>();
 
         for (Chat chat : chats) {
-            String other = chat.getSenderEmail().equals(currentUserEmail) ? chat.getReceiverEmail() : chat.getSenderEmail();
+            String other = chat.getSenderEmail().equals(currentUserEmail) ? chat.getReceiverEmail()
+                    : chat.getSenderEmail();
 
-            if (!lastMessageMap.containsKey(other) || chat.getTimestamp().isAfter(lastMessageMap.get(other).getTimestamp())) {
+            if (!lastMessageMap.containsKey(other)
+                    || chat.getTimestamp().isAfter(lastMessageMap.get(other).getTimestamp())) {
                 lastMessageMap.put(other, chat);
             }
 

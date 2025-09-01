@@ -12,7 +12,6 @@ export const ChatProvider = ({ children }) => {
   const clientRef = useRef(null);
   const pollingRef = useRef(null);
 
-  // fetch chat list helper
   const fetchChatList = async (email) => {
     if (!email) {
       setChatList([]);
@@ -26,14 +25,12 @@ export const ChatProvider = ({ children }) => {
       );
       setChatList(res.data || []);
     } catch (err) {
-      // silently fail or send to logging service if needed
     }
   };
 
-  // Re-subscribe logic: called whenever currentUserEmail changes
   useEffect(() => {
     if (clientRef.current && clientRef.current.active) {
-      try { clientRef.current.deactivate(); } catch (e) {}
+      try { clientRef.current.deactivate(); } catch (e) { }
       clientRef.current = null;
     }
 
@@ -84,30 +81,29 @@ export const ChatProvider = ({ children }) => {
                       const newItem = { profile, lastMessage: receivedMessage, hasUnread: receivedMessage.receiverEmail === currentUserEmail };
                       return [newItem, ...prev2];
                     });
-                  } catch {}
+                  } catch { }
                 })();
                 return copy;
               }
             });
 
             window.dispatchEvent(new CustomEvent("newMessage", { detail: receivedMessage }));
-          } catch {}
+          } catch { }
         });
       },
-      debug: () => {}
+      debug: () => { }
     });
 
     clientRef.current.activate();
 
     return () => {
       if (clientRef.current && clientRef.current.active) {
-        try { clientRef.current.deactivate(); } catch (e) {}
+        try { clientRef.current.deactivate(); } catch (e) { }
       }
       clientRef.current = null;
     };
   }, [currentUserEmail]);
 
-  // Detect auth changes inside same tab
   useEffect(() => {
     const onAuthChanged = () => {
       const newEmail = localStorage.getItem("email");
