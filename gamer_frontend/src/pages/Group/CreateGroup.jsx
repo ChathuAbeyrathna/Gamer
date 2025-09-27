@@ -7,20 +7,30 @@ import EmojiPicker from "emoji-picker-react";
 import NavBar from "../../components/NavBar";
 import photo from '../../images/photo.png';
 
+/**
+ * CreateGroup component
+ * - Handles both creating a new group and editing an existing group
+ * - Supports cover photo upload, group name, description, tags, and emoji pickers
+ */
 const CreateGroup = () => {
   const navigate = useNavigate();
-  const { groupId } = useParams();
+  const { groupId } = useParams(); // Get groupId from URL if editing
+  const token = localStorage.getItem("token"); // Auth token
+
+  // Component state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [coverPhoto, setCoverPhoto] = useState(null);
-  const [coverPhotoUrl, setCoverPhotoUrl] = useState('');
-  const [creating, setCreating] = useState(false);
+  const [coverPhoto, setCoverPhoto] = useState(null); // Selected local file
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState(''); // Firebase URL
+  const [creating, setCreating] = useState(false); // Loading state
   const [tags, setTags] = useState('');
   const [customTag, setCustomTag] = useState('');
   const [showNameEmojiPicker, setShowNameEmojiPicker] = useState(false);
   const [showDescEmojiPicker, setShowDescEmojiPicker] = useState(false);
-  const token = localStorage.getItem("token");
 
+  /**
+   * If groupId exists, fetch group data for editing
+   */
   useEffect(() => {
     if (groupId && token) {
       axios.get(`http://localhost:8080/api/groups/${groupId}`, {
@@ -32,6 +42,7 @@ const CreateGroup = () => {
           setDescription(g.description);
           setCoverPhotoUrl(g.coverPhotoUrl);
           setTags(g.tags?.[0] || '');
+          // Handle custom tags
           if (g.tags?.[0] && ![
             "Action Game", "Adventure Game", "RPG Game", "Simulation Game", "Sports Game"
           ].includes(g.tags[0])) {
@@ -43,25 +54,23 @@ const CreateGroup = () => {
     }
   }, [groupId, token]);
 
+  // Emoji picker toggles
+  const toggleNameEmojiPicker = () => setShowNameEmojiPicker(prev => !prev);
+  const toggleDescEmojiPicker = () => setShowDescEmojiPicker(prev => !prev);
 
-  const toggleNameEmojiPicker = () => setShowNameEmojiPicker((prev) => !prev);
-  const toggleDescEmojiPicker = () => setShowDescEmojiPicker((prev) => !prev);
+  const onNameEmojiClick = (emojiData) => setName(prev => prev + emojiData.emoji);
+  const onDescEmojiClick = (emojiData) => setDescription(prev => prev + emojiData.emoji);
 
-  const onNameEmojiClick = (emojiData) => {
-    setName((prev) => prev + emojiData.emoji);
-  };
-
-  const onDescEmojiClick = (emojiData) => {
-    setDescription((prev) => prev + emojiData.emoji);
-  };
-
-
+  /**
+   * Handle form submission for creating or updating a group
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCreating(true);
     const email = localStorage.getItem("email");
 
     let newCoverPhotoUrl = coverPhotoUrl;
+    // Upload cover photo to Firebase if changed
     if (coverPhoto) {
       const imageRef = ref(storage, `gamer/${coverPhoto.name}`);
       const snapshot = await uploadBytes(imageRef, coverPhoto);
@@ -79,12 +88,12 @@ const CreateGroup = () => {
 
     try {
       if (groupId) {
-        // UPDATE group
+        // UPDATE existing group
         await axios.put(`http://localhost:8080/api/groups/${groupId}`, groupData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        navigate(`/yourgroups`);
       } else {
+        // CREATE new group
         await axios.post('http://localhost:8080/api/groups', {
           ...groupData,
           ownerEmail: email,
@@ -92,8 +101,8 @@ const CreateGroup = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        navigate(`/yourgroups`);
       }
+      navigate(`/yourgroups`); // Redirect after success
     } catch (err) {
       alert("Error saving group");
       console.error(err);
@@ -102,18 +111,21 @@ const CreateGroup = () => {
     }
   };
 
+  // Cancel and go back
   const handleCancel = () => navigate(-1);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-8">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
       <NavBar />
+
       <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg mt-24 mb-20">
         <h2 className="text-center text-white text-2xl font-semibold mb-8">
           {groupId ? 'Edit Group' : 'Create New Group'}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Cover photo upload */}
           <div className="border border-white/90 rounded-md p-4 flex items-center justify-center">
             <label htmlFor="cover-photo" className="cursor-pointer text-center">
               <img
@@ -132,6 +144,7 @@ const CreateGroup = () => {
             />
           </div>
 
+          {/* Group name input with emoji picker */}
           <div className="relative">
             <input
               type="text"
@@ -150,6 +163,7 @@ const CreateGroup = () => {
             )}
           </div>
 
+          {/* Group description input with emoji picker */}
           <div className="relative">
             <input
               type="text"
@@ -168,6 +182,7 @@ const CreateGroup = () => {
             )}
           </div>
 
+          {/* Tag selection */}
           <select
             className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60 outline-none cursor-pointer"
             style={{ backgroundColor: 'transparent' }}
@@ -184,6 +199,7 @@ const CreateGroup = () => {
             <option className="bg-gray-900" value="Others">Others</option>
           </select>
 
+          {/* Custom tag input if "Others" selected */}
           {tags === "Others" && (
             <input
               type="text"
@@ -195,6 +211,7 @@ const CreateGroup = () => {
             />
           )}
 
+          {/* Cancel & Submit buttons */}
           <div className="flex justify-between mt-6 gap-4">
             <button
               type="button"

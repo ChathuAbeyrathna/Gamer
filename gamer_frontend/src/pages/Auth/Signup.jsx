@@ -3,35 +3,54 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from '../../images/logo.png';
 
+/**
+ * - Allows users to create a new account.
+ * - Validates input fields.
+ * - Sends signup request to backend.
+ * - Displays success/error popup messages.
+ * - Redirects to login page on success.
+ */
 const Signup = () => {
+    // State for form inputs
     const [formData, setFormData] = useState({
         username: "",
         email: "",
         password: "",
     });
 
+    // State for popup messages
     const [popupMessage, setPopupMessage] = useState("");
     const [popupType, setPopupType] = useState("");
     const [showPopup, setShowPopup] = useState(false);
+
+    // State for form submission
     const [isSubmitting, setIsSubmitting] = useState(false);
+
     const navigate = useNavigate();
 
+    // Handle input changes
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+
         try {
+            // Send signup request
             await axios.post("http://localhost:8080/api/auth/signup", formData);
 
+            // Store new username temporarily
             localStorage.setItem("newUserName", formData.username);
 
+            // Show success popup and redirect
             showPopupMessage("Signup successful! Redirecting...", "success");
             setTimeout(() => navigate("/login"), 1500);
 
         } catch (error) {
+            // Handle specific errors
             if (error.response && error.response.status === 400) {
                 const message = error.response.data || "";
                 if (message.toLowerCase().includes("email")) {
@@ -47,10 +66,12 @@ const Signup = () => {
         }
     };
 
+    // Function to show popup messages
     const showPopupMessage = (msg, type) => {
         setPopupMessage(msg);
         setPopupType(type);
         setShowPopup(true);
+
         setTimeout(() => {
             setShowPopup(false);
             setPopupMessage("");
@@ -65,19 +86,24 @@ const Signup = () => {
             {/* Popup Message */}
             {showPopup && (
                 <div className="mb-4 w-full max-w-md px-4">
-                    <div className={`text-white text-center py-2 px-4 rounded shadow-md animate-fade-in 
-                        ${popupType === "success" ? "bg-green-600" : "bg-red-600"}`}>
+                    <div
+                        className={`text-white text-center py-2 px-4 rounded shadow-md animate-fade-in 
+                        ${popupType === "success" ? "bg-green-600" : "bg-red-600"}`}
+                    >
                         {popupMessage}
                     </div>
                 </div>
             )}
 
+            {/* Signup Form */}
             <div className="w-full max-w-md border-1 border-transparent bg-gradient-to-b from-[#01C0D3] to-[#2059B6] p-[2px] rounded-lg shadow-lg">
                 <div className="bg-gradient-to-b from-gray-900 to-gray-700 p-8 rounded-lg">
                     <div className="mb-6">
                         <img src={logo} alt="Gamer Logo" className="mx-auto w-24" />
                     </div>
-                    <h2 className="text-3xl font-semibold text-white text-center mb-6">Create a New Account</h2>
+                    <h2 className="text-3xl font-semibold text-white text-center mb-6">
+                        Create a New Account
+                    </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
@@ -91,6 +117,7 @@ const Signup = () => {
                                 required
                             />
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-200">Email</label>
                             <input
@@ -102,6 +129,7 @@ const Signup = () => {
                                 required
                             />
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-200">Password</label>
                             <input
@@ -113,10 +141,12 @@ const Signup = () => {
                                 required
                             />
                         </div>
+
                         <div className="flex justify-center">
                             <button
                                 type="submit"
-                                className="w-64 p-3 mt-4 bg-gradient-to-r from-[#2059B6] to-[#407CDE] text-white font-semibold rounded hover:bg-gradient-to-r hover:from-[#2059B6] hover:to-[#407CDE] transition disabled:opacity-50"
+                                className="w-64 p-3 mt-4 bg-gradient-to-r from-[#2059B6] to-[#407CDE] text-white font-semibold rounded 
+                                           hover:bg-gradient-to-r hover:from-[#2059B6] hover:to-[#407CDE] transition disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? "Signing Up..." : "Sign Up"}
@@ -126,6 +156,7 @@ const Signup = () => {
                 </div>
             </div>
 
+            {/* Redirect to Login */}
             <div className="mt-2 w-full max-w-md border-1 border-transparent bg-gradient-to-b from-[#01C0D3] to-[#2059B6] p-[2px] rounded-lg shadow-lg">
                 <div className="bg-gradient-to-b from-gray-900 to-gray-700 p-4 rounded-lg">
                     <p className="text-gray-400 text-center">

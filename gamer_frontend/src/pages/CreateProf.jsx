@@ -1,27 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { storage } from '../firebaseConfig';
+import { storage } from '../firebaseConfig'; // Firebase storage for image upload
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
-import { getUserEmail } from "../authUtils";
+import { getUserEmail } from "../authUtils"; // Utility to get logged-in user's email
 import axios from 'axios';
-import photo from '../images/photo.png';
+import photo from '../images/photo.png'; // Default photo icon
 import EmojiPicker from "emoji-picker-react";
 
+/**
+ * CreateProf component
+ * - Handles creating or editing a gamer profile
+ * - Supports uploading profile images to Firebase
+ * - Allows adding gamer name, bio, roles, and custom role
+ * - Emoji picker integrated for bio
+ */
 const CreateProf = () => {
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [fileName, setFileName] = useState('');
-  const [gamerName, setGamerName] = useState('');
-  const [bio, setBio] = useState('');
-  const [selectedRoles, setSelectedRoles] = useState([]);
+  // Form states
+  const [image, setImage] = useState(null);               // Selected file object
+  const [imagePreview, setImagePreview] = useState(null); // URL for preview
+  const [fileName, setFileName] = useState('');           // Display file name
+  const [gamerName, setGamerName] = useState('');         // Gamer name
+  const [bio, setBio] = useState('');                     // Gamer bio
+  const [selectedRoles, setSelectedRoles] = useState([]); // Selected roles
+  const [customRole, setCustomRole] = useState('');       // If 'Other' role selected
+
+  // UI states
   const [showRoleOptions, setShowRoleOptions] = useState(false);
-  const [customRole, setCustomRole] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [loading, setLoading] = useState(false);          // Loading state for submit button
+  const [isEditMode, setIsEditMode] = useState(false);    // True if editing existing profile
+
   const navigate = useNavigate();
   const email = getUserEmail();
 
+  // Prefill gamer name if stored in localStorage (after signup)
   useEffect(() => {
     const savedName = localStorage.getItem("newUserName");
     if (savedName) {
@@ -30,6 +42,7 @@ const CreateProf = () => {
     }
   }, []);
 
+  // Fetch existing profile for editing
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -40,6 +53,7 @@ const CreateProf = () => {
           setBio(res.data.bio || '');
           setSelectedRoles(res.data.role || []);
           if (res.data.imageUrl) {
+            // Extract file name from URL for display
             setFileName(decodeURIComponent(res.data.imageUrl.split('/').pop().split('?')[0]));
             setImagePreview(res.data.imageUrl);
           }
@@ -48,10 +62,10 @@ const CreateProf = () => {
         console.log("No existing profile, creating new one");
       }
     };
-
     fetchProfile();
   }, [email]);
 
+  // Handle image selection and preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -61,6 +75,7 @@ const CreateProf = () => {
     }
   };
 
+  // Handle selection/unselection of roles
   const handleRoleChange = (e) => {
     const value = e.target.value;
     setSelectedRoles((prev) =>
@@ -68,40 +83,38 @@ const CreateProf = () => {
     );
   };
 
-  const toggleEmojiPicker = () => {
-    setShowEmojiPicker((val) => !val);
-  };
+  // Emoji picker toggle
+  const toggleEmojiPicker = () => setShowEmojiPicker((val) => !val);
 
-  const onEmojiClick = (emojiObject) => {
-    setBio((prevBio) => prevBio + emojiObject.emoji);
-  };
+  // Append emoji to bio
+  const onEmojiClick = (emojiObject) => setBio((prevBio) => prevBio + emojiObject.emoji);
 
+  // Handle form submission (create or update)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!gamerName.trim()) {
-      alert("Gamer name is required.");
-      return;
-    }
-
+    // Validation
+    if (!gamerName.trim()) return alert("Gamer name is required.");
     if (selectedRoles.length === 0 || (selectedRoles.includes("Other") && !customRole.trim())) {
-      alert("Please select at least one role.");
-      return;
+      return alert("Please select at least one role.");
     }
 
     setLoading(true);
     let imageUrl = '';
 
     try {
+      // Upload new image if selected
       if (image) {
         const imageRef = ref(storage, `gamer/${image.name}`);
         await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(imageRef);
       } else if (isEditMode) {
+        // If editing and no new image, keep existing
         const res = await axios.get(`http://localhost:8080/api/profile/${email}`);
         imageUrl = res.data?.imageUrl || '';
       }
 
+      // Merge custom role if 'Other' is selected
       const finalRoles = customRole && selectedRoles.includes("Other")
         ? [...selectedRoles.filter(r => r !== "Other"), customRole]
         : selectedRoles;
@@ -115,11 +128,7 @@ const CreateProf = () => {
       };
 
       const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
       if (isEditMode) {
         await axios.put('http://localhost:8080/api/profile/update', profileData, config);
@@ -137,6 +146,7 @@ const CreateProf = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-16">
+      {/* Background overlay */}
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
 
       <div className="w-full max-w-lg bg-gradient-to-r from-[#01C0D34C] to-[#2059B64C] p-12 rounded-lg shadow-lg">
@@ -149,11 +159,7 @@ const CreateProf = () => {
           <div className="border border-white/90 rounded-md p-4 flex items-center justify-center">
             <label htmlFor="profile-photo" className="cursor-pointer flex flex-col items-center">
               {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover"
-                />
+                <img src={imagePreview} alt="Profile" className="w-20 h-20 rounded-full object-cover" />
               ) : (
                 <>
                   <img src={photo} alt="Add profile" className="w-10 h-10 mx-auto" />
@@ -164,7 +170,7 @@ const CreateProf = () => {
             <input type="file" id="profile-photo" onChange={handleImageChange} className="hidden" />
           </div>
 
-          {/* Gamer Name */}
+          {/* Gamer Name Input */}
           <input
             type="text"
             placeholder="Add a gamer name"
@@ -173,7 +179,7 @@ const CreateProf = () => {
             className="w-full p-3 border border-white/90 rounded-md bg-transparent text-white placeholder-white/60"
           />
 
-          {/* Gamer Bio */}
+          {/* Gamer Bio Input with Emoji Picker */}
           <div className="relative">
             <input
               type="text"
@@ -197,7 +203,7 @@ const CreateProf = () => {
             )}
           </div>
 
-          {/* Role Dropdown */}
+          {/* Role Selection Dropdown */}
           <div>
             <button
               type="button"
@@ -234,7 +240,7 @@ const CreateProf = () => {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit and Cancel Buttons */}
           <button
             type="submit"
             className="w-40 mt-9 py-1 px-6 bg-gradient-to-r from-[#0E2750] to-[#2059B6] text-white rounded-md font-semibold border border-white hover:from-[#0E2750] hover:to-[#2059B6] mx-auto block"

@@ -11,29 +11,37 @@ import WriteBlog from "../../components/WriteBlog";
 import FeedCard from "../../components/FeedCard";
 import ViewBlog from "../../components/ViewBlog";
 
+/**
+ * GroupView Component
+ * - Displays a single group's cover, info, members, and posts/blogs
+ * - Supports group owner actions (edit/delete) and member actions (join/leave, create posts/blogs)
+ * - Handles saved posts/blogs, filtering, and modals for creating/editing posts or blogs
+ */
 const GroupView = () => {
-    const { id } = useParams();
+    const { id } = useParams(); // group ID from URL
     const navigate = useNavigate();
-    const email = localStorage.getItem("email");
-    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("email"); // current user's email
+    const token = localStorage.getItem("token"); // auth token
 
-    const [group, setGroup] = useState(null);
-    const [isOwner, setIsOwner] = useState(false);
-    const [isMember, setIsMember] = useState(false);
-    const [groupFeed, setGroupFeed] = useState([]);
-    const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
-    const [dropdownOpenId, setDropdownOpenId] = useState(null);
-    const [savedPostIds, setSavedPostIds] = useState([]);
-    const [savedBlogIds, setSavedBlogIds] = useState([]);
-    const [openBlog, setOpenBlog] = useState(null);
-    const [editingPost, setEditingPost] = useState(null);
-    const [editingBlog, setEditingBlog] = useState(null);
-    const [showCreatePost, setShowCreatePost] = useState(false);
-    const [showBlogModal, setShowBlogModal] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
-    const menuRef = useRef(null);
+    // ----- STATE -----
+    const [group, setGroup] = useState(null); // group data
+    const [isOwner, setIsOwner] = useState(false); // is current user the group owner?
+    const [isMember, setIsMember] = useState(false); // is current user a member?
+    const [groupFeed, setGroupFeed] = useState([]); // combined posts & blogs
+    const [showMyPostsOnly, setShowMyPostsOnly] = useState(false); // toggle filter for user's own posts
+    const [dropdownOpenId, setDropdownOpenId] = useState(null); // tracks which FeedCard dropdown is open
+    const [savedPostIds, setSavedPostIds] = useState([]); // IDs of saved posts
+    const [savedBlogIds, setSavedBlogIds] = useState([]); // IDs of saved blogs
+    const [openBlog, setOpenBlog] = useState(null); // blog to view in modal
+    const [editingPost, setEditingPost] = useState(null); // post being edited
+    const [editingBlog, setEditingBlog] = useState(null); // blog being edited
+    const [showCreatePost, setShowCreatePost] = useState(false); // toggle create post modal
+    const [showBlogModal, setShowBlogModal] = useState(false); // toggle write blog modal
+    const [showMenu, setShowMenu] = useState(false); // toggle owner menu
+    const [refreshKey, setRefreshKey] = useState(0); // trigger refetch of feed
+    const menuRef = useRef(null); // reference for owner menu dropdown
 
+    // ----- FETCH GROUP & FEED -----
     useEffect(() => {
         const fetchGroup = async () => {
             try {
@@ -50,18 +58,17 @@ const GroupView = () => {
 
         const fetchGroupFeed = async () => {
             try {
+                // Fetch posts & blogs simultaneously
                 const [postsRes, blogsRes] = await Promise.all([
                     axios.get(`http://localhost:8080/api/groups/${id}/posts`, { headers: { Authorization: `Bearer ${token}` } }),
                     axios.get(`http://localhost:8080/api/groups/${id}/blogs`, { headers: { Authorization: `Bearer ${token}` } }),
                 ]);
 
-                const posts = postsRes.data.map((p) => ({ ...p, type: "post" }));
-                const blogs = blogsRes.data.map((b) => ({ ...b, type: "blog" }));
+                const posts = postsRes.data.map(p => ({ ...p, type: "post" }));
+                const blogs = blogsRes.data.map(b => ({ ...b, type: "blog" }));
 
-                const combined = [...posts, ...blogs].sort(
-                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-                );
-
+                // Combine & sort descending by createdAt
+                const combined = [...posts, ...blogs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 setGroupFeed(combined);
             } catch (err) {
                 console.error("Failed to load posts/blogs", err);
@@ -70,17 +77,16 @@ const GroupView = () => {
 
         fetchGroup();
         fetchGroupFeed();
-    }, [id, email, token, refreshKey]);
+    }, [id, email, token, refreshKey]); // refetch if group changes or refreshKey increments
 
+    // ----- FETCH SAVED ITEMS -----
     useEffect(() => {
         const fetchSavedItems = async () => {
             if (!token) return;
             try {
-                // Saved posts
                 const postsRes = await axios.get("http://localhost:8080/api/saved-posts", { headers: { Authorization: `Bearer ${token}` } });
                 setSavedPostIds(postsRes.data.map(sp => sp.postId));
 
-                // Saved blogs
                 const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", { headers: { Authorization: `Bearer ${token}` } });
                 setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
             } catch (err) {
@@ -91,7 +97,7 @@ const GroupView = () => {
         fetchSavedItems();
     }, [token]);
 
-
+    // ----- TOGGLE SAVE POST/BLOG -----
     const toggleSavePost = async (postId) => {
         if (!token) {
             const result = await window.confirm("You need to log in to save posts. Go to login page?");
@@ -118,6 +124,7 @@ const GroupView = () => {
         } catch (err) { console.error("Error toggling save blog:", err); }
     };
 
+    // ----- EDIT / DELETE HANDLERS -----
     const handleEditItem = (item) => {
         if (item.type === "post") { setEditingPost(item); setShowCreatePost(true); }
         else { setEditingBlog(item); setShowBlogModal(true); }
@@ -142,15 +149,19 @@ const GroupView = () => {
         setDropdownOpenId(null);
     };
 
+    // Filter feed to show only user's posts if toggled
     const filteredFeed = showMyPostsOnly ? groupFeed.filter(item => item.email === email) : groupFeed;
 
+    // Scroll to top on component mount
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
+    // ----- RENDER -----
     return (
         <div className="relative min-h-screen text-white">
             <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
             <NavBar />
 
+            {/* Back button */}
             <button onClick={() => navigate(-1)} className="fixed top-20 md:top-24 left-4 md:left-8 lg:left-32 z-50 text-white hover:text-gray-400">
                 <FaArrowLeft className="text-2xl font-light" />
             </button>
@@ -158,7 +169,10 @@ const GroupView = () => {
             <div className="mx-auto mt-20 md:mt-20 px-4 py-8 flex flex-col items-center">
                 {group && (
                     <>
+                        {/* Group Cover */}
                         <img src={group.coverPhotoUrl || defaultImg} alt="Group Cover" className="w-full max-w-4xl h-80 object-cover shadow-lg" />
+
+                        {/* Group Info & Actions */}
                         <div className="max-w-4xl w-full mt-6 mb-4">
                             <div className="flex justify-between items-center">
                                 <div>
@@ -168,22 +182,16 @@ const GroupView = () => {
                                 </div>
 
                                 <div className="flex gap-2">
+                                    {/* Owner Menu */}
                                     {isOwner && (
                                         <div className="relative" ref={menuRef}>
-                                            <button
-                                                onClick={() => setShowMenu(prev => !prev)}
-                                                className="p-2"
-                                            >
+                                            <button onClick={() => setShowMenu(prev => !prev)} className="p-2">
                                                 <Cog6ToothIcon className="w-5 h-5" />
                                             </button>
-
                                             {showMenu && (
                                                 <div className="absolute right-0 mt-2 w-40 bg-gradient-to-b from-[#222] to-[#444] text-white rounded shadow z-10">
                                                     <button
-                                                        onClick={() => {
-                                                            setShowMenu(false);
-                                                            navigate(`/group/edit/${group.id}`);
-                                                        }}
+                                                        onClick={() => { setShowMenu(false); navigate(`/group/edit/${group.id}`); }}
                                                         className="w-full text-left px-4 py-2 hover:bg-gray-600"
                                                     >
                                                         Edit Group
@@ -194,11 +202,8 @@ const GroupView = () => {
                                                             // Wait for confirmation before proceeding
                                                             const confirmed = await window.confirm("Are you sure you want to delete this group?");
                                                             if (!confirmed) return; // Stop if user cancels
-
                                                             try {
-                                                                await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, {
-                                                                    headers: { Authorization: `Bearer ${token}` },
-                                                                });
+                                                                await axios.delete(`http://localhost:8080/api/groups/${id}?email=${email}`, { headers: { Authorization: `Bearer ${token}` } });
                                                                 alert("Group deleted successfully");
                                                                 navigate("/yourgroups");
                                                             } catch (err) {
@@ -215,15 +220,12 @@ const GroupView = () => {
                                         </div>
                                     )}
 
+                                    {/* Join / Leave Buttons */}
                                     {!isOwner && !isMember && (
                                         <button
                                             onClick={async () => {
                                                 try {
-                                                    await axios.post(
-                                                        `http://localhost:8080/api/groups/${id}/join?email=${email}`,
-                                                        {},
-                                                        { headers: { Authorization: `Bearer ${token}` } }
-                                                    );
+                                                    await axios.post(`http://localhost:8080/api/groups/${id}/join?email=${email}`, {}, { headers: { Authorization: `Bearer ${token}` } });
                                                     window.location.reload();
                                                 } catch (err) {
                                                     console.error("Join failed:", err);
@@ -234,19 +236,13 @@ const GroupView = () => {
                                             Join Group
                                         </button>
                                     )}
-
                                     {!isOwner && isMember && (
                                         <button
                                             onClick={async () => {
                                                 const confirmed = await window.confirm("Leave this group?");
                                                 if (!confirmed) return;
-
                                                 try {
-                                                    await axios.post(
-                                                        `http://localhost:8080/api/groups/${id}/leave?email=${email}`,
-                                                        {},
-                                                        { headers: { Authorization: `Bearer ${token}` } }
-                                                    );
+                                                    await axios.post(`http://localhost:8080/api/groups/${id}/leave?email=${email}`, {}, { headers: { Authorization: `Bearer ${token}` } });
                                                     navigate(-1);
                                                 } catch (err) {
                                                     console.error("Leave failed:", err);
@@ -256,18 +252,17 @@ const GroupView = () => {
                                         >
                                             Leave Group
                                         </button>
-
                                     )}
                                 </div>
                             </div>
 
+                            {/* Member Actions: Create Post / Blog */}
                             {(isOwner || isMember) && (
                                 <div className="flex flex-wrap items-center justify-between w-full mt-6">
                                     <div className="flex gap-4">
                                         <button onClick={() => { setEditingPost(null); setShowCreatePost(true); }} className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]">Create a Post</button>
                                         <button onClick={() => { setEditingBlog(null); setShowBlogModal(true); }} className="w-36 py-2 rounded-lg font-medium hover:opacity-90 bg-[linear-gradient(to_right,_rgba(33,_80,_182,_0.5),_rgba(1,_192,_211,_0.5))]">Write a Blog</button>
                                     </div>
-
                                     <div>
                                         <button onClick={() => setShowMyPostsOnly(prev => !prev)} className="border border-white text-white rounded-full p-2 hover:bg-white/20 transition duration-200">
                                             {showMyPostsOnly ? <ClipboardDocumentListIcon className="w-5 h-5" alt="All Posts" /> : <UserIcon className="w-5 h-5" alt="My Posts" />}
@@ -282,7 +277,7 @@ const GroupView = () => {
                             {filteredFeed.length === 0 ? (
                                 <div className="text-center text-gray-400">No posts or blogs yet.</div>
                             ) : (
-                                filteredFeed.map((item) => (
+                                filteredFeed.map(item => (
                                     <FeedCard
                                         key={item.id || item._id}
                                         item={item}
@@ -304,6 +299,7 @@ const GroupView = () => {
                     </>
                 )}
 
+                {/* Create Post Modal */}
                 {showCreatePost && (
                     <CreatePost
                         onClose={() => { setShowCreatePost(false); setEditingPost(null); }}
@@ -317,6 +313,7 @@ const GroupView = () => {
                     />
                 )}
 
+                {/* Write Blog Modal */}
                 {showBlogModal && (
                     <WriteBlog
                         onClose={() => { setShowBlogModal(false); setEditingBlog(null); }}

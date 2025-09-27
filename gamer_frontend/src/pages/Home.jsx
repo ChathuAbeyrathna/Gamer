@@ -7,21 +7,40 @@ import Sidebar from "../components/SideBar";
 import ViewBlog from "../components/ViewBlog";
 import defaultProfile from '../images/defaultProfile.png';
 
+/**
+ * Home Component
+ * - Displays the main feed (posts + blogs) sorted by date
+ * - Fetches user profiles for the right sidebar (Power Up Your Stream)
+ * - Handles follow/unfollow, save posts/blogs
+ * - Supports opening blogs in a modal
+ */
 const Home = () => {
+  // Main feed (combined posts + blogs)
   const [feedItems, setFeedItems] = useState([]);
+  // Arrays to track saved posts/blogs
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [savedBlogIds, setSavedBlogIds] = useState([]);
+  // User profiles for sidebar
   const [profiles, setProfiles] = useState([]);
+  // Emails of users current user is following
   const [following, setFollowing] = useState([]);
+  // Tracks which dropdown (save/edit) is open
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
+  // Blog modal
   const [openBlog, setOpenBlog] = useState(null);
+  // Loading state for feed fetch
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const currentUserEmail = localStorage.getItem("email");
   const token = localStorage.getItem("token");
 
+  /**
+   * Fetch feed, saved items, profiles, and following list
+   * Runs once on component mount
+   */
   useEffect(() => {
+    // Fetch combined feed
     const fetchFeed = async () => {
       setLoading(true);
       try {
@@ -29,11 +48,16 @@ const Home = () => {
           axios.get("http://localhost:8080/api/posts/all"),
           axios.get("http://localhost:8080/api/blogs/all"),
         ]);
+
+        // Add type field to distinguish posts vs blogs
         const posts = postsRes.data.map((p) => ({ ...p, type: "post" }));
         const blogs = blogsRes.data.map((b) => ({ ...b, type: "blog" }));
+
+        // Combine and sort by createdAt (newest first)
         const combinedFeed = [...posts, ...blogs].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
+
         setFeedItems(combinedFeed);
       } catch (error) {
         console.error("Error fetching feed:", error);
@@ -42,26 +66,25 @@ const Home = () => {
       }
     };
 
+    // Fetch saved posts/blogs for current user
     const fetchSavedItems = async () => {
-      if (!token) return;
+      if (!token) return; // Only fetch if logged in
       try {
-        // Fetch saved posts
         const postsRes = await axios.get("http://localhost:8080/api/saved-posts", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSavedPostIds(postsRes.data.map(sp => sp.postId));
 
-        // Fetch saved blogs
         const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
-
       } catch (err) {
         console.error("Error fetching saved items:", err);
       }
     };
 
+    // Fetch all profiles for sidebar
     const fetchProfiles = async () => {
       try {
         const res = await axios.get("http://localhost:8080/api/profile/all");
@@ -71,6 +94,7 @@ const Home = () => {
       }
     };
 
+    // Fetch following list of current user
     const fetchFollowing = async () => {
       if (!token || !currentUserEmail) return;
       try {
@@ -90,8 +114,11 @@ const Home = () => {
     fetchFollowing();
   }, [currentUserEmail, token]);
 
+  /**
+   * Follow or unfollow a user
+   */
   const handleToggleFollow = async (email, e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent triggering parent click
     if (!token) {
       const result = window.confirm("You need to log in to follow users. Go to login page?");
       if (result) navigate("/login");
@@ -105,6 +132,7 @@ const Home = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Update local following state
       if (res.data.status === "FOLLOWED") {
         setFollowing(prev => (prev.includes(email) ? prev : [...prev, email]));
       } else if (res.data.status === "UNFOLLOWED") {
@@ -115,6 +143,9 @@ const Home = () => {
     }
   };
 
+  /**
+   * Save or unsave a post
+   */
   const toggleSavePost = async (postId) => {
     if (!token) {
       const result = window.confirm("You need to log in to save posts. Go to login page?");
@@ -128,16 +159,16 @@ const Home = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.data) {
-        setSavedPostIds(prev => [...prev, postId]);
-      } else {
-        setSavedPostIds(prev => prev.filter(id => id !== postId));
-      }
+      if (res.data) setSavedPostIds(prev => [...prev, postId]);
+      else setSavedPostIds(prev => prev.filter(id => id !== postId));
     } catch (err) {
       console.error("Error toggling save post:", err);
     }
   };
 
+  /**
+   * Save or unsave a blog
+   */
   const toggleSaveBlog = async (blogId) => {
     if (!token) {
       const result = window.confirm("You need to log in to save blogs. Go to login page?");
@@ -151,32 +182,31 @@ const Home = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.data) {
-        setSavedBlogIds(prev => [...prev, blogId]);
-      } else {
-        setSavedBlogIds(prev => prev.filter(id => id !== blogId));
-      }
+      if (res.data) setSavedBlogIds(prev => [...prev, blogId]);
+      else setSavedBlogIds(prev => prev.filter(id => id !== blogId));
     } catch (err) {
       console.error("Error toggling save blog:", err);
     }
   };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // Scroll to top when component mounts
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <div className="relative min-h-screen text-white">
+      {/* Background layer */}
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+
+      {/* Navbar */}
       <NavBar />
 
       <div className="container mx-auto flex mt-4">
-        {/* Sidebar is now wrapped to be hidden on mobile */}
+        {/* Left Sidebar */}
         <div className="hidden lg:block">
-            <Sidebar />
+          <Sidebar />
         </div>
 
-        {/* Feed - updated with responsive classes */}
+        {/* Main feed */}
         <div className="w-full lg:w-2/4 bg-gray-900 p-4 mt-20 lg:ml-[25%]">
           {loading ? (
             <div className="flex justify-center items-center h-40 text-gray-400 text-lg font-medium">
@@ -201,7 +231,7 @@ const Home = () => {
           )}
         </div>
 
-        {/* Right Sidebar - no changes needed, it was already responsive */}
+        {/* Right Sidebar (Power Up Your Stream) */}
         <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed right-0 h-full mt-[6%]">
           <h2 className="font-semibold mb-2">Power Up Your Stream:</h2>
           <ul>

@@ -7,21 +7,33 @@ import axios from 'axios';
 import defaultGroup from '../../images/default.png';
 import viewMore from '../../images/viewMore.png';
 
+/**
+ * YourGroupList component
+ * - Displays all groups created by the logged-in user
+ * - Supports pagination with "View More"
+ * - Navigates to group view on click
+ */
 const YourGroupList = () => {
-  const email = localStorage.getItem("email");
-  const token = localStorage.getItem("token");
-  const [groups, setGroups] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(8);
+  const email = localStorage.getItem("email"); // Logged-in user email
+  const token = localStorage.getItem("token"); // Auth token
+  const [groups, setGroups] = useState([]); // Stores user's groups
+  const [visibleCount, setVisibleCount] = useState(8); // Number of groups visible initially
   const navigate = useNavigate();
 
+  /**
+   * Load user groups on component mount
+   * - Redirects to login if not authenticated
+   * - Fetches groups created by the user
+   */
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo(0, 0); // Scroll to top on load
 
     if (!email || !token) {
-        navigate('/login');
-        return;
+      navigate('/login'); // Redirect if user not logged in
+      return;
     }
 
+    // Fetch groups from backend
     axios.get(`http://localhost:8080/api/groups/owner/${email}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -29,36 +41,44 @@ const YourGroupList = () => {
       .catch(err => console.error("Error loading your groups", err));
   }, [email, token, navigate]);
 
-  const sortedGroups = [...groups].reverse(); // newest groups at the top
+  const sortedGroups = [...groups].reverse(); // Show newest groups at top
 
   return (
     <div className="relative min-h-screen text-white">
+      {/* Background layer */}
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
+
+      {/* Navbar */}
       <NavBar />
 
       <div className="container mx-auto flex mt-4">
-        {/* Sidebar hidden on mobile */}
+        {/* Sidebar (hidden on small screens) */}
         <div className="hidden lg:block lg:w-1/4">
           <Sidebar />
         </div>
 
-        {/* Main Content */}
+        {/* Main content */}
         <div className="w-full lg:w-3/4 px-4 mt-16">
+          {/* Header section: back button, title, group count */}
           <div className="sticky top-[70px] bg-gray-900 z-30 pt-8 pb-4 mb-4">
             <div className="flex items-center space-x-4">
               <FaArrowLeft
                 className="text-xl font-light cursor-pointer hover:text-gray-400"
-                onClick={() => navigate("/group")}
+                onClick={() => navigate("/group")} // Go back to group page
               />
               <h1 className="text-2xl md:text-3xl">Your Game Groups</h1>
             </div>
             <p className="mt-2 text-gray-400 ml-10">{groups.length} Groups</p>
           </div>
 
+          {/* No groups message */}
           {groups.length === 0 ? (
-            <p className="text-gray-500 text-center py-10">You haven’t created any groups yet.</p>
+            <p className="text-gray-500 text-center py-10">
+              You haven’t created any groups yet.
+            </p>
           ) : (
             <div className="space-y-4">
+              {/* Render visible groups */}
               {sortedGroups.slice(0, visibleCount).map(group => (
                 <div
                   key={group.id}
@@ -66,11 +86,13 @@ const YourGroupList = () => {
                   className="w-full max-w-3xl mx-auto bg-gradient-to-r from-[#01C0D3]/70 to-[#2059B6]/70 p-4 rounded-xl flex items-center space-x-4 cursor-pointer hover:brightness-110 transition"
                 >
                   <div className="flex items-center space-x-4 flex-1 min-w-0">
+                    {/* Group cover image */}
                     <img
                       src={group.coverPhotoUrl || defaultGroup}
                       alt="Group Cover"
                       className="w-12 h-12 rounded-full object-cover"
                     />
+                    {/* Group name */}
                     <div className="font-semibold text-white truncate">
                       {group.name}
                     </div>
@@ -78,10 +100,11 @@ const YourGroupList = () => {
                 </div>
               ))}
 
+              {/* "View More" button for pagination */}
               {sortedGroups.length > visibleCount && (
                 <div className="text-center py-8">
                   <button
-                    onClick={() => setVisibleCount(prev => prev + 8)}
+                    onClick={() => setVisibleCount(prev => prev + 8)} // Load 8 more groups
                     className="mx-auto flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
                   >
                     View More
