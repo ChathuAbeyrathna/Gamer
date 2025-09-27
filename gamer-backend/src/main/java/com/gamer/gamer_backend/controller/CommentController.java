@@ -9,6 +9,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * CommentController
+ * - Handles CRUD operations for comments and replies
+ * - Sends notifications to post owners and comment authors
+ * - CORS enabled for localhost:3000 frontend
+ */
 @RestController
 @RequestMapping("/api/comments")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -20,12 +26,16 @@ public class CommentController {
     @Autowired
     private NotificationService notificationService;
 
-    // Add new top-level comment
+    /**
+     * Add a new top-level comment
+     * - Creates comment
+     * - Sends notification to post owner if commenter is not the post owner
+     */
     @PostMapping("/add")
     public Comment addComment(@RequestBody Comment comment) {
         Comment saved = commentService.createComment(comment);
 
-        // Notify post owner if not commenting on own post
+        // Notify post owner if different from commenter
         String postOwnerId = commentService.getPostOwnerId(saved.getPostId());
         if (postOwnerId != null && !postOwnerId.equals(saved.getEmail())) {
             notificationService.sendNotification(
@@ -39,12 +49,16 @@ public class CommentController {
         return saved;
     }
 
-    // Add reply to comment
+    /**
+     * Add a reply to an existing comment
+     * - Creates reply
+     * - Sends notifications to parent comment author and post owner
+     */
     @PostMapping("/addReply")
     public Comment addReply(@RequestBody Comment reply) {
         Comment saved = commentService.createReply(reply);
 
-        // Notify parent comment author
+        // Notify parent comment author if not the reply author
         String parentCommentAuthor = commentService.getCommentAuthor(reply.getParentCommentId());
         if (parentCommentAuthor != null && !parentCommentAuthor.equals(saved.getEmail())) {
             notificationService.sendNotification(
@@ -71,17 +85,26 @@ public class CommentController {
         return saved;
     }
 
-    // Get comments with nested replies for a post
+    /**
+     * Get all comments with nested replies for a post
+     */
     @GetMapping("/post/{postId}")
     public List<Comment> getComments(@PathVariable String postId) {
         return commentService.getCommentsWithReplies(postId);
     }
 
+    /**
+     * Edit an existing comment
+     * - Updates only the content of the comment
+     */
     @PutMapping("/edit/{id}")
     public Comment editComment(@PathVariable String id, @RequestBody Comment updated) {
         return commentService.updateComment(id, updated.getContent());
     }
 
+    /**
+     * Delete a comment and all its replies
+     */
     @DeleteMapping("/delete/{id}")
     public void deleteComment(@PathVariable String id) {
         commentService.deleteCommentAndReplies(id);

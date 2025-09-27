@@ -12,25 +12,38 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.*;
 
+/**
+ * Controller for handling search requests across multiple collections.
+ */
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class SearchController {
 
+        // Injects MongoTemplate for database operations
         private final MongoTemplate mongoTemplate;
 
+        /**
+         * Searches posts, blogs, groups, and user profiles by query string.
+         * 
+         * @param query The search term provided by the user.
+         * @return A map containing matched results from each collection.
+         */
         @GetMapping
         public Map<String, Object> search(@RequestParam String query) {
                 Map<String, Object> results = new HashMap<>();
 
+                // Return empty results if query is null or blank
                 if (query == null || query.trim().isEmpty()) {
                         return results;
                 }
 
+                // Normalize and build case-insensitive regex for search
                 String normalizedQuery = query.trim();
                 String regex = "(?i).*" + normalizedQuery + "s?.*";
 
+                // Search Posts by userName, title, or tags
                 Query postQuery = new Query();
                 postQuery.addCriteria(new Criteria().orOperator(
                                 Criteria.where("userName").regex(regex),
@@ -40,6 +53,7 @@ public class SearchController {
                 if (!posts.isEmpty())
                         results.put("posts", posts);
 
+                // Search Blogs by userName, title, content, or tags
                 Query blogQuery = new Query();
                 blogQuery.addCriteria(new Criteria().orOperator(
                                 Criteria.where("userName").regex(regex),
@@ -50,6 +64,7 @@ public class SearchController {
                 if (!blogs.isEmpty())
                         results.put("blogs", blogs);
 
+                // Search Groups by name, description, or tags
                 Query groupQuery = new Query();
                 groupQuery.addCriteria(new Criteria().orOperator(
                                 Criteria.where("name").regex(regex),
@@ -59,6 +74,7 @@ public class SearchController {
                 if (!groups.isEmpty())
                         results.put("groups", groups);
 
+                // Search UserProfiles by gamerName or role
                 Query userQuery = new Query();
                 userQuery.addCriteria(new Criteria().orOperator(
                                 Criteria.where("gamerName").regex(regex),
@@ -67,6 +83,7 @@ public class SearchController {
                 if (!users.isEmpty())
                         results.put("users", users);
 
+                // Return the aggregated search results
                 return results;
         }
 }

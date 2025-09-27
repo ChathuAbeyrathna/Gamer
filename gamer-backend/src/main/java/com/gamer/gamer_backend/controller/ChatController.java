@@ -12,15 +12,27 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 
+/**
+ * REST controller for chat-related endpoints.
+ */
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class ChatController {
 
+    // Service for chat operations
     private final ChatService chatService;
+    // Template for sending messages via WebSocket
     private final SimpMessagingTemplate messagingTemplate;
 
+    /**
+     * Handles WebSocket messages sent to "/send".
+     * Saves the chat message and notifies both sender and receiver.
+     *
+     * @param chat      Chat message payload
+     * @param principal Authenticated user principal
+     */
     @MessageMapping("/send")
     public void sendMessage(@Payload Chat chat, Principal principal) {
         if (principal != null) {
@@ -29,17 +41,27 @@ public class ChatController {
 
         Chat saved = chatService.saveMessage(chat);
 
+        // Notify receiver
         messagingTemplate.convertAndSendToUser(
                 chat.getReceiverEmail(),
                 "/queue/messages",
                 saved);
 
+        // Notify sender
         messagingTemplate.convertAndSendToUser(
                 saved.getSenderEmail(),
                 "/queue/messages",
                 saved);
     }
 
+    /**
+     * Handles REST POST requests to send a chat message.
+     * Saves the chat message and notifies both sender and receiver.
+     *
+     * @param chat      Chat message payload
+     * @param principal Authenticated user principal
+     * @return Saved chat message
+     */
     @PostMapping("/send")
     public Chat sendMessageRest(@RequestBody Chat chat, Principal principal) {
         if (principal != null) {
@@ -47,17 +69,33 @@ public class ChatController {
         }
         Chat saved = chatService.saveMessage(chat);
 
+        // Notify receiver
         messagingTemplate.convertAndSendToUser(chat.getReceiverEmail(), "/queue/messages", saved);
+        // Notify sender
         messagingTemplate.convertAndSendToUser(saved.getSenderEmail(), "/queue/messages", saved);
 
         return saved;
     }
 
+    /**
+     * Retrieves chat history between two users.
+     *
+     * @param user1 First user's email
+     * @param user2 Second user's email
+     * @return List of chat messages
+     */
     @GetMapping("/history/{user1}/{user2}")
     public List<Chat> getChatHistory(@PathVariable String user1, @PathVariable String user2) {
         return chatService.getChatHistory(user1, user2);
     }
 
+    /**
+     * Retrieves a list of users the current user has chatted with, including
+     * profile metadata.
+     *
+     * @param currentUserEmail Current user's email
+     * @return List of user profiles with chat metadata
+     */
     @GetMapping("/list")
     public List<UserProfileWithMeta> getChatList(@RequestParam String currentUserEmail) {
         return chatService.getChatUsersWithProfile(currentUserEmail);

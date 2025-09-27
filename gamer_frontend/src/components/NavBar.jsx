@@ -334,7 +334,7 @@ const NavBar = () => {
                 <img
                   src={profile.imageUrl || defaultProfile}
                   alt="User Avatar"
-                  className={`h-8 w-8 lg:h-10 lg:w-10 rounded-full transition-all duration-200
+                  className={`h-8 w-8 lg:h-10 lg:w-10 rounded-full transition-all duration-200 object-cover
                   ${location.pathname === "/profile" ? "border-2 border-blue-400" : "border-2 border-transparent group-hover:border-blue-400"}`}
                 />
               </Link>

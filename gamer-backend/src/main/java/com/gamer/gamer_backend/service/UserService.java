@@ -20,8 +20,16 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
+    // Password encoder for hashing user passwords
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Registers a new user after checking if the email already exists.
+     * Hashes the password before saving.
+     *
+     * @param user The user to register
+     * @return The saved user
+     */
     public User registerUser(User user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists!");
@@ -30,6 +38,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /**
+     * Authenticates a user and returns a JWT token if successful.
+     *
+     * @param email    User's email
+     * @param password User's password
+     * @return JWT token or null if authentication fails
+     */
     public String loginAndGetToken(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
@@ -41,6 +56,12 @@ public class UserService {
         return null;
     }
 
+    /**
+     * Initiates the password reset process by generating a reset token,
+     * saving it to the user, and sending a reset link via email.
+     *
+     * @param email User's email
+     */
     public void initiatePasswordReset(String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isPresent()) {
@@ -57,6 +78,13 @@ public class UserService {
         }
     }
 
+    /**
+     * Resets the user's password using the provided reset token and new password.
+     * Validates the token and expiry before updating.
+     *
+     * @param token       The reset token
+     * @param newPassword The new password to set
+     */
     public void resetPassword(String token, String newPassword) {
         Optional<User> optionalUser = userRepository.findAll().stream()
                 .filter(u -> token.equals(u.getResetToken()) && System.currentTimeMillis() < u.getResetTokenExpiry())

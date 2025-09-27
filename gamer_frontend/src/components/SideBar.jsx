@@ -56,7 +56,7 @@ const SideBar = () => {
           <img
             src={profile.imageUrl || defaultProfile}
             alt="User Avatar"
-            className="h-8 w-8 rounded-full mr-2"
+            className="h-8 w-8 rounded-full mr-2 object-cover"
           />
           <span className="font-semibold">{profile.gamerName}</span>
         </NavLink>
