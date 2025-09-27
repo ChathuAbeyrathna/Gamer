@@ -1,15 +1,28 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { getUserEmail } from "../authUtils";
+
+// Icons and images
 import game from '../images/game.png';
 import group from '../images/group.png';
 import save from '../images/save.png';
 import defaultProfile from '../images/defaultProfile.png';
 
+/**
+ * SideBar component:
+ * - Displays user profile at the top
+ * - Navigation links for Game Suggestions, Groups, and Saved Items
+ * - Highlights active link
+ * - Only visible on large screens (hidden on mobile)
+ */
 const SideBar = () => {
-  const email = getUserEmail();
-  const [profile, setProfile] = useState(null);
+  const email = getUserEmail();          // Logged-in user's email
+  const [profile, setProfile] = useState(null); // User profile state
 
+  /**
+   * Fetch the logged-in user's profile data
+   * - Runs whenever the email changes
+   */
   useEffect(() => {
     const fetchProfile = async () => {
       if (!email) return;
@@ -31,6 +44,7 @@ const SideBar = () => {
   return (
     <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed h-full left-6 mt-[6%]">
 
+      {/* User Profile */}
       {profile && (
         <NavLink
           to="/profile"
@@ -48,12 +62,14 @@ const SideBar = () => {
         </NavLink>
       )}
 
+      {/* Navigation Links */}
       <ul>
+        {/* Game Suggestions */}
         <NavLink
           to="/suggest"
           className={({ isActive }) =>
             `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
-              ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+            ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
           }
         >
           <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
@@ -64,11 +80,12 @@ const SideBar = () => {
           </li>
         </NavLink>
 
+        {/* Groups */}
         <NavLink
           to="/group"
           className={({ isActive }) =>
             `flex items-center mb-4 p-2 rounded-lg transition duration-300 ease-in-out 
-              ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
+            ${isActive ? "bg-gray-700 text-blue-400" : "hover:bg-gray-700 hover:text-blue-400"}`
           }
         >
           <li className="flex items-center space-x-3 hover:bg-gray-700 rounded">
@@ -79,6 +96,7 @@ const SideBar = () => {
           </li>
         </NavLink>
 
+        {/* Saved Items: only show if user is logged in */}
         {email && (
           <NavLink
             to="/save"
@@ -95,7 +113,6 @@ const SideBar = () => {
             </li>
           </NavLink>
         )}
-
       </ul>
     </div>
   );

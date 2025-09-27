@@ -195,7 +195,7 @@ const CreateGroup = () => {
             />
           )}
 
-          <div className="flex justify-between mt-6">
+          <div className="flex justify-between mt-6 gap-4">
             <button
               type="button"
               onClick={handleCancel}

@@ -5,6 +5,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import EmojiPicker from "emoji-picker-react";
 import { FiSend } from "react-icons/fi";
+import { IoArrowBack } from "react-icons/io5"; // Import back arrow icon
 import defaultProfile from "../../images/defaultProfile.png";
 import chatBackground from "../../images/chatBg.png";
 import { useChat } from "../Chat/ChatContext";
@@ -24,12 +25,10 @@ const ChatPage = () => {
   const clientRef = useRef(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // Keep the latest markChatAsRead function in a ref
   useEffect(() => {
     markChatAsReadRef.current = markChatAsRead;
   }, [markChatAsRead]);
 
-  // Scroll helper
   const scrollToBottom = (smooth = false) => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({
@@ -38,7 +37,6 @@ const ChatPage = () => {
     }
   };
 
-  // Fetch receiver profile
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       if (!receiverEmail) return;
@@ -52,7 +50,6 @@ const ChatPage = () => {
     fetchReceiverProfile();
   }, [receiverEmail]);
 
-  // Fetch chat history
   useEffect(() => {
     const token = localStorage.getItem("token");
     let isMounted = true;
@@ -76,12 +73,10 @@ const ChatPage = () => {
     return () => { isMounted = false; };
   }, [receiverEmail, currentUserEmail]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     setTimeout(() => scrollToBottom(true), 50);
   }, [messages]);
 
-  // WebSocket for new messages
   useEffect(() => {
     clientRef.current = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
@@ -123,12 +118,10 @@ const ChatPage = () => {
 
   const formatDateTime = (timestamp) =>
     timestamp
-      ? new Date(timestamp).toLocaleString("en-GB", {
+      ? new Date(timestamp).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
+        year: "numeric",
       })
       : "";
 
@@ -142,12 +135,15 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex h-screen text-white pt-20">
+    <div className="flex h-screen text-white pt-16 md:pt-20">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
 
       {/* Sidebar */}
-      <div className="w-72 overflow-y-auto pl-6 pr-4 py-4 space-y-4 bg-gray-900 hide-scrollbar">
-        <h2 className="text-xl font-semibold mb-6">Chats</h2>
+      <div
+        className={`overflow-y-auto pl-6 pr-4 py-4 space-y-4 bg-gray-900 hide-scrollbar
+        ${receiverEmail ? "hidden lg:block w-full lg:w-72" : "block w-full lg:w-72"}`}
+      >
+        <h2 className="text-xl font-semibold mt-4 mb-6">Chats</h2>
         {chatList.map((chat) => {
           const isActive = chat.profile.email === receiverEmail;
           return (
@@ -186,12 +182,19 @@ const ChatPage = () => {
         })}
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Chat Area - Now responsive */}
+      <div className={`flex-1 flex-col ${receiverEmail ? "flex" : "hidden lg:flex"}`}>
         {receiverEmail ? (
           <>
             <div className="flex items-center p-4 justify-between bg-[#1a2232]">
               <div className="flex items-center space-x-4">
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => navigate("/chat")}
+                  className="lg:hidden p-2 -ml-2"
+                >
+                  <IoArrowBack className="text-2xl" />
+                </button>
                 <img
                   src={receiverProfile?.imageUrl || defaultProfile}
                   alt={receiverProfile?.gamerName || "Profile"}
@@ -222,13 +225,13 @@ const ChatPage = () => {
                       </div>
                     )}
                     <div
-                      className={`flex ${msg.senderEmail === currentUserEmail
+                      className={`flex items-end gap-2 ${msg.senderEmail === currentUserEmail
                         ? "justify-end"
                         : "justify-start"
                         }`}
                     >
-                      <div
-                        className={`px-4 py-2 rounded-lg max-w-xs break-words ${msg.senderEmail === currentUserEmail
+                       <div
+                        className={`px-4 py-2 rounded-lg max-w-[80%] md:max-w-md break-words ${msg.senderEmail === currentUserEmail
                           ? "bg-gradient-to-r from-[#01C0D3]/80 to-[#2059B6]/80"
                           : "bg-gradient-to-r from-gray-700/80 to-gray-500/80"
                           }`}
@@ -242,16 +245,21 @@ const ChatPage = () => {
               <div ref={messageEndRef}></div>
             </div>
 
-            <div className="flex items-center gap-2 p-4 bg-[#1a2232]">
+            <div className="relative flex items-center gap-2 p-4 bg-[#1a2232]">
               {showEmojiPicker && (
-                <div className="absolute bottom-14 z-50">
-                  <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" height={400} width={400} />
+                <div className="absolute bottom-20 left-0 right-0 mx-auto w-full max-w-sm px-2 z-50">
+                  <EmojiPicker
+                    onEmojiClick={onEmojiClick}
+                    theme="dark"
+                    height={350}
+                    width="100%"
+                  />
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="text-xl"
+                className="text-xl p-2 rounded-full hover:bg-gray-700"
               >
                 😊
               </button>
@@ -281,7 +289,7 @@ const ChatPage = () => {
               backgroundPosition: "center",
             }}
           >
-            Chat with your gaming buddies...❤️
+            Select a chat to start messaging...
           </div>
         )}
       </div>

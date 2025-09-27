@@ -151,11 +151,11 @@ const GroupView = () => {
             <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]"></div>
             <NavBar />
 
-            <button onClick={() => navigate(-1)} className="fixed top-24 left-32 mt-4 z-50 text-white hover:text-gray-400">
-                <FaArrowLeft className="text-2xl font-light" style={{ strokeWidth: 1 }} />
+            <button onClick={() => navigate(-1)} className="fixed top-20 md:top-24 left-4 md:left-8 lg:left-32 z-50 text-white hover:text-gray-400">
+                <FaArrowLeft className="text-2xl font-light" />
             </button>
 
-            <div className="mx-auto mt-20 px-4 py-8 flex flex-col items-center">
+            <div className="mx-auto mt-20 md:mt-20 px-4 py-8 flex flex-col items-center">
                 {group && (
                     <>
                         <img src={group.coverPhotoUrl || defaultImg} alt="Group Cover" className="w-full max-w-4xl h-80 object-cover shadow-lg" />
@@ -278,7 +278,7 @@ const GroupView = () => {
                         </div>
 
                         {/* Feed */}
-                        <div className="w-2/5 mx-4 mt-8 space-y-6">
+                        <div className="w-full max-w-xl mt-8 space-y-6">
                             {filteredFeed.length === 0 ? (
                                 <div className="text-center text-gray-400">No posts or blogs yet.</div>
                             ) : (

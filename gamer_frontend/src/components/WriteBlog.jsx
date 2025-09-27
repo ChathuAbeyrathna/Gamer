@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { IoMdClose } from "react-icons/io";
 import { storage } from "../firebaseConfig";
@@ -9,22 +9,39 @@ import EmojiPicker from "emoji-picker-react";
 import camera from '../images/camera.png';
 import defaultProfile from '../images/defaultProfile.png';
 
+/**
+ * WriteBlogModal Component
+ * 
+ * Props:
+ * - onClose: function to close the modal
+ * - onBlogCreated: callback after blog is successfully created/updated
+ * - editingBlog: object with blog data if editing, null if creating
+ * - groupId: optional group ID to associate the blog with a group
+ */
 const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null, groupId = null }) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
-  const [customTag, setCustomTag] = useState("");
-  const [image, setImage] = useState(null);
-  const [imageName, setImageName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
-  const [existingImageUrl, setExistingImageUrl] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Blog state variables
+  const [title, setTitle] = useState("");          // Blog title
+  const [content, setContent] = useState("");      // Blog content (rich text)
+  const [tags, setTags] = useState("");            // Selected tag from dropdown
+  const [customTag, setCustomTag] = useState("");  // Custom tag if "Others" is selected
+  const [image, setImage] = useState(null);        // Selected image file
+  const [imageName, setImageName] = useState("");  // Display name of the selected image
+  const [uploading, setUploading] = useState(false); // Flag for upload state
+  const [userProfile, setUserProfile] = useState(null); // Logged-in user profile
+  const [existingImageUrl, setExistingImageUrl] = useState(""); // Preloaded image URL when editing
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker toggle
+
+  // Popup alert state variables
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
+  /**
+   * Display a temporary popup alert
+   * @param {string} msg - Message to display
+   * @param {string} type - "success" or "error"
+   */
   const showPopupMessage = (msg, type) => {
     setPopupMessage(msg);
     setPopupType(type);
@@ -36,10 +53,15 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
     }, 3000);
   };
 
+  /**
+   * useEffect to initialize modal: fetch user profile, preload blog data if editing
+   * Also disables body scroll while modal is open
+   */
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     fetchUserProfile();
 
+    // Preload blog data if editing
     if (editingBlog) {
       setTitle(editingBlog.title || "");
       setContent(editingBlog.content || "");
@@ -52,11 +74,15 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
       }
     }
 
+    // Cleanup: restore body scroll on modal close
     return () => {
       document.body.style.overflow = 'auto';
     };
   }, [editingBlog]);
 
+  /**
+   * Fetch logged-in user's profile
+   */
   const fetchUserProfile = async () => {
     const email = localStorage.getItem("email");
     if (!email) return;
@@ -69,9 +95,14 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
     }
   };
 
+  /**
+   * Upload selected image to Firebase Storage
+   * @returns {string|null} URL of uploaded image
+   */
   const handleImageUpload = async () => {
     if (!image) return existingImageUrl || null;
     setUploading(true);
+
     const imageRef = ref(storage, `gamer/${image.name}`);
     const uploadTask = uploadBytesResumable(imageRef, image);
 
@@ -94,23 +125,26 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
     });
   };
 
-  const toggleEmojiPicker = () => {
-    setShowEmojiPicker((val) => !val);
-  };
+  // Toggle emoji picker visibility
+  const toggleEmojiPicker = () => setShowEmojiPicker((val) => !val);
 
-  const onEmojiClick = (emojiObject) => {
-    setTitle((prev) => prev + emojiObject.emoji);
-  };
+  // Add selected emoji to blog title
+  const onEmojiClick = (emojiObject) => setTitle((prev) => prev + emojiObject.emoji);
 
+  /**
+   * Submit blog: create or update
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation
     if (!title.trim()) return showPopupMessage("Title is required!", "error");
     if (!tags) return showPopupMessage("Please select a blog tag!", "error");
     if (tags === "Others" && !customTag.trim()) return showPopupMessage("Please specify your custom tag!", "error");
     if (!userProfile) return showPopupMessage("User profile not loaded!", "error");
 
     try {
+      // Upload image if new selected
       const imageUrl = await handleImageUpload();
       const finalTags = tags === "Others" ? [customTag] : [tags];
 
@@ -122,29 +156,33 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
         email: userProfile.email,
         userName: userProfile.name,
         userImage: userProfile.imageUrl,
-        groupId: groupId || null // ✅ Add groupId
+        groupId: groupId || null, // Optional group association
       };
 
       const token = localStorage.getItem("token");
-
       let response;
+
       if (editingBlog) {
+        // Update existing blog
         response = await axios.put(`http://localhost:8080/api/blogs/edit/${editingBlog.id}`, blogData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        showPopupMessage("Blog Updated Successfully..!", "success");
+        showPopupMessage("Blog Updated Successfully!", "success");
       } else {
+        // Create new blog
         response = await axios.post("http://localhost:8080/api/blogs/create", blogData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        showPopupMessage("Blog Published Successfully..!", "success");
+        showPopupMessage("Blog Published Successfully!", "success");
       }
 
+      // Reset form fields
       setTitle("");
       setTags("");
       setCustomTag("");
       setImage(null);
 
+      // Notify parent component and close modal
       setTimeout(() => {
         onBlogCreated(response.data);
         onClose();
@@ -156,6 +194,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
     }
   };
 
+  // Quill editor modules and formats
   const modules = {
     toolbar: [
       ['bold', 'italic', 'underline', 'strike'],
@@ -175,6 +214,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 backdrop-blur overflow-y-auto">
+
       {/* Popup Alert */}
       {showPopup && (
         <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-4">
@@ -185,8 +225,11 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
         </div>
       )}
 
+      {/* Modal Container */}
       <div className="min-h-screen flex justify-center items-start py-10 px-4 m-20">
         <div className="bg-gray-800 p-6 rounded-lg text-white w-full max-w-[700px] shadow-lg relative">
+
+          {/* Header */}
           <div className="flex justify-between items-center mb-2">
             <div className="flex justify-center items-center w-full">
               <h2 className="text-lg font-semibold">{editingBlog ? "Edit Blog" : "Write Blog"}</h2>
@@ -196,6 +239,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
 
           <hr className="border-t border-white opacity-50 my-2 mb-6" />
 
+          {/* User Info */}
           <div className="flex items-center space-x-4 mb-4">
             {userProfile && (
               <>
@@ -205,6 +249,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             )}
           </div>
 
+          {/* Cover Image Upload */}
           <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 flex items-center font-light h-18">
             <label className="flex-grow cursor-pointer flex justify-center items-center gap-3">
               <input type="file" className="hidden" onChange={(e) => {
@@ -216,6 +261,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             </label>
           </div>
 
+          {/* Title Input with Emoji Picker */}
           <div className="relative mt-5">
             <input
               type="text"
@@ -245,6 +291,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             )}
           </div>
 
+          {/* Quill Rich Text Editor */}
           <ReactQuill
             theme="snow"
             value={content}
@@ -255,6 +302,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             className="bg-transparent text-white h-40 mt-3 mb-14 custom-quill"
           />
 
+          {/* Blog Tag Selection */}
           <select
             className="w-full mt-3 p-3 bg-gray-800 rounded border border-white-600 text-white font-light cursor-pointer"
             value={tags}
@@ -270,6 +318,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             <option value="Others">Others</option>
           </select>
 
+          {/* Custom Tag Input */}
           {tags === "Others" && (
             <input
               type="text"
@@ -281,6 +330,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
             />
           )}
 
+          {/* Submit Button */}
           <div className="flex justify-center">
             <button
               type="submit"
@@ -292,6 +342,7 @@ const WriteBlogModal = ({ onClose, onBlogCreated = () => { }, editingBlog = null
               {uploading ? "Uploading..." : editingBlog ? "Update" : "Publish"}
             </button>
           </div>
+
         </div>
       </div>
     </div>

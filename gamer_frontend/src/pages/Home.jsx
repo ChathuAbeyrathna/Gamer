@@ -93,7 +93,7 @@ const Home = () => {
   const handleToggleFollow = async (email, e) => {
     e.stopPropagation();
     if (!token) {
-      const result = await window.confirm("You need to log in to follow users. Go to login page?");
+      const result = window.confirm("You need to log in to follow users. Go to login page?");
       if (result) navigate("/login");
       return;
     }
@@ -117,7 +117,7 @@ const Home = () => {
 
   const toggleSavePost = async (postId) => {
     if (!token) {
-      const result = await window.confirm("You need to log in to save posts. Go to login page?");
+      const result = window.confirm("You need to log in to save posts. Go to login page?");
       if (result) navigate("/login");
       return;
     }
@@ -140,7 +140,7 @@ const Home = () => {
 
   const toggleSaveBlog = async (blogId) => {
     if (!token) {
-      const result = await window.confirm("You need to log in to save blogs. Go to login page?");
+      const result = window.confirm("You need to log in to save blogs. Go to login page?");
       if (result) navigate("/login");
       return;
     }
@@ -171,10 +171,13 @@ const Home = () => {
       <NavBar />
 
       <div className="container mx-auto flex mt-4">
-        <Sidebar />
+        {/* Sidebar is now wrapped to be hidden on mobile */}
+        <div className="hidden lg:block">
+            <Sidebar />
+        </div>
 
-        {/* Feed */}
-        <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[5%] ml-[25%]">
+        {/* Feed - updated with responsive classes */}
+        <div className="w-full lg:w-2/4 bg-gray-900 p-4 mt-20 lg:ml-[25%]">
           {loading ? (
             <div className="flex justify-center items-center h-40 text-gray-400 text-lg font-medium">
               Loading...
@@ -198,7 +201,7 @@ const Home = () => {
           )}
         </div>
 
-        {/* Right Sidebar */}
+        {/* Right Sidebar - no changes needed, it was already responsive */}
         <div className="w-1/4 bg-black-800 p-4 hidden lg:block fixed right-0 h-full mt-[6%]">
           <h2 className="font-semibold mb-2">Power Up Your Stream:</h2>
           <ul>

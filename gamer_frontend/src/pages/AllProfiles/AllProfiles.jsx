@@ -79,16 +79,19 @@ const AllProfiles = () => {
       <div className="fixed inset-0 bg-gray-900 z-[-1]" />
       <NavBar />
 
-      <div className="container mx-auto flex mt-4 px-4 space-x-4">
-        <div className="w-1/4"><Sidebar /></div>
+      <div className="container mx-auto flex flex-col lg:flex-row mt-4 px-2 sm:px-4 space-y-4 lg:space-y-0 lg:space-x-4">
+        {/* Sidebar - Hidden on mobile, visible on medium screens and up */}
+        <div className="hidden md:block md:w-1/4 lg:w-1/5">
+          <Sidebar />
+        </div>
 
         <div className="w-full flex flex-col">
 
-          <div className="sticky top-[80px] bg-gray-900 z-30 pt-8 pb-6">
-            <h2 className="text-3xl">Gamers</h2>
+          <div className="sticky top-[80px] bg-gray-900 z-30 pt-4 pb-4 lg:pt-8 lg:pb-6 px-2 lg:px-0">
+            <h2 className="text-2xl sm:text-3xl font-bold">Gamers</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 mt-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-2 sm:p-4 mt-16 mb-16">
             {loading ? (
               <p className="text-gray-400">Loading...</p>
             ) : (
@@ -96,21 +99,23 @@ const AllProfiles = () => {
                 <div
                   key={p.email}
                   onClick={() => goToProfile(p.email)}
-                  className="cursor-pointer p-[2px] rounded-xl bg-gradient-to-b from-[#01C0D3] to-[#2059B6]"
+                  className="cursor-pointer p-[2px] rounded-xl bg-gradient-to-b from-[#01C0D3] to-[#2059B6] hover:scale-105 transition-transform duration-200"
                 >
-                  <div className="bg-gray-800 p-4 rounded-xl shadow-md flex flex-col items-center h-full">
+                  <div className="bg-gray-800 p-3 sm:p-4 rounded-xl shadow-md flex flex-col items-center h-full">
                     <img
                       src={p.imageUrl || defaultProfile}
                       alt={p.gamerName}
-                      className="w-24 h-24 rounded-full object-cover mt-3 mb-3"
+                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full object-cover mt-2 sm:mt-3 mb-2 sm:mb-3"
                     />
-                    <h3 className="text-lg font-semibold">{p.gamerName}</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-center break-words px-1">
+                      {p.gamerName}
+                    </h3>
                     <button
                       onClick={(e) => handleToggleFollow(p.email, e)}
-                      className={`m-4 w-28 py-1 rounded-lg text-sm font-medium text-white transition duration-150 ${following.includes(p.email)
+                      className={`m-2 sm:m-4 w-20 sm:w-28 py-1 rounded-lg text-xs sm:text-sm font-medium text-white transition duration-150 ${following.includes(p.email)
                         ? 'bg-gradient-to-b from-[#407CDE] to-[#2059B6]'
                         : 'bg-gradient-to-b from-[#2059B6] to-[#407CDE]'
-                        } hover:brightness-110`}
+                        } hover:brightness-110 active:scale-95`}
                     >
                       {following.includes(p.email) ? 'Unfollow' : 'Follow'}
                     </button>
@@ -122,14 +127,15 @@ const AllProfiles = () => {
 
           {/* View More Button */}
           {!loading && visibleCount < filteredProfiles.length && (
-            <button
-              onClick={() => setVisibleCount(prev => prev + 9)}
-              className="mx-auto m-10 text-md flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
-            >
-              View More
-              <img src={viewMore} alt="Mario Icon" className="w-5 h-5" />
-            </button>
-
+            <div className="flex justify-center">
+              <button
+                onClick={() => setVisibleCount(prev => prev + 9)}
+                className="mx-auto m-6 sm:m-10 text-sm sm:text-md flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
+              >
+                View More
+                <img src={viewMore} alt="View More" className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -7,24 +7,45 @@ import EmojiPicker from "emoji-picker-react";
 import camera from '../images/camera.png';
 import defaultProfile from '../images/defaultProfile.png';
 
+/**
+ * CreatePost Component
+ * Allows creating a new post or editing an existing post.
+ * Supports:
+ * - Text title with emoji picker
+ * - Tag selection (with custom tag option)
+ * - Media upload (image/video via Firebase Storage)
+ * - Popup messages for errors/success
+ *
+ * Props:
+ * - onClose: function to close the modal
+ * - onPostCreated: callback after successful post creation/edit
+ * - editingPost: optional post object if editing
+ * - groupId: optional group id to associate post with a group
+ */
 const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null }) => {
-  const [title, setTitle] = useState("");
-  const [tags, setTags] = useState("");
-  const [customTag, setCustomTag] = useState("");
-  const [media, setMedia] = useState(null);
-  const [mediaName, setMediaName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
-  const [existingMediaUrl, setExistingMediaUrl] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [title, setTitle] = useState(""); // Post content
+  const [tags, setTags] = useState(""); // Selected tag
+  const [customTag, setCustomTag] = useState(""); // Custom tag if "Others" is selected
+  const [media, setMedia] = useState(null); // Uploaded media file
+  const [mediaName, setMediaName] = useState(""); // File name for display
+  const [uploading, setUploading] = useState(false); // Upload state
+  const [userProfile, setUserProfile] = useState(null); // Logged-in user's profile
+  const [existingMediaUrl, setExistingMediaUrl] = useState(""); // For editing post
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Emoji picker visibility
 
+  // Popup state
   const [popupMessage, setPopupMessage] = useState("");
-  const [popupType, setPopupType] = useState("");
+  const [popupType, setPopupType] = useState(""); // 'success' or 'error'
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
+    // Prevent background scroll while modal is open
     document.body.style.overflow = 'hidden';
+
+    // Fetch user profile on mount
     fetchUserProfile();
+
+    // Pre-fill fields if editing an existing post
     if (editingPost) {
       setTitle(editingPost.title || "");
       setTags(editingPost.tags?.[0] || "");
@@ -34,11 +55,13 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
         setMediaName(nameFromUrl);
       }
     }
+
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'auto'; //Cleans up on unmount (restores scrolling)
     };
   }, [editingPost]);
 
+  // Fetch user profile from backend
   const fetchUserProfile = async () => {
     const email = localStorage.getItem("email");
     if (!email) return;
@@ -51,6 +74,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
     }
   };
 
+  // Show temporary popup messages
   const showPopupMessage = (msg, type) => {
     setPopupMessage(msg);
     setPopupType(type);
@@ -62,6 +86,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
     }, 3000);
   };
 
+  // Handle media file upload to Firebase Storage
   const handleMediaUpload = async () => {
     if (!media) return existingMediaUrl || null;
 
@@ -94,15 +119,19 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
     });
   };
 
+  // Toggle emoji picker
   const toggleEmojiPicker = () => setShowEmojiPicker(val => !val);
 
+  // Insert selected emoji into title
   const onEmojiClick = (emojiObject) => {
     setTitle(prev => prev + emojiObject.emoji);
   };
 
+  // Submit post or edit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation
     if (!title.trim()) return showPopupMessage("Title is required!", "error");
     if (!tags) return showPopupMessage("Please select a post tag!", "error");
     if (tags === "Others" && !customTag.trim()) return showPopupMessage("Please specify your custom tag!", "error");
@@ -126,19 +155,23 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
       let response;
 
       if (editingPost) {
+        // Edit existing post
         response = await axios.put(`http://localhost:8080/api/posts/edit/${editingPost.id}`, postData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         showPopupMessage("Post updated successfully..!", "success");
       } else {
+        // Create new post
         response = await axios.post("http://localhost:8080/api/posts/create", postData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         showPopupMessage("Post created successfully..!", "success");
       }
 
+      // Reset fields
       setTitle(""); setTags(""); setCustomTag(""); setMedia(null);
 
+      // Callback and close after short delay
       setTimeout(() => {
         onPostCreated(response.data);
         onClose();
@@ -152,9 +185,9 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 backdrop-blur overflow-y-auto">
-      {/* Popup */}
+      {/* Popup message */}
       {showPopup && (
-        <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-2">
+        <div className="fixed bottom-[50px] left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md px-2">
           <div className={`text-white text-center text-sm rounded shadow-md animate-fade-in 
             ${popupType === "success" ? "bg-green-600" : "bg-red-600"}`}>
             {popupMessage}
@@ -162,16 +195,18 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
         </div>
       )}
 
-      {/* Responsive Form */}
+      {/* Centered form modal */}
       <div className="min-h-screen flex justify-center items-start py-6 px-2 sm:px-4 mt-24 mb-20">
         <div className="bg-gray-800 p-4 sm:p-6 rounded-lg w-full max-w-[500px] min-h-[550px] text-white shadow-lg">
+
+          {/* Header */}
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">{editingPost ? "Edit Post" : "Create Post"}</h2>
             <button onClick={onClose}><IoMdClose size={24} /></button>
           </div>
-
           <hr className="border-t border-white opacity-50 my-2 mb-6" />
 
+          {/* User info */}
           <div className="flex items-center gap-4 mb-3">
             {userProfile && (
               <>
@@ -181,6 +216,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             )}
           </div>
 
+          {/* Text area with emoji */}
           <div className="relative">
             <textarea
               placeholder="What's happening in your gaming world?"
@@ -198,8 +234,9 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             )}
           </div>
 
+          {/* Tag selection */}
           <select
-            className="w-full mt-3 p-3 bg-gray-800 rounded border border-white text-white"
+            className="w-full mt-3 p-3 bg-gray-800 rounded border border-white text-white cursor-pointer"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             required
@@ -213,6 +250,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             <option value="Others">Others</option>
           </select>
 
+          {/* Custom tag input */}
           {tags === "Others" && (
             <input
               type="text"
@@ -224,6 +262,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             />
           )}
 
+          {/* Media upload */}
           <div className="w-full mt-3 p-3 bg-gray-800 rounded border border-white flex items-center">
             <label className="flex-grow cursor-pointer flex items-center gap-2">
               <input
@@ -240,6 +279,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
             </label>
           </div>
 
+          {/* Submit button */}
           <div className="flex justify-center">
             <button
               type="submit"
@@ -250,6 +290,7 @@ const CreatePost = ({ onClose, onPostCreated, editingPost = null, groupId = null
               {uploading ? "Uploading..." : editingPost ? "Update" : "Post"}
             </button>
           </div>
+
         </div>
       </div>
     </div>

@@ -119,12 +119,14 @@ const Notifications = ({ userId }) => {
     <div className="relative min-h-screen text-white">
       <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-[-1]" />
       <NavBar />
-      <div className="flex mt-4">
-        <div className="w-1/4">
+      <div className="flex container mx-auto mt-4">
+        {/* Sidebar now hidden on mobile */}
+        <div className="hidden lg:block lg:w-1/4">
           <Sidebar />
         </div>
 
-        <div className="w-3/4 px-4 mt-28 mb-20 mr-24 ml-24">
+        {/* Content area updated with responsive classes */}
+        <div className="w-full lg:w-3/4 px-4 mt-20 lg:mt-28 mb-20">
           {loading ? (
             <p className="text-gray-400">Loading...</p>
           ) : notifications.length === 0 ? (

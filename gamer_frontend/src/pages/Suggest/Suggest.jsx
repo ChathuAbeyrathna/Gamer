@@ -34,28 +34,21 @@ const Suggest = () => {
 
   const currentUserEmail = localStorage.getItem("email");
   const token = localStorage.getItem("token");
-
   const knownTags = ["action", "adventure", "rpg", "simulation", "sports"];
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     const fetchFeed = async () => {
       setLoading(true);
       try {
         const [postsRes, blogsRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/posts/all", {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get("http://localhost:8080/api/blogs/all", {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
+          axios.get("http://localhost:8080/api/posts/all", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:8080/api/blogs/all", { headers: { Authorization: `Bearer ${token}` } }),
         ]);
-
         const posts = postsRes.data.map((post) => ({ ...post, type: "post" }));
         const blogs = blogsRes.data.map((blog) => ({ ...blog, type: "blog" }));
-
-        const combinedFeed = [...posts, ...blogs].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
+        const combinedFeed = [...posts, ...blogs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setFeedItems(combinedFeed);
       } catch (error) {
         console.error("Error fetching feed:", error);
@@ -66,9 +59,7 @@ const Suggest = () => {
 
     const fetchGroups = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/groups", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get("http://localhost:8080/api/groups", { headers: { Authorization: `Bearer ${token}` } });
         const otherGroups = res.data.filter(g => g.ownerEmail !== currentUserEmail);
         setExploreGroups(otherGroups);
       } catch (err) {
@@ -79,18 +70,10 @@ const Suggest = () => {
     const fetchSavedItems = async () => {
       if (!token) return;
       try {
-        // Fetch saved posts
-        const postsRes = await axios.get("http://localhost:8080/api/saved-posts", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const postsRes = await axios.get("http://localhost:8080/api/saved-posts", { headers: { Authorization: `Bearer ${token}` } });
         setSavedPostIds(postsRes.data.map(sp => sp.postId));
-
-        // Fetch saved blogs
-        const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const blogsRes = await axios.get("http://localhost:8080/api/saved-blogs", { headers: { Authorization: `Bearer ${token}` } });
         setSavedBlogIds(blogsRes.data.map(sb => sb.blogId));
-
       } catch (err) {
         console.error("Error fetching saved items:", err);
       }
@@ -98,9 +81,7 @@ const Suggest = () => {
 
     const fetchJoinedGroups = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/groups/user/${currentUserEmail}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`http://localhost:8080/api/groups/user/${currentUserEmail}`, { headers: { Authorization: `Bearer ${token}` } });
         const joinedIds = res.data.map(g => g.id);
         setJoinedGroupIds(joinedIds);
       } catch (err) {
@@ -114,24 +95,16 @@ const Suggest = () => {
     fetchJoinedGroups();
   }, [currentUserEmail, token]);
 
+
   const toggleSavePost = async (postId) => {
     if (!token) {
       const result = await window.confirm("You need to log in to save posts. Go to login page?");
       if (result) navigate("/login");
       return;
     }
-
     try {
-      const res = await axios.post(
-        `http://localhost:8080/api/saved-posts/toggle/${postId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data) {
-        setSavedPostIds(prev => [...prev, postId]);
-      } else {
-        setSavedPostIds(prev => prev.filter(id => id !== postId));
-      }
+      const res = await axios.post(`http://localhost:8080/api/saved-posts/toggle/${postId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setSavedPostIds(prev => res.data ? [...prev, postId] : prev.filter(id => id !== postId));
     } catch (err) {
       console.error("Error toggling save post:", err);
     }
@@ -143,28 +116,18 @@ const Suggest = () => {
       if (result) navigate("/login");
       return;
     }
-
     try {
-      const res = await axios.post(
-        `http://localhost:8080/api/saved-blogs/toggle/${blogId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data) {
-        setSavedBlogIds(prev => [...prev, blogId]);
-      } else {
-        setSavedBlogIds(prev => prev.filter(id => id !== blogId));
-      }
+      const res = await axios.post(`http://localhost:8080/api/saved-blogs/toggle/${blogId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setSavedBlogIds(prev => res.data ? [...prev, blogId] : prev.filter(id => id !== blogId));
     } catch (err) {
       console.error("Error toggling save blog:", err);
     }
   };
 
+
   const handleJoinGroup = async (groupId) => {
     try {
-      await axios.post(`http://localhost:8080/api/groups/${groupId}/join?email=${currentUserEmail}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`http://localhost:8080/api/groups/${groupId}/join?email=${currentUserEmail}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setJoinedGroupIds(prev => [...prev, groupId]);
     } catch (err) {
       console.error("Join failed:", err);
@@ -187,45 +150,19 @@ const Suggest = () => {
     }
   };
 
-  const filteredItems = selectedCategory
-    ? feedItems.filter((item) => {
-      if (!item.tags || !Array.isArray(item.tags)) return false;
-      const itemTags = item.tags.map(tag => tag.toLowerCase());
-
-      if (selectedCategory === "others") {
-        return !itemTags.some(tag =>
-          knownTags.some(known => tag.includes(known))
-        );
-      } else {
-        return itemTags.some(tag => tag.includes(selectedCategory.toLowerCase()));
+  const filterContent = (items, category, isGroup) => {
+    if (!category) return [];
+    return items.filter(item => {
+      const itemTags = (isGroup ? item.tags : item.tags)?.map(tag => tag.toLowerCase()) || [];
+      if (category === "others") {
+        return !itemTags.some(tag => knownTags.some(known => tag.includes(known)));
       }
-    })
-    : [];
+      return itemTags.some(tag => tag.includes(category.toLowerCase()));
+    });
+  };
 
-  const filteredGroups = selectedCategory
-    ? exploreGroups.filter(group => {
-      const groupTags = group.tags?.map(tag => tag.toLowerCase()) || [];
-      if (selectedCategory === "others") {
-        return !groupTags.some(tag =>
-          knownTags.some(known => tag.includes(known))
-        );
-      } else {
-        return groupTags.some(tag => tag.includes(selectedCategory.toLowerCase()));
-      }
-    })
-    : [];
-
-  useEffect(() => {
-    if (!selectedCategory) {
-    }
-  }, [selectedCategory]);
-
-  if (filteredItems.length > 0) {
-  }
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const filteredItems = filterContent(feedItems, selectedCategory, false);
+  const filteredGroups = filterContent(exploreGroups, selectedCategory, true);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -233,14 +170,16 @@ const Suggest = () => {
       <NavBar />
 
       <div className="container mx-auto flex mt-4 space-x-4 px-4">
-        <div className="w-1/4">
+        {/* Sidebar hidden on mobile */}
+        <div className="hidden lg:block lg:w-1/4">
           <Sidebar />
         </div>
 
-        <div className="w-full flex flex-col">
+        {/* Main Content Area */}
+        <div className="w-full lg:w-3/4 flex flex-col">
           {/* Top header */}
           <div className="sticky top-[80px] bg-gray-900 z-30 pt-6 pb-4">
-            <div className="container mx-auto flex items-center space-x-3 px-10 text-3xl ml-20">
+            <div className="flex items-center space-x-3 text-2xl md:text-3xl">
               {selectedCategory && (
                 <button
                   onClick={() => {
@@ -249,7 +188,7 @@ const Suggest = () => {
                   }}
                   className="hover:text-gray-400"
                 >
-                  <FaArrowLeft className="text-2xl font-light mr-1" />
+                  <FaArrowLeft className="text-lg md:text-xl font-light" />
                 </button>
               )}
               <h2>
@@ -262,13 +201,13 @@ const Suggest = () => {
 
           {/* Tab switcher */}
           {selectedCategory && (
-            <div className="sticky top-[140px] bg-gray-900 z-30 py-2 flex justify-center">
-              <div className="mb-2 space-x-8 text-lg font-semibold">
+            <div className="sticky top-[140px] bg-gray-900 z-30 py-4 flex justify-center">
+              <div className="space-x-8 text-lg font-semibold">
                 <button
                   onClick={() => setViewType("posts")}
                   className={`px-4 py-1 border-b-2 ${viewType === "posts"
                     ? "text-[#01C0D3] border-[#01C0D3]"
-                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                    : "text-gray-400 border-transparent hover:text-[#01C0D3]"
                     }`}
                 >
                   Posts
@@ -277,7 +216,7 @@ const Suggest = () => {
                   onClick={() => setViewType("groups")}
                   className={`px-4 py-1 border-b-2 ${viewType === "groups"
                     ? "text-[#01C0D3] border-[#01C0D3]"
-                    : "text-gray-400 border-transparent hover:text-[#01C0D3] hover:border-[#01C0D3]"
+                    : "text-gray-400 border-transparent hover:text-[#01C0D3]"
                     }`}
                 >
                   Groups
@@ -286,109 +225,92 @@ const Suggest = () => {
             </div>
           )}
 
-          {/* Category selection */}
-          {!selectedCategory && (
-            <div className="flex flex-col space-y-6 w-3/4 mt-24 ml-40">
-              {categories.map((cat) => (
-                <div
-                  key={cat.tag}
-                  className="flex items-center space-x-4 bg-black p-4 rounded-md cursor-pointer hover:bg-gray-700"
-                  onClick={() => setSelectedCategory(cat.tag)}
-                >
-                  <span className="text-2xl">{cat.icon}</span>
-                  <span className="text-lg font-semibold">{cat.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Main display area */}
-          <div className="w-2/4 mx-4 bg-gray-900 p-4 h-full mt-[6%] ml-[27%]">
+          {/* Centered Content: Categories or Results */}
+          <div className="w-full max-w-3xl mx-auto mt-20 mb-12">
             {loading ? (
               <p className="text-center text-gray-400">Loading...</p>
             ) : selectedCategory ? (
               viewType === "posts" ? (
-                filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
-                    <FeedCard
-                      key={item.id}
-                      item={item}
-                      currentUserEmail={currentUserEmail}
-                      dropdownOpenId={dropdownOpenId}
-                      setDropdownOpenId={setDropdownOpenId}
-                      toggleSave={item.type === "post" ? toggleSavePost : toggleSaveBlog}
-                      savedPostIds={item.type === "post" ? savedPostIds : savedBlogIds}
-                      setOpenBlog={setOpenBlog}
-                      customStyle="w-[550px] min-h-[400px]"
-                    />
-                  ))
-                ) : (
-                  <p className="text-center text-gray-400">No posts found for this category.</p>
-                )
+                <div className="space-y-6">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((item) => (
+                      <div className="max-w-xl mx-auto">
+                        <FeedCard
+                          key={item.id}
+                          item={item}
+                          currentUserEmail={currentUserEmail}
+                          dropdownOpenId={dropdownOpenId}
+                          setDropdownOpenId={setDropdownOpenId}
+                          toggleSave={item.type === "post" ? toggleSavePost : toggleSaveBlog}
+                          savedPostIds={item.type === "post" ? savedPostIds : savedBlogIds}
+                          setOpenBlog={setOpenBlog}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-400 py-10">No posts found for this category.</p>
+                  )}
+                </div>
               ) : (
-                <div className="mt-8 mb-8 space-y-4">
+                <div className="space-y-4 pb-8">
                   {filteredGroups.length > 0 ? (
                     <>
-                      {[...filteredGroups].reverse().slice(0, visibleCount).map(group => {
-                        const isJoined = joinedGroupIds.includes(group.id);
-                        return (
-                          <div
-                            key={group.id}
-                            onClick={() => navigate(`/group/view/${group.id}`)}
-                            className="w-[700px] bg-gradient-to-r from-[#01C0D3B3] to-[#2059B6B3] p-4 rounded-xl flex items-center justify-between space-x-4 cursor-pointer -ml-24 -mt-8 hover:brightness-110 transition"
-                          >
-                            <div className="flex items-center space-x-4">
-                              <img
-                                src={group.coverPhotoUrl || defaultGroup}
-                                alt="Group Cover"
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                              <div className="font-semibold text-white">
-                                {group.name}
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                isJoined ? handleLeaveGroup(group.id) : handleJoinGroup(group.id);
-                              }}
-                              className="px-4 py-1 rounded-md text-sm font-medium border border-white text-white"
-                            >
-                              {isJoined ? "Leave Group" : "Join Group"}
-                            </button>
+                      {filteredGroups.slice(0, visibleCount).map(group => (
+                        <div
+                          key={group.id}
+                          onClick={() => navigate(`/group/view/${group.id}`)}
+                          className="w-full bg-gradient-to-r from-[#01C0D3]/70 to-[#2059B6]/70 p-4 rounded-xl flex items-center justify-between space-x-4 cursor-pointer hover:brightness-110 transition"
+                        >
+                          <div className="flex items-center space-x-4 flex-1 min-w-0">
+                            <img src={group.coverPhotoUrl || defaultGroup} alt="Group Cover" className="w-12 h-12 rounded-full object-cover" />
+                            <div className="font-semibold text-white truncate">{group.name}</div>
                           </div>
-                        );
-                      })}
-
-                      {filteredGroups.length > visibleCount && (
-                        <div className="text-center mt-4">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setVisibleCount(prev => prev + 8);
+                              joinedGroupIds.includes(group.id) ? handleLeaveGroup(group.id) : handleJoinGroup(group.id);
                             }}
+                            className="px-4 py-1.5 rounded-md text-sm font-medium border border-white text-white whitespace-nowrap"
+                          >
+                            {joinedGroupIds.includes(group.id) ? "Leave" : "Join"}
+                          </button>
+                        </div>
+                      ))}
+                      {filteredGroups.length > visibleCount && (
+                        <div className="text-center mt-4">
+                          <button
+                            onClick={() => setVisibleCount(prev => prev + 8)}
                             className="mx-auto mt-8 flex items-center gap-2 text-gray-300 hover:scale-105 transition duration-300"
                           >
                             View More
-                            <img src={viewMore} alt="Mario Icon" className="w-5 h-5" />
+                            <img src={viewMore} alt="View More" className="w-5 h-5" />
                           </button>
                         </div>
                       )}
                     </>
                   ) : (
-                    <p className="text-center text-gray-400">No groups found in this category.</p>
+                    <p className="text-center text-gray-400 py-10">No groups found in this category.</p>
                   )}
                 </div>
               )
             ) : (
-              <p className="text-center text-gray-400">Please select a category to view items.</p>
+              <div className="flex flex-col space-y-4">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.tag}
+                    className="flex items-center space-x-4 bg-gray-800 p-4 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    onClick={() => setSelectedCategory(cat.tag)}
+                  >
+                    <span className="text-2xl">{cat.icon}</span>
+                    <span className="text-lg font-semibold">{cat.name}</span>
+                  </div>
+                ))}
+              </div>
             )}
-
-            {openBlog && <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />}
           </div>
         </div>
       </div>
+      {openBlog && <ViewBlog blog={openBlog} onClose={() => setOpenBlog(null)} />}
     </div>
   );
 };
