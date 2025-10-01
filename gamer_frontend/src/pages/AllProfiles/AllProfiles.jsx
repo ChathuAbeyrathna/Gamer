@@ -133,11 +133,11 @@ const AllProfiles = () => {
 
           {/* Header */}
           <div className="sticky top-[80px] bg-gray-900 z-30 pt-4 pb-4 lg:pt-8 lg:pb-6 px-2 lg:px-0">
-            <h2 className="text-2xl sm:text-3xl font-bold">Gamers</h2>
+            <h2 className="text-2xl sm:text-3xl">Gamers</h2>
           </div>
 
           {/* Profiles Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-2 sm:p-4 mt-16 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-2 sm:p-4 mt-16">
             {loading ? (
               // Loading state
               <p className="text-gray-400">Loading...</p>
